@@ -169,6 +169,7 @@ function createBot() {
         [Markup.button.callback('🎫 Get Ticket', 'ticket:get')],
         [Markup.button.callback('🔄 Refresh', 'cash:hourly')],
         [Markup.button.callback('🏆 Last Results', 'results:last')],
+        [Markup.button.callback('📜 Rules', 'rules:hourly')],
       ]),
     });
   });
@@ -231,6 +232,11 @@ function createBot() {
       r.ticket_code ? `• ${r.id} (₦${r.amount}): \`${r.ticket_code}\` @${r.username || '?'}` : `• ${r.id}: no entries`
     );
     await ctx.reply(`🏆 *Recent results*\n\n${lines.join('\n')}`, { parse_mode: 'Markdown' });
+  });
+
+  bot.action('rules:hourly', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply(`📜 *Giveaway Rules*\n\n${config.rulesText}`, { parse_mode: 'Markdown' });
   });
 
   bot.on('text', async (ctx) => {

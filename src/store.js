@@ -166,7 +166,7 @@ async function markGiveawayDone(id) {
 async function getOpenCustomDraws() {
   const res = await query(
     `SELECT d.*, g.name AS giveaway_name, g.category AS giveaway_category,
-            g.sponsor_name AS g_sponsor_name
+            g.sponsor_name AS g_sponsor_name, g.rules AS g_rules
      FROM draws d JOIN giveaways g ON g.id = d.giveaway_id
      WHERE d.kind = 'custom' AND d.status = 'entry_open'
      ORDER BY d.entry_closes_at NULLS LAST, d.id`

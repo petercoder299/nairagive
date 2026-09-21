@@ -31,6 +31,7 @@ function mountMiniApp(app) {
         sponsor: config.sponsor,
         contact: config.contact.text,
         howTo: config.howToUse,
+        rules: config.rulesText,
       });
     } catch (e) {
       res.status(500).json({ error: e.message });
@@ -60,7 +61,7 @@ function mountMiniApp(app) {
     try {
       const r = await query(
         `SELECT id, name, category, amount, winners_per_draw, interval_minutes,
-                starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio
+                starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules
          FROM giveaways WHERE status = 'active' ORDER BY created_at DESC LIMIT 10`
       );
       res.json(r.rows);
@@ -121,6 +122,7 @@ function mountMiniApp(app) {
             name: d.giveaway_name,
             category: d.giveaway_category,
             sponsor: d.g_sponsor_name,
+            rules: d.g_rules,
           },
         });
       }

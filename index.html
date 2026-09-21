@@ -475,6 +475,7 @@
             <div class="ph" data-k="results"><i></i></div>
           </div>
         </div>
+        <button class="btn-g" id="rulesBtnHourly" type="button" style="margin-top:10px">Rules for this draw</button>
         <div class="spacer"></div>
         <div class="sec-head"><h2 style="font-size:20px">My entries</h2><span class="count" id="myCount">0 this round</span></div>
         <div class="cards" id="myTickets"><p class="muted small">No entries in this round yet.</p></div>
@@ -491,6 +492,17 @@
         <div class="sec-head"><h2>Sponsored</h2><span class="count" id="sponsoredCount">special draws</span></div>
         <p class="sub">Special draws from sponsors.</p>
         <div class="cards" id="sponsored"><div class="empty"><div class="e-ic">○</div><p>loading…</p></div></div>
+      </div>
+    </section>
+
+    <!-- RULES -->
+    <section class="screen" id="s-rules" data-title="Rules">
+      <div class="page">
+        <div class="sec-head"><h2>Rules</h2></div>
+        <div class="panel">
+          <h3 id="rulesTitle" style="font-family:var(--head-font);font-size:19px;padding:14px 0 4px">Rules</h3>
+          <p id="rulesBody" class="small" style="padding:0 0 14px;white-space:pre-line;line-height:1.7">Loading…</p>
+        </div>
       </div>
     </section>
 
@@ -671,6 +683,8 @@ function syncMainButton() {
 
 // ---- Hourly ticket page (server data only — no simulated draws) ----
 let serverSeen = false;
+let hourlyRules = '';
+let sponsoredRows = [];
 async function loadLive() {
   if (demoMode) return;
   try {
@@ -753,6 +767,7 @@ async function loadMe() {
     el('walletHint').textContent = 'Balance: ₦' + (me.wallet || 0);
     el('walletUser').textContent = 'Signed in as ' + who + ' — winnings credit automatically.';
     if (me.contact) el('contactText').textContent = me.contact;
+    if (me.rules) hourlyRules = me.rules;
     if (me.howTo) {
       const lines = me.howTo.split('\n').map((x) => x.trim()).filter((x) => x && !/^how to use/i.test(x));
       if (lines.length) el('howList').innerHTML = lines.map((x) => '<li>' + x.replace(/^\d+\.\s*/, '') + '</li>').join('');
@@ -787,6 +802,14 @@ async function claimTicket() {
   }
 }
 el('claimBtn').addEventListener('click', claimTicket);
+function showRules(title, body) {
+  el('rulesTitle').textContent = title || 'Rules';
+  el('rulesBody').textContent = body || 'No rules published for this giveaway yet.';
+  go('s-rules');
+}
+el('rulesBtnHourly').addEventListener('click', () => {
+  showRules('₦200 Hourly — Rules', hourlyRules || 'Entry is free. Max 10 tickets per hour. Entry :00–:50, draw :51–:52, results :53–:59. One winner, paid to Wallet automatically.');
+});
 async function loadWallet() {
   if (!IN_TELEGRAM && !TEST_USER) return;
   try {
@@ -816,6 +839,7 @@ async function loadSponsored() {
   opens.forEach((o) => { openByGiveaway[o.giveaway.id] = o; });
   el('sponsoredSub').textContent = rows.length ? rows.length + ' special draws' : 'Special draws from sponsors';
   el('sponsoredCount').textContent = opens.length ? opens.length + ' open' : 'none open';
+  sponsoredRows = rows;
   el('sponsored').innerHTML = rows.length
     ? rows.map((g) => {
         const o = openByGiveaway[g.id];
@@ -829,12 +853,22 @@ async function loadSponsored() {
         const action = o
           ? '<button class="btn-p" style="margin-top:10px" data-custom-claim="' + o.drawId + '">Enter · ' + o.myCount + '/' + o.max + '</button>'
           : '';
+        const rulesBtn = g.rules
+          ? '<button class="btn-g" style="margin-top:10px" data-rules="' + g.id + '">Rules</button>'
+          : '';
         return '<div class="tcard"><div class="tid">SPONSORED · ' + g.category + '</div><div class="trow"><span class="who">' + g.name +
           '<small>' + when + ' · Sponsor: ' + (g.sponsor_name || '—') + '</small></span>' +
-          '<span class="prz">₦' + g.amount + '</span></div>' + action + '</div>';
+          '<span class="prz">₦' + g.amount + '</span></div>' + action + rulesBtn + '</div>';
       }).join('')
     : '<div class="empty"><div class="e-ic">○</div><p>No sponsored giveaways right now — the hourly draw is live.</p></div>';
 }
+document.getElementById('sponsored').addEventListener('click', (e) => {
+  const rb = e.target.closest('[data-rules]');
+  if (rb) {
+    const g = sponsoredRows.find((x) => String(x.id) === rb.getAttribute('data-rules'));
+    if (g) showRules(g.name + ' — Rules', g.rules);
+  }
+});
 document.getElementById('sponsored').addEventListener('click', async (e) => {
   const btn = e.target.closest('[data-custom-claim]');
   if (!btn) return;

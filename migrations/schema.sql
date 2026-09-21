@@ -64,6 +64,11 @@ CREATE TABLE IF NOT EXISTS giveaways (
   sponsor_name TEXT,
   sponsor_link TEXT,
   sponsor_bio TEXT,
+  rules TEXT,
   status TEXT NOT NULL DEFAULT 'active',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Upgrade for databases created before the rules column existed.
+-- Safe to re-run: IF NOT EXISTS. (npm run migrate runs this whole file.)
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS rules TEXT;

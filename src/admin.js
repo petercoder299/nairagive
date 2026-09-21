@@ -35,6 +35,7 @@ Starts at <input id="g_start" type="datetime-local"/><br/>
 Ends at <input id="g_end" type="datetime-local"/><br/>
 One-off scheduled at <input id="g_sched" type="datetime-local" value="2026-10-05T18:00"/><br/>
 Sponsor name <input id="g_sp" value="NairaGiveBot"/><br/>
+Rules (shown to users) <input id="g_rules" size="60" placeholder="Free entry · max 10 tickets · ..."/><br/>
 <button onclick="createGiveaway()">Create</button><div id="g_out"></div></div>
 <div class="card"><h3>Giveaways</h3><div id="list">loading...</div></div>
 <div class="card"><h3>Recent draws</h3><div id="draws">loading...</div></div>
@@ -42,7 +43,7 @@ Sponsor name <input id="g_sp" value="NairaGiveBot"/><br/>
 const S = new URLSearchParams(location.search).get('admin_secret')||'';
 function h(u,m,b){return fetch(u+(u.includes('?')?'&':'?')+'admin_secret='+encodeURIComponent(S),{method:m||'GET',headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined}).then(r=>r.json())}
 function load(){h('/api/draws/current').then(d=>{document.getElementById('cur').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>'});h('/api/giveaways').then(d=>{document.getElementById('list').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>'});h('/api/draws/recent?limit=10').then(d=>{document.getElementById('draws').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>'})}
-function createGiveaway(){const b={name:val('g_name'),category:val('g_cat'),amount:+val('g_amt'),winners_per_draw:+val('g_win'),interval_minutes:val('g_int')?+val('g_int'):null,starts_at:val('g_start')?new Date(val('g_start')).toISOString():null,ends_at:val('g_end')?new Date(val('g_end')).toISOString():null,scheduled_at:val('g_sched')?new Date(val('g_sched')).toISOString():null,sponsor_name:val('g_sp')};h('/api/giveaways','POST',b).then(d=>{document.getElementById('g_out').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>';load()})}
+function createGiveaway(){const b={name:val('g_name'),category:val('g_cat'),amount:+val('g_amt'),winners_per_draw:+val('g_win'),interval_minutes:val('g_int')?+val('g_int'):null,starts_at:val('g_start')?new Date(val('g_start')).toISOString():null,ends_at:val('g_end')?new Date(val('g_end')).toISOString():null,scheduled_at:val('g_sched')?new Date(val('g_sched')).toISOString():null,sponsor_name:val('g_sp'),rules:val('g_rules')||null};h('/api/giveaways','POST',b).then(d=>{document.getElementById('g_out').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>';load()})}
 function triggerDraw(){h('/api/draws/current/trigger','POST',{}).then(d=>alert(JSON.stringify(d)))}
 function val(id){return document.getElementById(id).value}
 load();
@@ -122,8 +123,8 @@ function createAdminApp() {
       const b = req.body || {};
       if (!b.name || !b.amount) return res.status(400).json({ error: 'name and amount required' });
       const r = await query(
-        `INSERT INTO giveaways (name, category, amount, winners_per_draw, interval_minutes, starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'active') RETURNING *`,
+        `INSERT INTO giveaways (name, category, amount, winners_per_draw, interval_minutes, starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'active') RETURNING *`,
         [
           b.name,
           b.category || 'cash',
@@ -136,6 +137,7 @@ function createAdminApp() {
           b.sponsor_name || config.sponsor.name,
           b.sponsor_link || config.sponsor.link,
           b.sponsor_bio || config.sponsor.bio,
+          b.rules || null,
         ]
       );
       res.json(r.rows[0]);

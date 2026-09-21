@@ -33,6 +33,10 @@ const config = {
     'HOW_TO_USE_TEXT',
     'HOW TO USE\n\n1. Tap Enter Giveaway\n2. Pick a category (start with Cash/Money)\n3. Pick "₦200 Hourly Giveaway"\n4. Tap "Get Ticket" (max 10 tickets per hour)\n5. Entry open :00-:50 each hour. Winner picked :51-:52. Result shown :53-:59.\n6. Winnings go to Wallet.'
   ),
+  rulesText: requireEnv(
+    'RULES_TEXT',
+    'GIVEAWAY RULES\n\n1. Entry is free. Max 10 tickets per user per draw.\n2. Hourly draw: entry :00–:50, winner picked :51–:52, results :53–:59 (Africa/Lagos).\n3. One winner per hourly draw; custom draws pay the stated winners.\n4. Winners are picked by seeded shuffle (SHA-256), never at random by hand — every result is verifiable.\n5. Winnings credit to your Wallet automatically. No ticket, no win.\n6. Abuse, duplicate accounts or botting forfeits winnings.'
+  ),
 };
 
 module.exports = config;
