@@ -64,7 +64,7 @@ async function tickCustom(now = new Date()) {
         const win = custom.currentWindow(g, now);
         if (win) {
           await store.ensureDraw({
-            drawId: custom.customDrawId(g.id, win.start),
+            drawId: custom.customDrawId(g, win.start),
             kind: 'custom',
             amount: g.amount,
             winnersCount: g.winners_per_draw || 1,
@@ -79,7 +79,7 @@ async function tickCustom(now = new Date()) {
         }
       } else if (custom.isOneOffGiveaway(g)) {
         const state = custom.oneOffState(g, now);
-        const drawId = custom.oneOffDrawId(g.id);
+        const drawId = custom.oneOffDrawId(g);
         await store.ensureDraw({
           drawId,
           kind: 'custom',

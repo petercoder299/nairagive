@@ -19,8 +19,26 @@ function fmtWindowUTC(d) {
   );
 }
 
-function customDrawId(giveawayId, windowStart) {
-  return `G${giveawayId}-${fmtWindowUTC(new Date(windowStart))}`;
+// Local (server time, Africa/Lagos) DDMMYYYY + hour letter A..X,
+// same alphabet as the hourly cash draws: A = 00:00–01:00 … X = 23:00–00:00.
+function fmtLocalDay(d) {
+  const x = new Date(d);
+  return pad(x.getDate()) + pad(x.getMonth() + 1) + x.getFullYear();
+}
+
+function hourLetterLocal(d) {
+  return String.fromCharCode(65 + new Date(d).getHours());
+}
+
+// Draw ID for an interval window. Giveaways with a draw_prefix (e.g. 'OG'
+// for Others) use PREFIX + DDMMYYYY + hour letter of the window start
+// (e.g. OG21092026A for a window opening 12:xx am). Others use G<id>-<UTC>.
+function customDrawId(idOrGiveaway, windowStart) {
+  const g = typeof idOrGiveaway === 'object' && idOrGiveaway !== null ? idOrGiveaway : { id: idOrGiveaway };
+  if (g.draw_prefix) {
+    return `${g.draw_prefix}${fmtLocalDay(windowStart)}${hourLetterLocal(windowStart)}`;
+  }
+  return `G${g.id}-${fmtWindowUTC(new Date(windowStart))}`;
 }
 
 function isIntervalGiveaway(g) {
@@ -61,13 +79,21 @@ function oneOffState(g, now = new Date()) {
   return new Date(now).getTime() >= new Date(g.scheduled_at).getTime() ? 'due' : 'upcoming';
 }
 
-function oneOffDrawId(giveawayId) {
-  return `G${giveawayId}-ONCE`;
+function oneOffDrawId(idOrGiveaway) {
+  const g = typeof idOrGiveaway === 'object' && idOrGiveaway !== null ? idOrGiveaway : { id: idOrGiveaway };
+  // Prefixed one-offs (e.g. Netflix on 30 Sep 6pm → OG30092026S): the draw's
+  // own scheduled hour sets the letter.
+  if (g.draw_prefix && g.scheduled_at) {
+    return `${g.draw_prefix}${fmtLocalDay(g.scheduled_at)}${hourLetterLocal(g.scheduled_at)}`;
+  }
+  return `G${g.id}-ONCE`;
 }
 
 module.exports = {
   pad,
   fmtWindowUTC,
+  fmtLocalDay,
+  hourLetterLocal,
   customDrawId,
   oneOffDrawId,
   isIntervalGiveaway,

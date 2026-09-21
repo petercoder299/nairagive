@@ -36,6 +36,8 @@ Ends at <input id="g_end" type="datetime-local"/><br/>
 One-off scheduled at <input id="g_sched" type="datetime-local" value="2026-10-05T18:00"/><br/>
 Sponsor name <input id="g_sp" value="NairaGiveBot"/><br/>
 Rules (shown to users) <input id="g_rules" size="60" placeholder="Free entry · max 10 tickets · ..."/><br/>
+Draw prefix (e.g. OG for Others — blank for default G&lt;id&gt; style) <input id="g_prefix" size="8" placeholder="OG"/><br/>
+Ticket digits <input id="g_digits" type="number" value="10"/><br/>
 <button onclick="createGiveaway()">Create</button><div id="g_out"></div></div>
 <div class="card"><h3>Giveaways</h3><div id="list">loading...</div></div>
 <div class="card"><h3>Withdrawals (min ₦100 — pay from your bank app, then mark Paid)</h3><div id="wd">loading...</div></div>
@@ -44,7 +46,7 @@ Rules (shown to users) <input id="g_rules" size="60" placeholder="Free entry · 
 const S = new URLSearchParams(location.search).get('admin_secret')||'';
 function h(u,m,b){return fetch(u+(u.includes('?')?'&':'?')+'admin_secret='+encodeURIComponent(S),{method:m||'GET',headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined}).then(r=>r.json())}
 function load(){h('/api/draws/current').then(d=>{document.getElementById('cur').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>'});h('/api/giveaways').then(d=>{document.getElementById('list').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>'});h('/api/draws/recent?limit=10').then(d=>{document.getElementById('draws').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>'});loadWd()}
-function createGiveaway(){const b={name:val('g_name'),category:val('g_cat'),amount:+val('g_amt'),winners_per_draw:+val('g_win'),interval_minutes:val('g_int')?+val('g_int'):null,starts_at:val('g_start')?new Date(val('g_start')).toISOString():null,ends_at:val('g_end')?new Date(val('g_end')).toISOString():null,scheduled_at:val('g_sched')?new Date(val('g_sched')).toISOString():null,sponsor_name:val('g_sp'),rules:val('g_rules')||null};h('/api/giveaways','POST',b).then(d=>{document.getElementById('g_out').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>';load()})}
+function createGiveaway(){const b={name:val('g_name'),category:val('g_cat'),amount:+val('g_amt'),winners_per_draw:+val('g_win'),interval_minutes:val('g_int')?+val('g_int'):null,starts_at:val('g_start')?new Date(val('g_start')).toISOString():null,ends_at:val('g_end')?new Date(val('g_end')).toISOString():null,scheduled_at:val('g_sched')?new Date(val('g_sched')).toISOString():null,sponsor_name:val('g_sp'),rules:val('g_rules')||null,draw_prefix:val('g_prefix')||null,ticket_digits:val('g_digits')?+val('g_digits'):10};h('/api/giveaways','POST',b).then(d=>{document.getElementById('g_out').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>';load()})}
 function triggerDraw(){h('/api/draws/current/trigger','POST',{}).then(d=>alert(JSON.stringify(d)))}
 function loadWd(){h('/api/withdrawals?status=pending').then(d=>{document.getElementById('wd').innerHTML=d.length?d.map(w=>'<div>#' + w.id + ' @' + (w.username||w.telegram_id) + ' <b>₦' + w.amount + '</b><br>' + esc(w.full_name) + ' · ' + esc(w.account_number) + ' · ' + esc(w.bank_name) + ' <button onclick="wdAct(' + w.id + ',\\'paid\\')">Paid</button> <button onclick="wdAct(' + w.id + ',\\'rejected\\')">Reject</button></div>').join(''):'no pending withdrawals'})}
 function wdAct(id,act){h('/api/withdrawals/'+id+'/'+act,'POST',{}).then(()=>{loadWd()})}
@@ -127,8 +129,8 @@ function createAdminApp() {
       const b = req.body || {};
       if (!b.name || !b.amount) return res.status(400).json({ error: 'name and amount required' });
       const r = await query(
-        `INSERT INTO giveaways (name, category, amount, winners_per_draw, interval_minutes, starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'active') RETURNING *`,
+        `INSERT INTO giveaways (name, category, amount, winners_per_draw, interval_minutes, starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, draw_prefix, ticket_digits, status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'active') RETURNING *`,
         [
           b.name,
           b.category || 'cash',
@@ -142,6 +144,8 @@ function createAdminApp() {
           b.sponsor_link || config.sponsor.link,
           b.sponsor_bio || config.sponsor.bio,
           b.rules || null,
+          b.draw_prefix || null,
+          b.ticket_digits || 10,
         ]
       );
       res.json(r.rows[0]);

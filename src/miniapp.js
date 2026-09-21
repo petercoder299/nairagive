@@ -143,7 +143,13 @@ function mountMiniApp(app) {
         return res.status(403).json({ error: 'That draw is not open for entry right now.' });
       }
       await store.upsertUser(u.id, u.username, u.first_name).catch(() => {});
-      const code = await store.issueTicket(drawId, u.id, u.username);
+      // OG (other-category) draws use 9-digit tickets; cash customs use 10.
+      let digits = 10;
+      if (draw.giveaway_id) {
+        const g = await store.getGiveaway(draw.giveaway_id).catch(() => null);
+        if (g && g.ticket_digits) digits = g.ticket_digits;
+      }
+      const code = await store.issueTicket(drawId, u.id, u.username, digits);
       const count = await store.countUserTickets(drawId, u.id);
       res.json({ drawId, ticket_code: code, count, max: config.maxTicketsPerUser });
     } catch (e) {

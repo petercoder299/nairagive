@@ -56,7 +56,7 @@ async function getUserTickets(drawId, telegramId) {
   return res.rows.map((r) => r.ticket_code);
 }
 
-async function issueTicket(drawId, telegramId, username) {
+async function issueTicket(drawId, telegramId, username, digits = 10) {
   // Enforce max 10 per user per draw
   const count = await countUserTickets(drawId, telegramId);
   if (count >= config.maxTicketsPerUser) {
@@ -66,7 +66,7 @@ async function issueTicket(drawId, telegramId, username) {
   }
   // Generate unique non-sequential code
   for (let i = 0; i < 10; i++) {
-    const code = generateTicketCode(drawId);
+    const code = generateTicketCode(drawId, new Set(), digits);
     try {
       await query('INSERT INTO tickets (ticket_code, draw_id, telegram_id, username) VALUES ($1,$2,$3,$4)', [
         code,
@@ -156,6 +156,11 @@ async function getRecentResults(limit = 5) {
 async function getActiveGiveaways() {
   const res = await query(`SELECT * FROM giveaways WHERE status = 'active' ORDER BY id`);
   return res.rows;
+}
+
+async function getGiveaway(id) {
+  const res = await query(`SELECT * FROM giveaways WHERE id = $1`, [id]);
+  return res.rows[0] || null;
 }
 
 async function markGiveawayDone(id) {
@@ -286,6 +291,7 @@ module.exports = {
   getWallet,
   getRecentResults,
   getActiveGiveaways,
+  getGiveaway,
   markGiveawayDone,
   getOpenCustomDraws,
   getOverdueCustomDraws,

@@ -59,16 +59,18 @@ function getPhaseForDraw(drawId, date = new Date()) {
 }
 
 // Non-sequential ticket suffix using crypto.randomInt (CSPRNG), uniqueness enforced by DB.
-function generateTicketCode(drawId, existingSet = new Set()) {
+// digits: 10 for cash draws, 9 for OG (other) draws — never Math.random.
+function generateTicketCode(drawId, existingSet = new Set(), digits = 10) {
+  const space = 10 ** digits;
   for (let attempt = 0; attempt < 20; attempt++) {
-    const n = crypto.randomInt(0, 10000000000); // 0 .. 9,999,999,999
-    const suffix = String(n).padStart(10, '0');
+    const n = crypto.randomInt(0, space);
+    const suffix = String(n).padStart(digits, '0');
     const code = `${drawId}${suffix}`;
     if (!existingSet.has(code)) return code;
   }
   // Fallback: mix in random bytes
-  const suffix = crypto.randomBytes(5).readUIntBE(0, 5) % 10000000000;
-  return `${drawId}${String(suffix).padStart(10, '0')}`;
+  const suffix = crypto.randomBytes(6).readUIntBE(0, 6) % space;
+  return `${drawId}${String(suffix).padStart(digits, '0')}`;
 }
 
 // ---- Seeded winner picking (no Math.random) ----

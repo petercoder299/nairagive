@@ -71,3 +71,29 @@ describe('classification', () => {
     assert.equal(custom.oneOffState({ interval_minutes: 5 }, new Date()), null);
   });
 });
+
+describe('OG (other-category) draws', () => {
+  const p2 = (n) => String(n).padStart(2, '0');
+
+  it('interval window uses PREFIX + local DDMMYYYY + hour letter (12:33am -> A)', () => {
+    const d = new Date(2026, 8, 21, 0, 33);
+    const expected =
+      'OG' + p2(d.getDate()) + p2(d.getMonth() + 1) + d.getFullYear() + String.fromCharCode(65 + d.getHours());
+    assert.equal(custom.customDrawId({ id: 9, draw_prefix: 'OG' }, d), expected);
+    assert.match(expected, /^OG\d{8}A$/);
+  });
+
+  it('legacy G<id> format still works when no prefix is set', () => {
+    assert.equal(custom.customDrawId(7, new Date(Date.UTC(2026, 9, 5, 18, 0))), 'G7-202610051800');
+    assert.equal(custom.oneOffDrawId(3), 'G3-ONCE');
+  });
+
+  it('one-off uses the scheduled hour letter (30 Sep 6pm local)', () => {
+    const sched = new Date(2026, 8, 30, 18, 0, 0);
+    const g = { id: 5, draw_prefix: 'OG', scheduled_at: sched.toISOString() };
+    const expected =
+      'OG' + p2(sched.getDate()) + p2(sched.getMonth() + 1) + sched.getFullYear() + String.fromCharCode(65 + sched.getHours());
+    assert.equal(custom.oneOffDrawId(g), expected);
+    assert.match(expected, /^OG\d{8}[A-X]$/);
+  });
+});
