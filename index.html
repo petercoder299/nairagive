@@ -790,7 +790,7 @@ function renderDraw(d, fromApi) {
   if (w.length && lastWinnerBurst !== d.drawId) { lastWinnerBurst = d.drawId; confettiBurst(90); }
   const sp = (d.draw && (d.draw.sponsor_name || d.draw.sponsor_bio)) ? d.draw : null;
   el('sponsor').innerHTML = sp
-    ? 'Sponsor: <b>' + sp.sponsor_name + '</b> · <a href="' + sp.sponsor_link + '" target="_blank" rel="noopener">' + sp.sponsor_link + '</a><br>' + sp.sponsor_bio
+    ? 'Sponsor: <b>' + sp.sponsor_name + '</b><br>Link: <a href="' + sp.sponsor_link + '" target="_blank" rel="noopener">' + sp.sponsor_link + '</a><br>' + sp.sponsor_bio
     : 'Sponsor: <b>NairaGiveBot</b> — free hourly ₦200 giveaways.';
 }
 // ---- Paged ticket lists (20 per page) + ticket labels ----
@@ -1098,7 +1098,7 @@ function renderOther() {
   el('oTitle').textContent = label.title + ' — ' + label.chip;
   el('oCountLabel').textContent = open ? 'until entry closes' : 'entry closed';
   el('oSponsor').innerHTML = draw.sponsor_name
-    ? 'Sponsor: <b>' + draw.sponsor_name + '</b>' + (draw.sponsor_link ? ' · <a href="' + draw.sponsor_link + '" target="_blank" rel="noopener">' + draw.sponsor_link + '</a>' : '') + (draw.sponsor_bio ? '<br>' + draw.sponsor_bio : '')
+    ? 'Sponsor: <b>' + draw.sponsor_name + '</b>' + (draw.sponsor_link ? '<br>Link: <a href="' + draw.sponsor_link + '" target="_blank" rel="noopener">' + draw.sponsor_link + '</a>' : '') + (draw.sponsor_bio ? '<br>' + draw.sponsor_bio : '')
     : '';
   otherCache = { tickets: d.myTickets || [], drawId: draw.id, max: d.max };
   rerenderOtherMine();
