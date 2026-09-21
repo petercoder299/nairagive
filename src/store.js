@@ -56,11 +56,25 @@ async function getUserTickets(drawId, telegramId) {
   return res.rows.map((r) => r.ticket_code);
 }
 
-async function issueTicket(drawId, telegramId, username, digits = 10) {
-  // Enforce max 10 per user per draw
-  const count = await countUserTickets(drawId, telegramId);
+async function countUserTicketsSince(drawId, telegramId, since) {
+  const res = await query(
+    'SELECT COUNT(*)::int AS c FROM tickets WHERE draw_id=$1 AND telegram_id=$2 AND created_at >= $3',
+    [drawId, telegramId, since.toISOString()]
+  );
+  return res.rows[0].c;
+}
+
+async function issueTicket(drawId, telegramId, username, digits = 10, perHour = false) {
+  // Enforce max 10 per user per draw — or per rolling hour for multi-day customs.
+  const count = perHour
+    ? await countUserTicketsSince(drawId, telegramId, new Date(Date.now() - 3600000))
+    : await countUserTickets(drawId, telegramId);
   if (count >= config.maxTicketsPerUser) {
-    const err = new Error(`Ticket limit reached (max ${config.maxTicketsPerUser} per draw).`);
+    const err = new Error(
+      perHour
+        ? `Ticket limit reached (max ${config.maxTicketsPerUser} per hour). Try again later.`
+        : `Ticket limit reached (max ${config.maxTicketsPerUser} per draw).`
+    );
     err.code = 'LIMIT';
     throw err;
   }
@@ -282,6 +296,7 @@ module.exports = {
   ensureDraw,
   getDraw,
   countUserTickets,
+  countUserTicketsSince,
   getUserTickets,
   issueTicket,
   getTicketsForDraw,

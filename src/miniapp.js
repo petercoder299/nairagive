@@ -139,8 +139,9 @@ function mountMiniApp(app) {
     try {
       const draws = await store.getOpenCustomDraws().catch(() => []);
       const out = [];
+      const hourAgo = new Date(Date.now() - 3600000);
       for (const d of draws) {
-        const myCount = await store.countUserTickets(d.id, req.tgUser.id).catch(() => 0);
+        const myCount = await store.countUserTicketsSince(d.id, req.tgUser.id, hourAgo).catch(() => 0);
         out.push({
           drawId: d.id,
           amount: d.amount,
@@ -179,8 +180,8 @@ function mountMiniApp(app) {
         const g = await store.getGiveaway(draw.giveaway_id).catch(() => null);
         if (g && g.ticket_digits) digits = g.ticket_digits;
       }
-      const code = await store.issueTicket(drawId, u.id, u.username, digits);
-      const count = await store.countUserTickets(drawId, u.id);
+      const code = await store.issueTicket(drawId, u.id, u.username, digits, true);
+      const count = await store.countUserTicketsSince(drawId, u.id, new Date(Date.now() - 3600000));
       res.json({ drawId, ticket_code: code, count, max: config.maxTicketsPerUser });
     } catch (e) {
       if (e.code === 'LIMIT') return res.status(429).json({ error: e.message });

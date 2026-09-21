@@ -434,7 +434,7 @@
           <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Airtime</span><span class="menu-s">Mobile top-up</span></span><span class="tag soon">SOON</span></button>
           <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Data Bundles</span><span class="menu-s">Mobile data</span></span><span class="tag soon">SOON</span></button>
           <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Gadgets</span><span class="menu-s">Phones &amp; devices</span></span><span class="tag soon">SOON</span></button>
-          <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Food</span><span class="menu-s">Meals &amp; groceries</span></span><span class="tag soon">SOON</span></button>
+          <button class="menu-card" data-go="s-food" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Food</span><span class="menu-s">Meals &amp; groceries</span></span><span class="tag">LIVE</span></button>
           <button class="menu-card" data-go="s-others" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Others</span><span class="menu-s">Gadgets, accounts &amp; more</span></span><span class="tag">LIVE</span></button>
         </div>
       </div>
@@ -495,6 +495,15 @@
           <h3 id="rulesTitle" style="font-family:var(--head-font);font-size:19px;padding:14px 0 4px">Rules</h3>
           <p id="rulesBody" class="small" style="padding:0 0 14px;white-space:pre-line;line-height:1.7">Loading…</p>
         </div>
+      </div>
+    </section>
+
+    <!-- FOOD LIST -->
+    <section class="screen" id="s-food" data-title="Food">
+      <div class="page">
+        <div class="sec-head"><h2>Food</h2><span class="count" id="foodsCount">—</span></div>
+        <p class="sub">Restaurant credits and meals.</p>
+        <div class="menu" id="foods"><div class="empty"><div class="e-ic">○</div><p>loading…</p></div></div>
       </div>
     </section>
 
@@ -613,7 +622,7 @@
 <script>
 // ---- Navigation stack: one screen at a time, like the bot flow ----
 const stack = ['s-home'];
-const TAB_FOR = { 's-home': 's-home', 's-hourly': 's-hourly', 's-cats': 's-hourly', 's-cash': 's-hourly', 's-sponsored': 's-hourly', 's-others': 's-hourly', 's-other': 's-hourly', 's-draws': 's-draws', 's-wallet': 's-wallet', 's-how': '', 's-contact': '' };
+const TAB_FOR = { 's-home': 's-home', 's-hourly': 's-hourly', 's-cats': 's-hourly', 's-cash': 's-hourly', 's-sponsored': 's-hourly', 's-others': 's-hourly', 's-food': 's-hourly', 's-other': 's-hourly', 's-draws': 's-draws', 's-wallet': 's-wallet', 's-how': '', 's-contact': '' };
 function renderNav() {
   const cur = stack[stack.length - 1];
   document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('show', s.id === cur));
@@ -628,6 +637,7 @@ function go(id) {
   renderNav();
   if (id === 's-sponsored') loadSponsored();
   if (id === 's-others') loadOthers();
+  if (id === 's-food') loadFoods();
   if (id === 's-wallet') loadWallet();
   if (id === 's-hourly') { loadLive(); loadMe(); }
   if (id === 's-draws') loadLive();
@@ -983,6 +993,37 @@ document.getElementById('sponsored').addEventListener('click', async (e) => {
 // ---- Others list + full giveaway page ----
 // ---- Others list + full giveaway page ----
 let currentOther = null;
+async function loadCategoryList(category, listId, countId) {
+  let rows = [];
+  try {
+    rows = await api('/api/miniapp/sponsored?category=' + category);
+  } catch (_) {
+    el(listId).innerHTML = '<div class="empty"><div class="e-ic">○</div><p>Giveaways appear here when the server is running.</p></div>';
+    return;
+  }
+  let opens = [];
+  try {
+    opens = await api('/api/miniapp/custom-open');
+  } catch (_) { opens = []; }
+  const openById = {};
+  opens.forEach((o) => { if (o.giveaway && o.giveaway.category === category) openById[o.giveaway.id] = o; });
+  el(countId).textContent = rows.length ? rows.length + ' live' : 'none yet';
+  el(listId).innerHTML = rows.length
+    ? rows.map((g) => {
+        const o = openById[g.id];
+        const state = o
+          ? 'Open now · closes ' + new Date(o.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+          : g.scheduled_at
+            ? 'Draws ' + new Date(g.scheduled_at).toLocaleString()
+            : 'Opens soon';
+        return '<button class="menu-card" data-other-open="' + g.id + '" type="button"><span class="menu-ic">☆</span><span class="menu-tx"><span class="menu-t">' + g.name +
+          '</span><span class="menu-s">' + state + '</span></span>' + (o ? '<span class="tag">LIVE</span>' : '<span class="chev">›</span>') + '</button>';
+      }).join('')
+    : '<div class="empty"><div class="e-ic">○</div><p>No giveaways here right now.</p></div>';
+}
+async function loadFoods() {
+  await loadCategoryList('food', 'foods', 'foodsCount');
+}
 async function loadOthers() {
   let rows = [];
   try {

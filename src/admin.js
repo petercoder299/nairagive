@@ -241,10 +241,22 @@ function createAdminApp() {
   app.patch('/api/giveaways/:id', requireAdmin, async (req, res) => {
     try {
       const b = req.body || {};
-      const r = await query(`UPDATE giveaways SET status=COALESCE($2,status) WHERE id=$1 RETURNING *`, [
-        req.params.id,
-        b.status,
-      ]);
+      const sets = [];
+      const vals = [req.params.id];
+      if (b.status !== undefined) {
+        vals.push(b.status);
+        sets.push(`status = $${vals.length}`);
+      }
+      if (b.scheduled_at !== undefined) {
+        vals.push(b.scheduled_at || null);
+        sets.push(`scheduled_at = $${vals.length}`);
+      }
+      if (b.rules !== undefined) {
+        vals.push(b.rules || null);
+        sets.push(`rules = $${vals.length}`);
+      }
+      if (!sets.length) return res.status(400).json({ error: 'nothing to update (status, scheduled_at, rules)' });
+      const r = await query(`UPDATE giveaways SET ${sets.join(', ')} WHERE id = $1 RETURNING *`, vals);
       if (!r.rows.length) return res.status(404).json({ error: 'not found' });
       res.json(r.rows[0]);
     } catch (e) {
