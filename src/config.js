@@ -1,0 +1,38 @@
+require('dotenv').config();
+
+function requireEnv(name, fallback = undefined) {
+  const v = process.env[name] ?? fallback;
+  return v;
+}
+
+const config = {
+  botToken: requireEnv('BOT_TOKEN', ''),
+  databaseUrl: requireEnv('DATABASE_URL', ''),
+  port: parseInt(requireEnv('PORT', '3000'), 10),
+  timezone: requireEnv('TIMEZONE', 'Africa/Lagos'),
+  winnerSeedSecret: requireEnv('WINNER_SEED_SECRET', 'nairagivebot-default-seed-change-me'),
+  adminSecret: requireEnv('ADMIN_SECRET', 'change-me-admin-secret'),
+  miniAppUrl: requireEnv('MINI_APP_URL', ''),
+  // DEV ONLY. When true, Mini App APIs accept X-Test-User so index.html
+  // works fully in a desktop browser without Telegram. Never enable in prod.
+  allowTestMode: requireEnv('ALLOW_TEST_MODE', 'false') === 'true',
+  hourlyAmount: parseInt(requireEnv('HOURLY_AMOUNT', '200'), 10),
+  maxTicketsPerUser: parseInt(requireEnv('MAX_TICKETS_PER_USER', '10'), 10),
+  sponsor: {
+    name: requireEnv('SPONSOR_NAME', 'NairaGiveBot'),
+    link: requireEnv('SPONSOR_LINK', 'https://t.me/nairagivebot'),
+    bio: requireEnv('SPONSOR_BIO', 'Proudly powering free hourly ₦200 giveaways for our community.'),
+  },
+  contact: {
+    text: requireEnv(
+      'CONTACT_TEXT',
+      'Questions or sponsorships? Contact @nairagivebot_admin or email support@nairagivebot.example'
+    ),
+  },
+  howToUse: requireEnv(
+    'HOW_TO_USE_TEXT',
+    'HOW TO USE\n\n1. Tap Enter Giveaway\n2. Pick a category (start with Cash/Money)\n3. Pick "₦200 Hourly Giveaway"\n4. Tap "Get Ticket" (max 10 tickets per hour)\n5. Entry open :00-:50 each hour. Winner picked :51-:52. Result shown :53-:59.\n6. Winnings go to Wallet.'
+  ),
+};
+
+module.exports = config;

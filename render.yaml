@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: nairagivebot
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: TZ
+        value: Africa/Lagos
+      - key: TIMEZONE
+        value: Africa/Lagos
+      - key: BOT_TOKEN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: WINNER_SEED_SECRET
+        sync: false
+      - key: ADMIN_SECRET
+        sync: false
+      - key: MINI_APP_URL
+        sync: false
+      - key: ALLOW_TEST_MODE
+        value: false
+      - key: HOURLY_AMOUNT
+        value: 200
+      - key: MAX_TICKETS_PER_USER
+        value: 10
+      - key: SPONSOR_NAME
+        value: NairaGiveBot
+      - key: SPONSOR_LINK
+        value: https://t.me/nairagivebot
+      - key: SPONSOR_BIO
+        value: Proudly powering free hourly 200 naira giveaways.
+      - key: PORT
+        value: 3000

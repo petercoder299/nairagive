@@ -1,0 +1,1078 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#FFF6E9" />
+<title>NairaGiveBot — Win ₦200 Every Hour</title>
+<meta name="description" content="NairaGiveBot Mini App — free hourly ₦200 cash giveaway." />
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  /* NairaGiveBot "Sunbeam" — bright sticker-book system, original layout. */
+  :root {
+    --bg: #FFF6E9;
+    --surface: #ffffff;
+    --surface2: #FFF1D6;
+    --ink: #2A1A12;
+    --ink-2: #6b5f4c;
+    --ink-3: #a2937a;
+    --emerald: #00A36C;
+    --emerald-deep: #007A44;
+    --gold: #E79B00;
+    --gold-soft: #FFC531;
+    --coral: #FF5030;
+    --teal: #00B39B;
+    --orange: #FF8A00;
+    --line: rgba(42, 26, 18, 0.14);
+    --btn: #FF5030;
+    --btn-text: #ffffff;
+    --grad-gold: linear-gradient(135deg, #ffe08a, #f2b705 60%, #d99a00);
+    --grad-emerald: linear-gradient(135deg, #00c179, #007a44);
+    --head-font: "Sora", "Inter", system-ui, sans-serif;
+    --body-font: "Inter", -apple-system, "Segoe UI", sans-serif;
+    --maxw: 480px;
+    --r-lg: 20px;
+    --r-md: 14px;
+    --shadow-hard: 4px 4px 0 var(--ink);
+    --tab-h: 74px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { background: #F1DFC0; color: var(--ink); font-family: var(--body-font); font-size: 16px; line-height: 1.5; }
+  body { min-height: 100vh; }
+  button { font-family: inherit; cursor: pointer; background: none; border: none; color: inherit; }
+  #app {
+    max-width: var(--maxw); margin: 0 auto; min-height: 100vh;
+    display: flex; flex-direction: column;
+    position: relative; z-index: 1;
+    background-color: var(--bg);
+    background-image: radial-gradient(rgba(42, 26, 18, 0.08) 1.5px, transparent 1.5px);
+    background-size: 22px 22px;
+  }
+  #app main { flex: 1; }
+  @media (min-width: 560px) {
+    #app { border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+  }
+  .bg-bubbles { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+  .bg-bubbles span { position: absolute; border-radius: 50%; animation: drift 16s ease-in-out infinite alternate; }
+  .bg-bubbles span:nth-child(1) { width: 26px; height: 26px; top: 12%; left: 6%; background: var(--coral); opacity: 0.25; }
+  .bg-bubbles span:nth-child(2) { width: 18px; height: 18px; top: 30%; right: 8%; animation-delay: -4s; background: var(--teal); opacity: 0.25; }
+  .bg-bubbles span:nth-child(3) { width: 22px; height: 22px; top: 58%; left: 10%; animation-delay: -8s; background: var(--gold-soft); opacity: 0.4; }
+  .bg-bubbles span:nth-child(4) { width: 16px; height: 16px; bottom: 14%; right: 12%; animation-delay: -11s; background: var(--orange); opacity: 0.3; }
+  @keyframes drift { from { transform: translateY(-12px); } to { transform: translateY(14px); } }
+  /* Topbar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    max-width: calc(var(--maxw) - 24px); margin: 12px auto 0; padding: 10px 12px;
+    background: #fff; border: 2.5px solid var(--ink);
+    border-radius: 18px; box-shadow: var(--shadow-hard);
+  }
+  .tb-left { width: 52px; display: flex; }
+  .back-btn { font-size: 22px; line-height: 1; padding: 8px 12px 8px 4px; color: var(--ink); font-weight: 800; visibility: hidden; }
+  .back-btn.show { visibility: visible; }
+  .brand { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: center; }
+  .brand-mark {
+    width: 38px; height: 38px; border-radius: 12px; transform: rotate(-6deg);
+    background: var(--coral); color: #fff; border: 2.5px solid var(--ink);
+    font-family: var(--head-font); font-size: 21px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex: none;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  .brand-name { font-family: var(--head-font); font-size: 17px; font-weight: 800; letter-spacing: 0.4px; }
+  .brand-name small { display: block; font-family: var(--body-font); font-size: 9.5px; font-weight: 700; letter-spacing: 2.6px; text-transform: uppercase; color: var(--coral); }
+  .wallet-pill {
+    min-width: 52px; display: flex; align-items: center; justify-content: center; gap: 7px;
+    font-size: 13px; font-weight: 800; background: var(--ink); color: var(--gold-soft);
+    padding: 10px 15px; border-radius: 999px; box-shadow: 3px 3px 0 rgba(42, 26, 18, 0.25);
+    font-variant-numeric: tabular-nums;
+  }
+  .wallet-pill:active { transform: translateY(2px); box-shadow: none; }
+  .wallet-pill .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--emerald); flex: none; animation: blink 1.6s infinite; }
+  .wallet-pill .dot.off { background: var(--coral); animation: none; }
+  @keyframes blink { 50% { opacity: 0.35; } }
+  /* Tab bar — plain footer menu, scrolls with the page */
+  .tabbar {
+    display: flex;
+    margin: 18px 16px calc(20px + env(safe-area-inset-bottom));
+    padding: 8px 10px;
+    background: #fff;
+    border: 2.5px solid var(--ink); border-radius: 24px;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  .tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--ink-3); border-radius: 14px; padding: 8px 2px; position: relative;
+  }
+  .tab .ic { font-size: 21px; font-style: normal; line-height: 1; }
+  .tab.active { color: var(--coral); }
+  .tab.active::after {
+    content: ""; position: absolute; bottom: 2px; width: 22px; height: 4px;
+    border-radius: 99px; background: var(--coral);
+  }
+  .tab:active { transform: scale(0.94); }
+  /* Pages */
+  .page { padding: 18px 16px 0; animation: rise 0.3s ease; }
+  .screen { display: none; }
+  .screen.show { display: block; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .kicker {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 800; letter-spacing: 2.2px; text-transform: uppercase;
+    color: var(--ink); background: var(--gold-soft);
+    border: 2.5px solid var(--ink);
+    padding: 7px 15px; border-radius: 999px; margin-bottom: 14px;
+    transform: rotate(-1.5deg); box-shadow: 3px 3px 0 var(--ink);
+  }
+  .kicker::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--coral); animation: blink 1.2s infinite; }
+  .hero h1 { font-family: var(--head-font); font-weight: 800; font-size: 36px; line-height: 1.08; letter-spacing: -0.5px; margin-bottom: 10px; }
+  .hero h1 em { font-style: normal; color: var(--coral); }
+  .hero h1 .amt {
+    display: inline-block; background: var(--gold-soft); color: var(--ink);
+    border: 2.5px solid var(--ink);
+    padding: 2px 14px; border-radius: 14px; transform: rotate(1deg);
+    box-shadow: 3px 3px 0 var(--ink); white-space: nowrap;
+  }
+  .lede { color: var(--ink-2); font-size: 14.5px; font-weight: 500; max-width: 38ch; margin-bottom: 18px; }
+  /* Ticker */
+  .ticker { background: var(--ink); color: #FFE9B8; border-radius: 12px; overflow: hidden; margin-bottom: 16px; transform: rotate(-0.6deg); box-shadow: 3px 3px 0 rgba(42, 26, 18, 0.25); }
+  .ticker-in { display: flex; white-space: nowrap; animation: tickmove 20s linear infinite; font-size: 12px; font-weight: 800; letter-spacing: 1.5px; padding: 9px 0; }
+  .ticker-in span { padding: 0 20px; }
+  @keyframes tickmove { to { transform: translateX(-50%); } }
+  /* Sticker hero — stacked sticker chips, our own mark */
+  .hero-stickers { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; margin: 2px 0 12px; }
+  .stk { font-family: var(--head-font); font-weight: 800; border: 2.5px solid var(--ink); border-radius: 14px; padding: 6px 16px; box-shadow: 3px 3px 0 var(--ink); line-height: 1.15; }
+  .stk.small { font-size: 12px; letter-spacing: 2px; background: var(--ink); color: #FFE9B8; transform: rotate(-1.5deg); }
+  .stk.big { font-size: 58px; background: var(--gold-soft); color: var(--ink); transform: rotate(-2deg); padding: 2px 22px; letter-spacing: -1px; }
+  .stk.mid { font-size: 17px; background: #fff; color: var(--ink); transform: rotate(1deg); letter-spacing: 0.5px; }
+  .stk.mid b { color: var(--coral); }
+  /* Status ticket */
+  .status-ticket {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+    background: #fff; border: 2.5px solid var(--ink); border-radius: 16px;
+    padding: 12px 6px; margin-bottom: 16px; box-shadow: var(--shadow-hard);
+    text-align: center;
+  }
+  .status-ticket small { display: block; font-size: 9.5px; font-weight: 800; letter-spacing: 1.5px; color: var(--ink-3); }
+  .status-ticket b { font-size: 13.5px; }
+  .status-ticket > div + div { border-left: 2px dashed #E3D5B8; }
+  /* Menu rows */
+  .menu { display: flex; flex-direction: column; gap: 11px; }
+  .menu-card {
+    display: flex; align-items: center; gap: 13px;
+    width: 100%; text-align: left;
+    background: #fff; border: 2.5px solid var(--ink); border-radius: 18px;
+    padding: 13px 14px; transition: transform 0.1s ease; position: relative;
+    font-size: 16px; color: var(--ink); box-shadow: var(--shadow-hard);
+  }
+  .menu-card:active { transform: scale(0.97); }
+  .menu-card:disabled { opacity: 0.5; }
+  .menu-ic {
+    width: 50px; height: 50px; border-radius: 15px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-style: normal; color: #fff;
+    background: var(--coral); border: 2.5px solid var(--ink);
+  }
+  .menu-card:nth-child(2) .menu-ic { background: var(--teal); }
+  .menu-card:nth-child(3) .menu-ic { background: var(--gold-soft); color: var(--ink); }
+  .menu-card:nth-child(4) .menu-ic { background: var(--ink); color: var(--gold-soft); }
+  .menu-card:nth-child(5) .menu-ic { background: var(--orange); }
+  .menu-card:nth-child(6) .menu-ic { background: var(--emerald); }
+  .menu-tx { flex: 1; min-width: 0; }
+  .menu-t { font-family: var(--head-font); font-size: 17px; font-weight: 700; line-height: 1.25; }
+  .menu-s { font-size: 12.5px; color: var(--ink-2); font-weight: 500; margin-top: 2px; display: block; }
+  .chev {
+    width: 32px; height: 32px; border-radius: 50%; flex: none;
+    border: 2.5px solid var(--ink); color: var(--ink); background: var(--gold-soft);
+    font-size: 18px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .menu-card.hero-cta { background: var(--coral); color: #fff; }
+  .menu-card.hero-cta .menu-s { color: rgba(255, 255, 255, 0.85); }
+  .menu-card.hero-cta .menu-ic { background: #fff; color: var(--coral); border-color: var(--ink); }
+  .menu-card.hero-cta .chev { background: #fff; border-color: var(--ink); color: var(--coral); animation: nudge 1.4s ease-in-out infinite; }
+  @keyframes nudge { 50% { transform: translateX(4px); } }
+  /* Home 2x2 sticker grid */
+  .menu.home-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .menu.home-grid .menu-card { flex-direction: column; align-items: flex-start; gap: 10px; min-height: 152px; }
+  .menu.home-grid .menu-ic { width: 54px; height: 54px; font-size: 26px; }
+  .menu.home-grid .menu-card:nth-child(1) { background: #fff; }
+  .menu.home-grid .menu-card:nth-child(2) { background: #E2F6EC; }
+  .menu.home-grid .menu-card:nth-child(3) { background: #FFF3D1; }
+  .menu.home-grid .menu-card:nth-child(4) { background: #FFE7E2; }
+  .menu.home-grid .menu-card.hero-cta { color: var(--ink); }
+  .menu.home-grid .hero-cta .menu-s { color: var(--ink-2); }
+  .menu.home-grid .chev { display: none; }
+  .tag {
+    flex: none; font-size: 10.5px; font-weight: 800; letter-spacing: 1px;
+    padding: 5px 11px; border-radius: 999px; white-space: nowrap;
+    background: #E2F6EC; color: #007A44; border: 2px solid #007A44;
+  }
+  .tag.soon { background: transparent; color: var(--ink-3); border-color: var(--line); }
+  /* Section heads */
+  .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0 4px; }
+  .sec-head h2 { font-family: var(--head-font); font-size: 24px; font-weight: 800; letter-spacing: -0.3px; }
+  .count {
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: #FFE9B8; background: var(--ink);
+    padding: 6px 13px; border-radius: 999px; white-space: nowrap;
+    box-shadow: 2px 2px 0 rgba(42, 26, 18, 0.25);
+  }
+  .sub { color: var(--ink-2); font-size: 13.5px; font-weight: 500; margin-bottom: 14px; }
+  /* Status / countdown */
+  .statusbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: #fff; border: 2.5px solid var(--emerald); border-radius: 18px;
+    padding: 14px 16px; margin-bottom: 14px; box-shadow: var(--shadow-hard);
+  }
+  .statusbar .st { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
+  .statusbar .pulse { width: 11px; height: 11px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 0 5px rgba(0, 163, 108, 0.18); animation: blink 1.2s infinite; }
+  .statusbar.closed { border-color: var(--coral); }
+  .statusbar.closed .pulse { background: var(--coral); box-shadow: 0 0 0 5px rgba(255, 80, 48, 0.16); }
+  .statusbar .cd { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 23px; font-family: var(--head-font); color: var(--coral); }
+  .statusbar .cd small { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 1.6px; color: var(--ink-2); text-transform: uppercase; text-align: right; font-family: var(--body-font); }
+  .round-chip {
+    font-size: 12px; font-weight: 800; letter-spacing: 0.6px;
+    background: var(--ink); color: var(--gold-soft);
+    padding: 8px 15px; border-radius: 999px;
+    font-variant-numeric: tabular-nums; display: inline-block; margin-bottom: 12px;
+    box-shadow: 3px 3px 0 rgba(42, 26, 18, 0.25);
+  }
+  /* Winner coins — single gold style */
+  .balls { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+  .ball {
+    width: 46px; height: 46px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--head-font); font-weight: 800; font-size: 17px;
+    font-variant-numeric: tabular-nums;
+    background: radial-gradient(circle at 50% 32%, #ffe08a 0%, #f2b705 58%, #8a5b00 100%);
+    color: #3a2a00; flex: none;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.45), inset 0 -3px 5px rgba(122, 82, 0, 0.5);
+    border: 2px solid #7a5200;
+  }
+  .ball.reveal { animation: coinIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes coinIn { 0% { transform: scale(0) rotate(-180deg); } 60% { transform: scale(1.3) rotate(10deg); } 100% { transform: scale(1) rotate(0); } }
+  /* Buttons */
+  .btn-p {
+    width: 100%; background: var(--coral); color: #fff; border: 2.5px solid var(--ink);
+    border-radius: 16px; padding: 15px; font-family: var(--head-font);
+    font-size: 16px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+    box-shadow: var(--shadow-hard);
+  }
+  .btn-p:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+  .btn-p:disabled { opacity: 0.45; filter: grayscale(0.4); }
+  .btn-g {
+    width: 100%; border: 2.5px solid var(--ink); border-radius: 16px; padding: 13px;
+    font-family: var(--head-font); font-size: 14px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase; background: #fff; color: var(--ink); box-shadow: var(--shadow-hard);
+  }
+  .btn-g:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+  /* Ticket cards with perforated stub + barcode */
+  .cards { display: flex; flex-direction: column; gap: 11px; }
+  .tcard {
+    background: #fff; border: 2.5px solid var(--ink); border-radius: var(--r-lg);
+    padding: 14px 15px; width: 100%; text-align: left; position: relative; overflow: hidden;
+    box-shadow: var(--shadow-hard);
+  }
+  .tcard::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+    background: repeating-linear-gradient(180deg, var(--coral) 0 7px, transparent 7px 13px);
+    opacity: 0.9;
+  }
+  .tcard .tid { font-size: 10.5px; font-weight: 700; letter-spacing: 1px; color: var(--ink-3); font-variant-numeric: tabular-nums; word-break: break-all; padding-left: 8px; }
+  .tcard .trow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; padding-left: 8px; }
+  .tcard .who { font-weight: 700; font-size: 15px; }
+  .tcard .who small { display: block; font-weight: 500; color: var(--ink-2); font-size: 12px; }
+  .tcard .prz { font-family: var(--head-font); font-size: 22px; font-weight: 800; white-space: nowrap; color: var(--emerald-deep, #007A44); }
+  .tcode-bar { height: 30px; margin: 10px 0 2px 8px; border-radius: 4px; background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 4px, var(--ink) 4px 7px, transparent 7px 9px, var(--ink) 9px 10px, transparent 10px 14px); opacity: 0.85; }
+  .pick-card {
+    background: #fff;
+    border: 2.5px solid var(--ink); border-radius: 22px;
+    padding: 20px 17px; box-shadow: var(--shadow-hard); position: relative; overflow: hidden;
+  }
+  .pick-card h3 { font-family: var(--head-font); font-size: 21px; font-weight: 800; margin-bottom: 2px; }
+  .pick-card .hint { font-size: 13px; color: var(--ink-2); font-weight: 500; margin-bottom: 14px; }
+  .meter { height: 12px; border-radius: 99px; background: #F1E4C6; border: 2px solid var(--ink); overflow: hidden; margin-top: 12px; }
+  .meter i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--teal), var(--emerald), var(--gold-soft)); border-radius: 99px; transition: width .3s; }
+  .meter-label { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--ink-2); margin-top: 6px; }
+  .phases { display: flex; gap: 6px; margin-top: 12px; }
+  .ph { flex: 1; text-align: center; font-size: 10px; font-weight: 700; color: var(--ink-3); }
+  .ph i { display: block; height: 5px; border-radius: 99px; background: #E8DCC3; margin-bottom: 5px; }
+  .ph.on { color: var(--coral); }
+  .ph.on i { background: linear-gradient(90deg, var(--teal), var(--emerald), var(--gold-soft)); }
+  /* Panels */
+  .panel { background: #fff; border: 2.5px solid var(--ink); border-radius: var(--r-lg); padding: 4px 18px; margin-top: 14px; box-shadow: var(--shadow-hard); }
+  .prow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 2px dashed #E3D5B8; font-size: 14.5px; }
+  .prow:last-child { border-bottom: none; }
+  .prow .k { font-weight: 700; }
+  .prow .k small { display: block; font-weight: 500; color: var(--ink-2); font-size: 12px; }
+  .prow .v { font-family: var(--head-font); font-size: 20px; font-weight: 800; white-space: nowrap; color: var(--coral); }
+  .notice { background: #FFF3D1; border: 2.5px solid var(--ink); border-radius: var(--r-lg); padding: 18px; margin-top: 14px; box-shadow: var(--shadow-hard); }
+  .notice h3 { font-family: var(--head-font); font-size: 19px; font-weight: 800; margin-bottom: 8px; color: var(--ink); }
+  .notice p { font-size: 13.5px; line-height: 1.65; font-weight: 500; margin-bottom: 10px; color: var(--ink-2); }
+  .notice p:last-child { margin-bottom: 0; }
+  ol.how { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.9; font-weight: 500; color: var(--ink-2); }
+  ol.how b { color: var(--ink); }
+  /* Wallet */
+  .bal-card {
+    background: linear-gradient(160deg, #FF6A4D, var(--coral) 55%, #C23A22);
+    border: 2.5px solid var(--ink);
+    border-radius: 22px; padding: 24px 22px; margin-top: 6px;
+    box-shadow: var(--shadow-hard); color: #fff;
+    position: relative; overflow: hidden;
+  }
+  .bal-card::before {
+    content: "₦"; position: absolute; right: 8px; bottom: -56px;
+    font-family: var(--head-font); font-size: 170px; font-weight: 800;
+    color: rgba(255, 255, 255, 0.16); transform: rotate(8deg); pointer-events: none;
+  }
+  .bal-k { font-size: 11px; font-weight: 800; letter-spacing: 2.6px; text-transform: uppercase; color: #FFE9B8; }
+  .bal-v { font-family: var(--head-font); font-size: 48px; font-weight: 800; margin-top: 4px; font-variant-numeric: tabular-nums; text-shadow: 0 3px 0 rgba(42, 26, 18, 0.35); }
+  .bal-sub { font-size: 13px; font-weight: 500; color: rgba(255, 255, 255, 0.92); margin-top: 8px; }
+  .tx { display: flex; align-items: center; gap: 12px; padding: 12px 2px; border-bottom: 2px dashed #E3D5B8; }
+  .tx:last-child { border-bottom: none; }
+  .tx-ic {
+    width: 42px; height: 42px; border-radius: 13px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--head-font); font-size: 18px; font-weight: 800;
+    background: #E2F6EC; color: var(--emerald-deep, #007A44); border: 2px solid var(--ink);
+  }
+  .tx-mid { flex: 1; min-width: 0; }
+  .tx-t { font-size: 14px; font-weight: 700; word-break: break-word; }
+  .tx-d { font-size: 12px; color: var(--ink-3); font-weight: 500; margin-top: 1px; }
+  .tx-a { font-weight: 800; font-size: 15px; white-space: nowrap; font-variant-numeric: tabular-nums; font-family: var(--head-font); color: var(--emerald-deep, #007A44); }
+  /* Demo + misc */
+  .modes { display: flex; gap: 8px; margin-bottom: 12px; }
+  .modes button {
+    flex: 1; padding: 10px; border-radius: 12px; border: 2.5px solid var(--ink);
+    background: #fff; color: var(--ink-2); font-weight: 800; font-size: 13px; font-family: var(--head-font);
+  }
+  .modes button.on { background: var(--ink); color: var(--gold-soft); border-color: var(--ink); }
+  .demobar {
+    background: linear-gradient(90deg, #FFD968, var(--gold-soft)); color: var(--ink);
+    border: 2.5px solid var(--ink);
+    font-weight: 800; font-size: 12px; border-radius: 12px; padding: 9px 11px;
+    margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    box-shadow: var(--shadow-hard);
+  }
+  .demobar button { border: 2px solid var(--ink); border-radius: 8px; background: #fff; color: var(--ink); font-weight: 800; padding: 6px 12px; font-size: 12px; flex: none; }
+  #demoFeed .tcard.flash { border-color: var(--coral); box-shadow: 4px 4px 0 var(--coral); }
+  .sponsor { border-left: 4px solid var(--coral); padding-left: 12px; margin: 14px 2px 0; font-size: 12.5px; color: var(--ink-2); font-weight: 500; line-height: 1.6; }
+  .sponsor a { color: var(--coral); }
+  .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+  .muted { color: var(--ink-2); }
+  .small { font-size: 13px; font-weight: 500; }
+  .spacer { height: 22px; }
+  .foot { text-align: center; color: var(--ink-3); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 20px 0 4px; line-height: 2; }
+  .toast {
+    position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(14px);
+    background: var(--ink); color: #FFE9B8; padding: 13px 22px;
+    font-size: 12.5px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 60; max-width: 88vw; text-align: center; border-radius: 999px;
+    border: 2.5px solid var(--gold-soft); box-shadow: 4px 4px 0 rgba(42, 26, 18, 0.35);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .empty { text-align: center; padding: 40px 20px; color: var(--ink-3); font-weight: 600; }
+  .empty .e-ic { font-size: 38px; margin-bottom: 10px; opacity: 0.6; }
+  #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+  @media (max-width: 380px) {
+    .hero h1 { font-size: 31px; }
+    .stk.big { font-size: 46px; }
+    .stk.mid { font-size: 15px; }
+    .bal-v { font-size: 40px; }
+    .ball { width: 42px; height: 42px; font-size: 15px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div class="bg-bubbles" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+<div id="app">
+
+  <header class="topbar">
+    <div class="tb-left"><button class="back-btn" id="backBtn" type="button" aria-label="Back">&#8592;</button></div>
+    <div class="brand"><span class="brand-mark">₦</span><span class="brand-name">NairaGiveBot<small>Win every hour</small></span></div>
+    <button class="wallet-pill" id="walletPill" type="button" aria-label="Wallet"><span class="dot" id="dot"></span><span id="conn" style="display:none">live</span><span id="walletPillBal">₦0</span></button>
+  </header>
+
+  <main>
+    <!-- 1 · HOME -->
+    <section class="screen show" id="s-home" data-title="Home">
+      <div class="page hero">
+        <div class="ticker" aria-hidden="true"><div class="ticker-in"><span>₦200 EVERY HOUR • FREE ENTRY • NO WAHALA • WINNERS PAID INSTANTLY •&nbsp;</span><span>₦200 EVERY HOUR • FREE ENTRY • NO WAHALA • WINNERS PAID INSTANTLY •&nbsp;</span></div></div>
+        <div class="hero-stickers">
+          <span class="stk small">FREE GIVEAWAY • NO WAHALA</span>
+          <span class="stk big">₦<span id="prize">200</span></span>
+          <span class="stk mid">EVERY HOUR, <b>1 WINNER</b></span>
+        </div>
+        <p class="lede" id="hello">Free money, airtime, data, gadgets &amp; food. Good luck.</p>
+        <div class="menu home-grid">
+          <button class="menu-card hero-cta" data-go="s-cats" type="button"><span class="menu-ic">◉</span><span class="menu-tx"><span class="menu-t">Enter Giveaway</span><span class="menu-s">Cash, airtime, data &amp; more</span></span><span class="chev">›</span></button>
+          <button class="menu-card" data-go="s-how" type="button"><span class="menu-ic">?</span><span class="menu-tx"><span class="menu-t">How To Use App</span><span class="menu-s">Entries, draws &amp; payouts</span></span><span class="chev">›</span></button>
+          <button class="menu-card" data-go="s-wallet" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">Wallet</span><span class="menu-s" id="walletHint">Your balance &amp; wins</span></span><span class="chev">›</span></button>
+          <button class="menu-card" data-go="s-contact" type="button"><span class="menu-ic">✉</span><span class="menu-tx"><span class="menu-t">Contact Us</span><span class="menu-s">Support &amp; sponsorships</span></span><span class="chev">›</span></button>
+        </div>
+        <div class="status-ticket" style="margin-top:16px">
+          <div><small>DRAW</small><b class="mono" id="drawIdHome">—</b></div>
+          <div><small>STATUS</small><b id="phaseHome">loading…</b></div>
+          <div><small>BALANCE</small><b id="walletBalTop">₦0</b></div>
+        </div>
+        <p class="muted small" style="margin-top:18px;text-align:center;letter-spacing:2px;text-transform:uppercase">Free play · Draws every hour · WAT</p>
+      </div>
+    </section>
+
+    <!-- 2 · CATEGORIES -->
+    <section class="screen" id="s-cats" data-title="Enter Giveaway">
+      <div class="page">
+        <div class="sec-head"><h2>Categories</h2><span class="count">1 live</span></div>
+        <p class="sub">Pick a giveaway category to enter.</p>
+        <div class="menu">
+          <button class="menu-card" data-go="s-cash" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">Cash / Money</span><span class="menu-s">Hourly draws · live</span></span><span class="tag">LIVE</span></button>
+          <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Airtime</span><span class="menu-s">Mobile top-up</span></span><span class="tag soon">SOON</span></button>
+          <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Data Bundles</span><span class="menu-s">Mobile data</span></span><span class="tag soon">SOON</span></button>
+          <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Gadgets</span><span class="menu-s">Phones &amp; devices</span></span><span class="tag soon">SOON</span></button>
+          <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Food</span><span class="menu-s">Meals &amp; groceries</span></span><span class="tag soon">SOON</span></button>
+          <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Others</span><span class="menu-s">More giveaways</span></span><span class="tag soon">SOON</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · CASH -->
+    <section class="screen" id="s-cash" data-title="Cash / Money">
+      <div class="page">
+        <div class="sec-head"><h2>Cash</h2><span class="count">2 draws</span></div>
+        <p class="sub">Hourly draw plus special sponsored draws.</p>
+        <div class="menu">
+          <button class="menu-card hero-cta" data-go="s-hourly" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">₦200 An Hour Giveaway</span><span class="menu-s" id="hourlySub">Every hour, on the hour</span></span><span class="chev">›</span></button>
+          <button class="menu-card" data-go="s-sponsored" type="button"><span class="menu-ic">☆</span><span class="menu-tx"><span class="menu-t">Sponsored Giveaways</span><span class="menu-s" id="sponsoredSub">Special draws from sponsors</span></span><span class="chev">›</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4a · HOURLY TICKET PAGE -->
+    <section class="screen" id="s-hourly" data-title="Hourly Draw">
+      <div class="page">
+        <div class="modes"><button id="modeLive" class="on" type="button">Live</button><button id="modeDemo" type="button">Demo draw</button></div>
+        <div class="demobar" id="demoBar" style="display:none"><span>DEMO — simulated, no real money</span><button id="demoSkip" type="button">Skip »</button></div>
+        <span class="round-chip">DRAW · <span id="drawId">—</span></span>
+        <div class="statusbar" id="statusbar"><span class="st"><span class="pulse"></span><span id="phase">…</span></span><span class="cd"><span id="countdown">--:--</span><small id="countLabel">until entry closes</small></span></div>
+        <div class="pick-card">
+          <h3>Get your tickets</h3>
+          <p class="hint" id="claimNote">Max 10 tickets per hour. Free entry.</p>
+          <button class="btn-p" id="claimBtn" type="button">Get ticket</button>
+          <div class="meter"><i id="myBar"></i></div>
+          <div class="meter-label"><span>YOUR TICKETS</span><b id="entries">—</b></div>
+          <div class="phases" style="display:none">
+            <div class="ph" data-k="entry_open"><i></i></div>
+            <div class="ph" data-k="drawing"><i></i></div>
+            <div class="ph" data-k="results"><i></i></div>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="sec-head"><h2 style="font-size:20px">My entries</h2><span class="count" id="myCount">0 this round</span></div>
+        <div class="cards" id="myTickets"><p class="muted small">No entries in this round yet.</p></div>
+        <div id="winners" style="margin-top:6px"></div>
+        <div class="sec-head" id="demoFeedLabel" style="display:none"><h2 style="font-size:20px">Demo entries</h2><span class="count">simulated</span></div>
+        <div class="cards" id="demoFeed" style="display:none"></div>
+        <div class="sponsor" id="sponsor"></div>
+      </div>
+    </section>
+
+    <!-- 4b · SPONSORED -->
+    <section class="screen" id="s-sponsored" data-title="Sponsored">
+      <div class="page">
+        <div class="sec-head"><h2>Sponsored</h2><span class="count" id="sponsoredCount">special draws</span></div>
+        <p class="sub">Special draws from sponsors.</p>
+        <div class="cards" id="sponsored"><div class="empty"><div class="e-ic">○</div><p>loading…</p></div></div>
+      </div>
+    </section>
+
+    <!-- DRAWS -->
+    <section class="screen" id="s-draws" data-title="Draws">
+      <div class="page">
+        <div class="sec-head"><h2>Previous draws</h2><span class="count" id="drawsDraw">—</span></div>
+        <p class="sub">Winning tickets &amp; owners. Seeded draws — verifiable, never Math.random.</p>
+        <div class="cards" id="recent"><div class="empty"><div class="e-ic">○</div><p>loading…</p></div></div>
+      </div>
+    </section>
+
+    <!-- HOW TO -->
+    <section class="screen" id="s-how" data-title="How To Use">
+      <div class="page">
+        <div class="sec-head"><h2>How to use</h2></div>
+        <div class="panel">
+          <ol class="how" id="howList" style="padding:14px 6px 14px 26px">
+            <li>Tap <b>Enter Giveaway</b> and pick a category.</li>
+            <li>Pick <b>Cash / Money</b>, then the hourly draw.</li>
+            <li>Tap <b>Get ticket</b> — up to 10 per hour.</li>
+            <li>Entry <b>:00–:50</b>, draw <b>:51–:52</b>, results <b>:53–:59</b>.</li>
+            <li>Winnings land in your <b>Wallet</b> automatically.</li>
+          </ol>
+        </div>
+        <div class="spacer"></div>
+        <div class="panel">
+          <div class="prow"><span class="k">Draws seen<small>recent results</small></span><span class="v" id="stDraws">—</span></div>
+          <div class="prow"><span class="k">Paid out<small>recent prizes</small></span><span class="v" id="stPaid">—</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WALLET -->
+    <section class="screen" id="s-wallet" data-title="Wallet">
+      <div class="page">
+        <div class="bal-card">
+          <div class="bal-k">Balance</div>
+          <div class="bal-v">₦<span id="walletBal">0</span></div>
+          <div class="bal-sub" id="walletUser">Winnings credit automatically after each draw.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="sec-head"><h2 style="font-size:20px">Win history</h2></div>
+        <div class="panel" id="winsPanel"><div id="wins"><p class="muted small" style="padding:12px 0">Open via Telegram to see your wins.</p></div></div>
+        <p class="muted small" style="margin-top:12px">Withdrawals (OPay / bank) plus KYC arrive after the cash launch.</p>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="screen" id="s-contact" data-title="Contact">
+      <div class="page">
+        <div class="sec-head"><h2>Contact us</h2></div>
+        <div class="notice">
+          <h3>Talk to us</h3>
+          <p id="contactText">Questions or sponsorships? Reach us via Telegram.</p>
+          <p style="margin-top:12px"><a class="btn-p" id="contactBtn" href="https://t.me/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">Message us</a></p>
+        </div>
+        <div class="foot"><span class="mono" id="footDraw">—</span><br />NairaGiveBot · hourly ₦200 · cash first</div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab active" data-tab="s-home" type="button"><span class="ic">⌂</span><span>Home</span></button>
+    <button class="tab" data-tab="s-hourly" type="button"><span class="ic">◉</span><span>Play</span></button>
+    <button class="tab" data-tab="s-draws" type="button"><span class="ic">▤</span><span>Draws</span></button>
+    <button class="tab" data-tab="s-wallet" type="button"><span class="ic">₦</span><span>Wallet</span></button>
+  </nav>
+
+</div>
+<div id="toast" class="toast" role="status"></div>
+
+<script>
+// ---- Navigation stack: one screen at a time, like the bot flow ----
+const stack = ['s-home'];
+const TAB_FOR = { 's-home': 's-home', 's-hourly': 's-hourly', 's-cats': 's-hourly', 's-cash': 's-hourly', 's-sponsored': 's-hourly', 's-draws': 's-draws', 's-wallet': 's-wallet', 's-how': '', 's-contact': '' };
+function renderNav() {
+  const cur = stack[stack.length - 1];
+  document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('show', s.id === cur));
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === (TAB_FOR[cur] || '')));
+  document.getElementById('backBtn').classList.toggle('show', stack.length > 1);
+  try { tg && tg.HapticFeedback && tg.HapticFeedback.selectionChanged(); } catch (_) {}
+  syncMainButton();
+}
+function go(id) {
+  if (stack[stack.length - 1] === id) return;
+  stack.push(id);
+  renderNav();
+  if (id === 's-sponsored') loadSponsored();
+  if (id === 's-wallet') loadWallet();
+  if (id === 's-hourly') { loadLive(); loadMe(); }
+  if (id === 's-draws') loadLive();
+  window.scrollTo(0, 0);
+}
+function back() { if (stack.length > 1) { stack.pop(); renderNav(); } }
+document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => go(b.dataset.go)));
+document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
+  stack.length = 0;
+  stack.push(b.dataset.tab);
+  renderNav();
+  if (b.dataset.tab === 's-hourly') { loadLive(); loadMe(); }
+  if (b.dataset.tab === 's-wallet') loadWallet();
+  if (b.dataset.tab === 's-draws') loadLive();
+  window.scrollTo(0, 0);
+}));
+document.getElementById('backBtn').addEventListener('click', back);
+document.getElementById('walletPill').addEventListener('click', () => go('s-wallet'));
+
+// ---- Clock helpers (display only — all draw data comes from the server) ----
+function pad2(n) { return String(n).padStart(2, '0'); }
+function secsToBoundary(d) {
+  const cur = d.getMinutes() * 60 + d.getSeconds();
+  for (const t of [51 * 60, 53 * 60, 3600]) if (cur < t) return t - cur;
+  return 3600 - cur;
+}
+function fmt(n) { return pad2(Math.floor(n / 60)) + ':' + pad2(n % 60); }
+const el = (id) => document.getElementById(id);
+const phaseLabel = { entry_open: 'Entries open', drawing: 'Drawing now', results: 'Results out' };
+const countLabel = { entry_open: 'until entry closes', drawing: 'until results', results: 'until next draw' };
+function toast(msg) {
+  const t = el('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ---- Telegram Mini App ----
+const tg = (window.Telegram && window.Telegram.WebApp) || null;
+const INIT_DATA = (tg && tg.initData) || '';
+const IN_TELEGRAM = Boolean(tg && INIT_DATA);
+const TEST_USER = (() => { try { return localStorage.getItem('ng_test_user') || ''; } catch (_) { return ''; } })();
+function haptic(kind) { try { tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred(kind); } catch (_) {} }
+async function api(path, opts) {
+  const o = opts || {};
+  o.headers = Object.assign({}, o.headers || {});
+  if (INIT_DATA) o.headers['X-Telegram-Init-Data'] = INIT_DATA;
+  if (!INIT_DATA && TEST_USER) o.headers['X-Test-User'] = TEST_USER;
+  if (o.body && !o.headers['Content-Type']) o.headers['Content-Type'] = 'application/json';
+  const r = await fetch(path, o);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || ('request failed: ' + r.status));
+  return data;
+}
+function enableTestMode() {
+  let name = 'tester';
+  try { name = window.prompt('Browser test username (letters/numbers):', 'tester') || 'tester'; }
+  catch (_) { name = 'tester'; }
+  name = name.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 24) || 'tester';
+  const id = 900000 + (Date.now() % 90000);
+  try { localStorage.setItem('ng_test_user', id + ':' + name + ':' + name); } catch (_) {}
+  location.reload();
+}
+try {
+  if (tg) {
+    tg.ready();
+    try { tg.expand(); } catch (_) {}
+    try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch (_) {}
+    try { tg.BackButton && tg.BackButton.onClick(back); } catch (_) {}
+    try { if (tg.MainButton) tg.MainButton.onClick(() => { if (stack[stack.length - 1] === 's-hourly') claimTicket(); }); } catch (_) {}
+    const bot = tg.initDataUnsafe && tg.initDataUnsafe.bot_username;
+    if (bot) {
+      el('contactBtn').href = 'https://t.me/' + bot;
+    }
+  }
+} catch (_) {}
+function syncMainButton() {
+  try {
+    if (tg && tg.BackButton) { stack.length > 1 ? tg.BackButton.show() : tg.BackButton.hide(); }
+  } catch (_) {}
+  try {
+    if (!tg || !tg.MainButton || (!IN_TELEGRAM && !TEST_USER)) return;
+    if (stack[stack.length - 1] !== 's-hourly') { tg.MainButton.hide(); return; }
+    tg.MainButton.setText('GET TICKET');
+    tg.MainButton.show();
+  } catch (_) {}
+}
+
+// ---- Hourly ticket page (server data only — no simulated draws) ----
+let serverSeen = false;
+async function loadLive() {
+  if (demoMode) return;
+  try {
+    const d = await api('/api/draws/current');
+    serverSeen = true;
+    renderDraw(d, true);
+  } catch (_) {
+    el('phase').textContent = 'Offline';
+    el('statusbar').classList.add('closed');
+  }
+  try {
+    const rows = await api('/api/draws/recent?limit=6');
+    let paid = 0; const seen = new Set();
+    rows.forEach((x) => { seen.add(x.id); if (x.ticket_code) paid += (x.amount || 0); });
+    el('recent').innerHTML = rows.length
+      ? rows.map((x) => '<div class="tcard"><div class="tid">' + x.id + ' · ₦' + x.amount + '</div><div class="trow"><span class="who">' +
+          (x.ticket_code ? '<span class="mono">' + x.ticket_code + '</span><small>@' + (x.username || '?') + '</small>' : '<small>no entries</small>') +
+          '</span></div></div>').join('')
+      : '<div class="empty"><div class="e-ic">○</div><p>No results yet — first draw completes at :51–:53 past the hour.</p></div>';
+    el('stDraws').textContent = seen.size;
+    el('stPaid').textContent = '₦' + paid.toLocaleString();
+  } catch (_) {
+    el('recent').innerHTML = '<div class="empty"><div class="e-ic">○</div><p><b>Connection failed.</b></p><p class="muted small">Could not reach the server.</p></div>';
+  }
+}
+function renderDraw(d, fromApi) {
+  el('drawId').textContent = d.drawId;
+  el('drawIdHome').textContent = d.drawId;
+  el('drawsDraw').textContent = d.drawId;
+  el('hourlySub').textContent = 'Draw ' + d.drawId + ' · ' + (phaseLabel[d.phase] || d.phase).toLowerCase();
+  el('footDraw').textContent = d.drawId + ' · ' + (phaseLabel[d.phase] || d.phase);
+  el('phase').textContent = phaseLabel[d.phase] || d.phase;
+  el('phaseHome').textContent = phaseLabel[d.phase] || d.phase;
+  el('statusbar').classList.toggle('closed', d.phase !== 'entry_open');
+  el('countLabel').textContent = countLabel[d.phase] || '';
+  if (d.draw && d.draw.amount) { el('prize').textContent = d.draw.amount; }
+  document.querySelectorAll('#s-hourly .ph').forEach((s) => s.classList.toggle('on', s.dataset.k === d.phase));
+  const w = d.winners || [];
+  el('winners').innerHTML = w.length
+    ? w.map((x) => {
+        const tail = String(x.ticket_code).replace(/\D/g, '').slice(-5).padStart(5, '0');
+        const coins = tail.split('').map((n, i) => '<span class="ball reveal" style="animation-delay:' + (i * 0.12) + 's">' + n + '</span>').join('');
+        return '<div class="pick-card" style="margin-top:14px"><h3>Winning ticket</h3><p class="hint">@' + (x.username || x.telegram_id) + ' · +₦' + x.prize_amount + '</p>' +
+          '<div class="balls">' + coins + '</div>' +
+          '<div class="tcode-bar"></div><p class="mono small">' + x.ticket_code + '</p></div>';
+      }).join('')
+    : '';
+  if (w.length && lastWinnerBurst !== d.drawId) { lastWinnerBurst = d.drawId; confettiBurst(90); }
+  const sp = (d.draw && (d.draw.sponsor_name || d.draw.sponsor_bio)) ? d.draw : null;
+  el('sponsor').innerHTML = sp
+    ? 'Sponsor: <b>' + sp.sponsor_name + '</b> · <a href="' + sp.sponsor_link + '" target="_blank" rel="noopener">' + sp.sponsor_link + '</a><br>' + sp.sponsor_bio
+    : 'Sponsor: <b>NairaGiveBot</b> — free hourly ₦200 giveaways.';
+}
+function renderMyTickets(me) {
+  const t = me.myTickets || [];
+  el('entries').textContent = t.length + '/' + me.draw.maxTickets;
+  el('myCount').textContent = t.length + ' this round';
+  el('myBar').style.width = Math.min(100, (t.length / me.draw.maxTickets) * 100) + '%';
+  el('myTickets').innerHTML = t.length
+    ? t.map((x) => '<div class="tcard"><div class="tcode-bar"></div><div class="tid">' + me.draw.drawId + '</div><div class="trow"><span class="who"><span class="mono">' + x + '</span></span></div></div>').join('')
+    : '<p class="muted small">No entries in this round yet.</p>';
+  const open = me.draw.phase === 'entry_open';
+  el('claimBtn').textContent = open ? 'Get ticket (' + t.length + '/' + me.draw.maxTickets + ')' : 'Entry closed';
+  el('claimBtn').disabled = !open || t.length >= me.draw.maxTickets;
+}
+async function loadMe() {
+  if (!IN_TELEGRAM && !TEST_USER) {
+    el('claimNote').textContent = 'You are in a desktop browser. Enable test mode to claim tickets here — no Telegram needed.';
+    el('claimBtn').disabled = false;
+    el('claimBtn').textContent = 'Enable browser test mode';
+    return;
+  }
+  try {
+    const me = await api('/api/me');
+    const who = me.user.username ? '@' + me.user.username : (me.user.first_name || 'Player');
+    el('hello').textContent = 'Good luck, ' + (me.user.first_name || me.user.username || 'player') + '. Free money, airtime, data, gadgets & food.';
+    el('walletBalTop').textContent = '₦' + (me.wallet || 0);
+    el('walletPillBal').textContent = '₦' + (me.wallet || 0);
+    el('walletBal').textContent = me.wallet || 0;
+    el('walletHint').textContent = 'Balance: ₦' + (me.wallet || 0);
+    el('walletUser').textContent = 'Signed in as ' + who + ' — winnings credit automatically.';
+    if (me.contact) el('contactText').textContent = me.contact;
+    if (me.howTo) {
+      const lines = me.howTo.split('\n').map((x) => x.trim()).filter((x) => x && !/^how to use/i.test(x));
+      if (lines.length) el('howList').innerHTML = lines.map((x) => '<li>' + x.replace(/^\d+\.\s*/, '') + '</li>').join('');
+    }
+    el('claimNote').textContent = (me.user.test ? '[BROWSER TEST] ' : '') + 'Signed in as ' + who + ' — max ' + me.draw.maxTickets + ' per hour.';
+    renderMyTickets(me);
+    loadWallet();
+  } catch (e) {
+    el('claimNote').textContent = 'Sign-in failed: ' + e.message;
+  }
+}
+async function claimTicket() {
+  if (demoMode) return demoClaim();
+  if (!IN_TELEGRAM && !TEST_USER) return enableTestMode();
+  el('claimBtn').disabled = true;
+  try {
+    if (tg && tg.MainButton) { try { tg.MainButton.showProgress(); } catch (_) {} }
+    const r = await api('/api/miniapp/tickets', { method: 'POST' });
+    haptic('success');
+    confettiBurst(130);
+    toast('Ticket issued');
+    el('claimNote').textContent = 'Ticket issued: ' + r.ticket_code + ' (' + r.count + '/' + r.max + ')';
+    await loadMe();
+    await loadLive();
+  } catch (e) {
+    haptic('error');
+    toast('Claim failed');
+    el('claimNote').textContent = e.message;
+  } finally {
+    el('claimBtn').disabled = false;
+    try { if (tg && tg.MainButton) tg.MainButton.hideProgress(); } catch (_) {}
+  }
+}
+el('claimBtn').addEventListener('click', claimTicket);
+async function loadWallet() {
+  if (!IN_TELEGRAM && !TEST_USER) return;
+  try {
+    const w = await api('/api/miniapp/wallet');
+    el('walletBalTop').textContent = '₦' + (w.balance || 0);
+    el('walletPillBal').textContent = '₦' + (w.balance || 0);
+    el('walletBal').textContent = w.balance || 0;
+    el('walletHint').textContent = 'Balance: ₦' + (w.balance || 0);
+    el('wins').innerHTML = (w.wins && w.wins.length)
+      ? w.wins.map((x) => '<div class="tx"><span class="tx-ic">₦</span><span class="tx-mid"><span class="tx-t">+₦' + x.prize_amount + '</span><span class="tx-d mono">' + x.ticket_code + ' · ' + x.draw_id + '</span></span></div>').join('')
+      : '<p class="muted small" style="padding:12px 0">No winnings yet — claim tickets every hour.</p>';
+  } catch (_) {}
+}
+async function loadSponsored() {
+  let rows = [];
+  try {
+    rows = await api('/api/miniapp/sponsored');
+  } catch (_) {
+    el('sponsored').innerHTML = '<div class="empty"><div class="e-ic">○</div><p>Sponsored giveaways appear here when the server is running.</p></div>';
+    return;
+  }
+  let opens = [];
+  try {
+    opens = await api('/api/miniapp/custom-open');
+  } catch (_) { opens = []; }
+  const openByGiveaway = {};
+  opens.forEach((o) => { openByGiveaway[o.giveaway.id] = o; });
+  el('sponsoredSub').textContent = rows.length ? rows.length + ' special draws' : 'Special draws from sponsors';
+  el('sponsoredCount').textContent = opens.length ? opens.length + ' open' : 'none open';
+  el('sponsored').innerHTML = rows.length
+    ? rows.map((g) => {
+        const o = openByGiveaway[g.id];
+        const when = o
+          ? 'Open now · closes ' + new Date(o.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+          : g.scheduled_at
+            ? 'Draws ' + new Date(g.scheduled_at).toLocaleString()
+            : (g.interval_minutes && g.starts_at && g.ends_at)
+              ? 'Every ' + g.interval_minutes + ' min'
+              : 'Opens soon';
+        const action = o
+          ? '<button class="btn-p" style="margin-top:10px" data-custom-claim="' + o.drawId + '">Enter · ' + o.myCount + '/' + o.max + '</button>'
+          : '';
+        return '<div class="tcard"><div class="tid">SPONSORED · ' + g.category + '</div><div class="trow"><span class="who">' + g.name +
+          '<small>' + when + ' · Sponsor: ' + (g.sponsor_name || '—') + '</small></span>' +
+          '<span class="prz">₦' + g.amount + '</span></div>' + action + '</div>';
+      }).join('')
+    : '<div class="empty"><div class="e-ic">○</div><p>No sponsored giveaways right now — the hourly draw is live.</p></div>';
+}
+document.getElementById('sponsored').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-custom-claim]');
+  if (!btn) return;
+  const drawId = btn.getAttribute('data-custom-claim');
+  btn.disabled = true;
+  try {
+    await api('/api/miniapp/custom-tickets', { method: 'POST', body: JSON.stringify({ drawId }) });
+    haptic('success');
+    confettiBurst(80);
+    toast('Custom ticket issued');
+    await loadSponsored();
+    loadWallet();
+  } catch (err) {
+    haptic('error');
+    toast('Claim failed');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// ---- DEMO mode: simulated full draw loop for UX testing (explicitly fake) ----
+let demoMode = false;
+let demo = null;
+let demoTimer = null;
+let demoShuffleFx = null;
+const DEMO_SECRET = 'demo-simulation';
+const DEMO_NAMES = ['Adaeze', 'Tunde', 'Ngozi', 'Emeka', 'Fatima', 'Yusuf', 'Chiamaka', 'Olumide', 'Aisha', 'Ibrahim', 'Nkechi', 'Segun', 'Zainab', 'Chidi'];
+function demoPhase() {
+  if (!demo) return 'entry_open';
+  return demo.min <= 50 ? 'entry_open' : demo.min <= 52 ? 'drawing' : 'results';
+}
+function demoId() {
+  const p = (n) => String(n).padStart(2, '0');
+  return p(demo.day) + p(demo.mon + 1) + demo.year + String.fromCharCode(65 + (demo.hour % 24));
+}
+function setMode(d) {
+  demoMode = d;
+  el('modeLive').classList.toggle('on', !d);
+  el('modeDemo').classList.toggle('on', d);
+  el('demoBar').style.display = d ? '' : 'none';
+  el('demoFeed').style.display = d ? '' : 'none';
+  el('demoFeedLabel').style.display = d ? '' : 'none';
+  if (demoTimer) { clearInterval(demoTimer); demoTimer = null; }
+  stopShuffleFx();
+  if (d) startDemo();
+  else { el('myTickets').innerHTML = '<p class="muted small">No entries in this round yet.</p>'; loadLive(); loadMe(); }
+}
+el('modeLive').addEventListener('click', () => setMode(false));
+el('modeDemo').addEventListener('click', () => setMode(true));
+el('demoSkip').addEventListener('click', () => { if (demo) demo.min = demo.min < 51 ? 51 : 53; });
+function startDemo() {
+  const now = new Date();
+  demo = { min: 0, hour: now.getHours(), day: now.getDate(), mon: now.getMonth(), year: now.getFullYear(), tickets: [], mine: [], winner: null, drawing: false, busy: false };
+  el('demoFeed').innerHTML = '';
+  el('myTickets').innerHTML = '<p class="muted small">No entries in this round yet.</p>';
+  el('winners').innerHTML = '';
+  demoTick();
+  demoTimer = setInterval(demoTick, 1000);
+}
+function demoTicket(id) {
+  return id + String(Math.floor(rnd() * 10000000000)).padStart(10, '0');
+}
+function demoClaim() {
+  if (!demo || demoPhase() !== 'entry_open') { el('claimNote').textContent = '[DEMO] Entry is closed right now.'; toast('Entry closed'); return; }
+  if (demo.mine.length >= 10) { el('claimNote').textContent = '[DEMO] Limit reached (10 tickets).'; return; }
+  const code = demoTicket(demoId());
+  demo.mine.push({ code, user: 'you' });
+  haptic('success');
+  confettiBurst(60);
+  toast('Demo ticket issued');
+  el('claimNote').textContent = '[DEMO] Ticket: ' + code + ' (' + demo.mine.length + '/10)';
+}
+async function demoTick() {
+  if (!demoMode || !demo || demo.busy) return;
+  demo.min++;
+  if (demo.min >= 60) {
+    demo.hour = (demo.hour + 1) % 24; demo.min = 0;
+    demo.tickets = []; demo.mine = []; demo.winner = null; demo.drawing = false;
+    el('demoFeed').innerHTML = '';
+  }
+  const id = demoId();
+  const phase = demoPhase();
+  if (phase === 'entry_open' && demo.tickets.length < 140) {
+    const k = 1 + Math.floor(rnd() * 3);
+    for (let i = 0; i < k && demo.tickets.length < 140; i++) {
+      const nm = DEMO_NAMES[Math.floor(rnd() * DEMO_NAMES.length)];
+      const code = demoTicket(id);
+      demo.tickets.push({ code, user: nm });
+      const li = document.createElement('div');
+      li.className = 'tcard';
+      li.style.marginBottom = '8px';
+      li.innerHTML = '<div class="tid">DEMO ENTRY</div><div class="trow"><span class="who">@' + nm.toLowerCase() + '<small class="mono">…' + code.slice(-6) + '</small></span></div>';
+      const feed = el('demoFeed');
+      feed.prepend(li);
+      while (feed.children.length > 6) feed.removeChild(feed.lastChild);
+    }
+  }
+  if (phase === 'drawing' && !demo.drawing) { demo.drawing = true; startShuffleFx(); }
+  if (phase === 'results') {
+    stopShuffleFx();
+    if (!demo.winner && (demo.tickets.length + demo.mine.length)) {
+      demo.busy = true;
+      try {
+        demo.winner = await demoPickWinner(demo.tickets.concat(demo.mine), id);
+      } catch (_) {}
+      demo.busy = false;
+    }
+  }
+  renderDraw({
+    drawId: id, phase, ticketCount: demo.tickets.length + demo.mine.length,
+    winners: demo.winner ? [{ ticket_code: demo.winner.code, username: demo.winner.user, prize_amount: 200, telegram_id: 0 }] : [],
+    draw: { amount: 200 },
+  }, true);
+  el('entries').textContent = demo.mine.length + '/10';
+  el('myCount').textContent = demo.mine.length + ' this round';
+  el('myBar').style.width = (demo.mine.length * 10) + '%';
+  el('myTickets').innerHTML = demo.mine.length
+    ? demo.mine.map((t) => '<div class="tcard"><div class="tcode-bar"></div><div class="tid">' + id + '</div><div class="trow"><span class="who"><span class="mono">' + t.code + '</span></span></div></div>').join('')
+    : '<p class="muted small">No entries in this round yet.</p>';
+  const open = phase === 'entry_open';
+  el('claimBtn').textContent = open ? 'Get ticket (' + demo.mine.length + '/10)' : 'Entry closed';
+  el('claimBtn').disabled = !open || demo.mine.length >= 10;
+  el('footDraw').textContent = id + ' · DEMO';
+}
+function startShuffleFx() {
+  stopShuffleFx();
+  demoShuffleFx = setInterval(() => {
+    const rows = document.querySelectorAll('#demoFeed .tcard');
+    rows.forEach((r) => r.classList.remove('flash'));
+    if (rows.length) rows[Math.floor(rnd() * rows.length)].classList.add('flash');
+  }, 150);
+}
+function stopShuffleFx() {
+  if (demoShuffleFx) { clearInterval(demoShuffleFx); demoShuffleFx = null; }
+  document.querySelectorAll('#demoFeed .flash').forEach((r) => r.classList.remove('flash'));
+}
+async function shaHex(str) {
+  try {
+    if (window.crypto && crypto.subtle) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch (_) {}
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
+}
+// Same algorithm as the server (src/draw.js): sort, seed, deterministic shuffle, take first.
+async function demoPickWinner(pool, drawId) {
+  const sorted = [...pool].sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
+  const seedStr = drawId + '|n=' + sorted.length + '|codes=' + sorted.map((t) => t.code).join(',') + '|secret=' + DEMO_SECRET;
+  const hex = await shaHex(seedStr);
+  let a = parseInt(hex.slice(0, 8), 16) >>> 0;
+  const rand = function () {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const arr = [...sorted];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  return arr[0];
+}
+function tickClock() {
+  if (demoMode && demo) {
+    const left = demo.min <= 50 ? 51 - demo.min : demo.min <= 52 ? 53 - demo.min : 60 - demo.min;
+    el('countdown').textContent = left + 'm';
+    return;
+  }
+  if (!serverSeen) return;
+  el('countdown').textContent = fmt(secsToBoundary(new Date()));
+}
+
+// ---- confetti (pure canvas, no deps; visual-only randomness, never used for draws) ----
+let confettiSeed = (Date.now() % 2147483646) + 1;
+function rnd() {
+  confettiSeed ^= confettiSeed << 13;
+  confettiSeed ^= confettiSeed >>> 17;
+  confettiSeed ^= confettiSeed << 5;
+  confettiSeed >>>= 0;
+  return confettiSeed / 4294967296;
+}
+const confettiPieces = [];
+let confettiRunning = false;
+let lastWinnerBurst = '';
+function confettiBurst(n) {
+  const cv = document.getElementById('confetti');
+  if (!cv) return;
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
+  const colors = ['#FF5030', '#00B39B', '#FFC531', '#2A1A12', '#ffffff', '#FF8A00'];
+  for (let i = 0; i < (n || 120); i++) {
+    confettiPieces.push({
+      x: window.innerWidth / 2 + (rnd() - 0.5) * 140,
+      y: window.innerHeight * 0.35,
+      vx: (rnd() - 0.5) * 11,
+      vy: -rnd() * 9 - 3,
+      s: rnd() * 7 + 4,
+      r: rnd() * Math.PI,
+      vr: (rnd() - 0.5) * 0.3,
+      c: colors[i % colors.length],
+      life: 90 + rnd() * 40,
+    });
+  }
+  if (!confettiRunning) { confettiRunning = true; requestAnimationFrame(confettiTick); }
+}
+function confettiTick() {
+  const cv = document.getElementById('confetti');
+  if (!cv) { confettiRunning = false; return; }
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  for (let i = confettiPieces.length - 1; i >= 0; i--) {
+    const p = confettiPieces[i];
+    p.vy += 0.28; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life--;
+    if (p.life <= 0 || p.y > cv.height + 20) { confettiPieces.splice(i, 1); continue; }
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+    ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.62);
+    ctx.restore();
+  }
+  if (confettiPieces.length) requestAnimationFrame(confettiTick);
+  else { confettiRunning = false; ctx.clearRect(0, 0, cv.width, cv.height); }
+}
+
+renderNav();
+loadLive();
+loadMe();
+setInterval(loadLive, 30000);
+setInterval(tickClock, 1000);
+tickClock();
+</script>
+</body>
+</html>
