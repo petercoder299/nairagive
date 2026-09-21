@@ -75,12 +75,12 @@ describe('classification', () => {
 describe('OG (other-category) draws', () => {
   const p2 = (n) => String(n).padStart(2, '0');
 
-  it('interval window uses PREFIX + local DDMMYYYY + hour letter (12:33am -> A)', () => {
+  it('interval window: OG + 2-digit id + local DDMMYYYY + hour letter (12:33am -> A)', () => {
     const d = new Date(2026, 8, 21, 0, 33);
     const expected =
-      'OG' + p2(d.getDate()) + p2(d.getMonth() + 1) + d.getFullYear() + String.fromCharCode(65 + d.getHours());
+      'OG' + p2(9) + p2(d.getDate()) + p2(d.getMonth() + 1) + d.getFullYear() + String.fromCharCode(65 + d.getHours());
     assert.equal(custom.customDrawId({ id: 9, draw_prefix: 'OG' }, d), expected);
-    assert.match(expected, /^OG\d{8}A$/);
+    assert.equal(expected, 'OG0921092026A');
   });
 
   it('legacy G<id> format still works when no prefix is set', () => {
@@ -88,13 +88,15 @@ describe('OG (other-category) draws', () => {
     assert.equal(custom.oneOffDrawId(3), 'G3-ONCE');
   });
 
-  it('one-off uses the scheduled hour letter (30 Sep 6pm local)', () => {
-    const sched = new Date(2026, 8, 30, 18, 0, 0);
-    const g = { id: 5, draw_prefix: 'OG', scheduled_at: sched.toISOString() };
-    const expected =
-      'OG' + p2(sched.getDate()) + p2(sched.getMonth() + 1) + sched.getFullYear() + String.fromCharCode(65 + sched.getHours());
-    assert.equal(custom.oneOffDrawId(g), expected);
-    assert.match(expected, /^OG\d{8}[A-X]$/);
+  it('one-off uses the giveaway creation time: #1 created 12:33am -> OG0121092026A', () => {
+    const created = new Date(2026, 8, 21, 0, 33, 0);
+    const g = {
+      id: 1,
+      draw_prefix: 'OG',
+      created_at: created.toISOString(),
+      scheduled_at: new Date(2026, 8, 30, 18, 0, 0).toISOString(),
+    };
+    assert.equal(custom.oneOffDrawId(g), 'OG0121092026A');
   });
 });
 

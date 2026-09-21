@@ -530,6 +530,7 @@
     <section class="screen" id="s-other" data-title="Giveaway">
       <div class="page">
         <span class="round-chip">DRAW · <span id="oDrawId">—</span></span>
+        <div class="sub" id="oCloses">—</div>
         <div class="statusbar" id="oStatusbar"><span class="st"><span class="pulse"></span><span id="oPhase">…</span></span><span class="cd"><span id="oCountdown">--:--</span><small id="oCountLabel">until entry closes</small></span></div>
         <div class="pick-card">
           <h3 id="oTitle">Giveaway</h3>
@@ -1210,6 +1211,9 @@ function renderOther() {
   const label = d.label || { chip: 'OTHERS', title: g.name || 'Giveaway' };
   const open = draw.status === 'entry_open';
   el('oDrawId').textContent = draw.id;
+  el('oCloses').textContent = draw.entry_closes_at
+    ? 'Entry closes ' + new Date(draw.entry_closes_at).toLocaleString([], { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+    : '';
   el('oPhase').textContent = open ? 'Entries open' : (draw.status === 'results' ? 'Results out' : draw.status);
   el('oStatusbar').classList.toggle('closed', !open);
   el('oTitle').textContent = label.title + ' — ' + label.chip;
@@ -1269,10 +1273,18 @@ el('oRulesBtn').addEventListener('click', () => {
   const g = currentOther && currentOther.giveaway;
   showRules(g ? g.name + ' — Rules' : 'Rules', (g && g.rules) || 'No rules published for this giveaway yet.');
 });
+function fmtDHMS(totalSeconds) {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = s % 60;
+  return d + 'd ' + pad2(h) + 'h ' + pad2(m) + 'm ' + pad2(ss) + 's';
+}
 function tickClock() {
   if (stack[stack.length - 1] === 's-other' && currentOther && currentOther.draw && currentOther.draw.entry_closes_at) {
     const left = Math.max(0, new Date(currentOther.draw.entry_closes_at).getTime() - Date.now());
-    el('oCountdown').textContent = left > 0 ? fmt(Math.ceil(left / 1000)) : '0:00';
+    el('oCountdown').textContent = left > 0 ? fmtDHMS(Math.ceil(left / 1000)) : 'closed';
   }
   if (demoMode && demo) {
     const left = demo.min <= 50 ? 51 - demo.min : demo.min <= 52 ? 53 - demo.min : 60 - demo.min;

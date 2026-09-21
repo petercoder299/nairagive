@@ -45,11 +45,11 @@ describe('tickets', () => {
     assert.equal(seen.size, 50);
   });
 
-  it('supports 9-digit OG suffixes, non-sequential, unique', () => {
+  it('supports OG tickets: draw id + 10 random digits, non-sequential, unique', () => {
     const seen = new Set();
     for (let i = 0; i < 50; i++) {
-      const c = generateTicketCode('OG21092026A', seen, 9);
-      assert.match(c, /^OG21092026A\d{9}$/);
+      const c = generateTicketCode('OG0121092026A', seen, 10);
+      assert.match(c, /^OG0121092026A\d{10}$/);
       seen.add(c);
     }
     assert.equal(seen.size, 50);

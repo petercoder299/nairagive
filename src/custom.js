@@ -31,12 +31,14 @@ function hourLetterLocal(d) {
 }
 
 // Draw ID for an interval window. Giveaways with a draw_prefix (e.g. 'OG'
-// for Others) use PREFIX + DDMMYYYY + hour letter of the window start
-// (e.g. OG21092026A for a window opening 12:xx am). Others use G<id>-<UTC>.
+// for Others) use PREFIX + 2-digit giveaway number + DDMMYYYY + hour letter
+// of the window start (e.g. giveaway #1 opening 12:33am 21 Sep → OG0121092026A).
+// Others use G<id>-<UTC>.
 function customDrawId(idOrGiveaway, windowStart) {
   const g = typeof idOrGiveaway === 'object' && idOrGiveaway !== null ? idOrGiveaway : { id: idOrGiveaway };
   if (g.draw_prefix) {
-    return `${g.draw_prefix}${fmtLocalDay(windowStart)}${hourLetterLocal(windowStart)}`;
+    const d = new Date(windowStart);
+    return `${g.draw_prefix}${pad(g.id)}${fmtLocalDay(d)}${hourLetterLocal(d)}`;
   }
   return `G${g.id}-${fmtWindowUTC(new Date(windowStart))}`;
 }
@@ -81,10 +83,12 @@ function oneOffState(g, now = new Date()) {
 
 function oneOffDrawId(idOrGiveaway) {
   const g = typeof idOrGiveaway === 'object' && idOrGiveaway !== null ? idOrGiveaway : { id: idOrGiveaway };
-  // Prefixed one-offs (e.g. Netflix on 30 Sep 6pm → OG30092026S): the draw's
-  // own scheduled hour sets the letter.
-  if (g.draw_prefix && g.scheduled_at) {
-    return `${g.draw_prefix}${fmtLocalDay(g.scheduled_at)}${hourLetterLocal(g.scheduled_at)}`;
+  // Prefixed one-offs use the giveaway's own creation time so the ID is
+  // stable across scheduler ticks (e.g. giveaway #1 created 12:33am 21 Sep
+  // → OG0121092026A). Creation hour sets the letter, exactly like hourly.
+  if (g.draw_prefix) {
+    const base = new Date(g.created_at || g.scheduled_at || Date.now());
+    return `${g.draw_prefix}${pad(g.id)}${fmtLocalDay(base)}${hourLetterLocal(base)}`;
   }
   return `G${g.id}-ONCE`;
 }
