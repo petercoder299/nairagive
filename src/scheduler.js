@@ -1,5 +1,5 @@
 const cron = require('node-cron');
-const { getDrawId, getPhase } = require('./draw');
+const { getDrawId, getPhase, displayWinner } = require('./draw');
 const custom = require('./custom');
 const store = require('./store');
 const config = require('./config');
@@ -123,7 +123,7 @@ async function broadcastResults(drawId) {
     text = `⏰ Draw ${drawId} (₦${draw ? draw.amount : config.hourlyAmount}) closed with no entries. New draw opens at the next hour!`;
   } else {
     const lines = winners.map(
-      (w, i) => `${i + 1}. 🎟️ \`${w.ticket_code}\` — @${w.username || w.telegram_id} (+₦${w.prize_amount})`
+      (w, i) => `${i + 1}. 🎟️ \`${w.ticket_code}\` — ${displayWinner(w)} (+₦${w.prize_amount})`
     );
     text = `🏆 *Draw ${drawId} result*\n\n${lines.join('\n')}\n\nNew draw opens at the next hour. Good luck!`;
   }

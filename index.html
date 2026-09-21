@@ -666,6 +666,16 @@ function secsToBoundary(d) {
 }
 function fmt(n) { return pad2(Math.floor(n / 60)) + ':' + pad2(n % 60); }
 const el = (id) => document.getElementById(id);
+// Winner identity chain (mirrors displayWinner in src/draw.js):
+// public @username → telegram numeric ID → profile name.
+function dispW(w) {
+  const u = w || {};
+  if (u.username) return '@' + u.username;
+  if (u.telegram_id !== undefined && u.telegram_id !== null && String(u.telegram_id) !== '') return String(u.telegram_id);
+  const name = u.first_name || u.firstName;
+  if (name) return String(name);
+  return 'unknown';
+}
 const phaseLabel = { entry_open: 'Entries open', drawing: 'Drawing now', results: 'Results out' };
 const countLabel = { entry_open: 'until entry closes', drawing: 'until results', results: 'until next draw' };
 function toast(msg) {
@@ -746,7 +756,7 @@ async function loadLive() {
     rows.forEach((x) => { seen.add(x.id); if (x.ticket_code) paid += (x.amount || 0); });
     el('recent').innerHTML = rows.length
       ? rows.map((x) => '<div class="tcard"><div class="tid">' + x.id + ' · ₦' + x.amount + '</div><div class="trow"><span class="who">' +
-          (x.ticket_code ? '<span class="mono">' + x.ticket_code + '</span><small>@' + (x.username || '?') + '</small>' : '<small>no entries</small>') +
+          (x.ticket_code ? '<span class="mono">' + x.ticket_code + '</span><small>' + dispW(x) + '</small>' : '<small>no entries</small>') +
           '</span></div></div>').join('')
       : '<div class="empty"><div class="e-ic">○</div><p>No results yet — first draw completes at :51–:53 past the hour.</p></div>';
     el('stDraws').textContent = seen.size;
@@ -772,7 +782,7 @@ function renderDraw(d, fromApi) {
     ? w.map((x) => {
         const tail = String(x.ticket_code).replace(/\D/g, '').slice(-5).padStart(5, '0');
         const coins = tail.split('').map((n, i) => '<span class="ball reveal" style="animation-delay:' + (i * 0.12) + 's">' + n + '</span>').join('');
-        return '<div class="pick-card" style="margin-top:14px"><h3>Winning ticket</h3><p class="hint">@' + (x.username || x.telegram_id) + ' · +₦' + x.prize_amount + '</p>' +
+        return '<div class="pick-card" style="margin-top:14px"><h3>Winning ticket</h3><p class="hint">' + dispW(x) + ' · +₦' + x.prize_amount + '</p>' +
           '<div class="balls">' + coins + '</div>' +
           '<div class="tcode-bar"></div><p class="mono small">' + x.ticket_code + '</p></div>';
       }).join('')
@@ -1099,7 +1109,7 @@ function renderOther() {
   el('oWinners').innerHTML = w.length
     ? w.map((x) => {
         const prize = x.prize_amount > 0 ? ' · +₦' + x.prize_amount : '';
-        return '<div class="pick-card" style="margin-top:14px"><h3>Winning ticket</h3><p class="hint">@' + (x.username || x.telegram_id) + prize + '</p><p class="mono small">' + x.ticket_code + '</p></div>';
+        return '<div class="pick-card" style="margin-top:14px"><h3>Winning ticket</h3><p class="hint">' + dispW(x) + prize + '</p><p class="mono small">' + x.ticket_code + '</p></div>';
       }).join('')
     : '';
   if (w.length && lastWinnerBurst !== draw.id) { lastWinnerBurst = draw.id; confettiBurst(90); }

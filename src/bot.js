@@ -1,6 +1,6 @@
 const { Telegraf, Markup } = require('telegraf');
 const config = require('./config');
-const { getDrawId, getPhase } = require('./draw');
+const { getDrawId, getPhase, displayWinner } = require('./draw');
 const store = require('./store');
 const { trackChat } = require('./scheduler');
 
@@ -154,7 +154,7 @@ function createBot() {
       const winners = await store.getWinners(drawId).catch(() => []);
       let extra = '';
       if (winners.length) {
-        extra = `\n\n🏆 Winners:\n${winners.map((w) => `• \`${w.ticket_code}\` — @${w.username || w.telegram_id}`).join('\n')}`;
+        extra = `\n\n🏆 Winners:\n${winners.map((w) => `• \`${w.ticket_code}\` — ${displayWinner(w)}`).join('\n')}`;
       }
       await ctx.reply(entryPageText(drawId, phase, count, tickets) + extra, {
         parse_mode: 'Markdown',
@@ -229,7 +229,7 @@ function createBot() {
       return;
     }
     const lines = rows.map((r) =>
-      r.ticket_code ? `• ${r.id} (₦${r.amount}): \`${r.ticket_code}\` @${r.username || '?'}` : `• ${r.id}: no entries`
+      r.ticket_code ? `• ${r.id} (₦${r.amount}): \`${r.ticket_code}\` ${displayWinner(r)}` : `• ${r.id}: no entries`
     );
     await ctx.reply(`🏆 *Recent results*\n\n${lines.join('\n')}`, { parse_mode: 'Markdown' });
   });

@@ -111,6 +111,19 @@ function seededPickWinners(tickets, { drawId, seedSecret, count = 1 }) {
   return arr.slice(0, count);
 }
 
+// Winner identity chain for display: public @username → telegram numeric ID
+// → profile name. Never renders a bare "@" or "undefined".
+function displayWinner(w) {
+  const u = w || {};
+  if (u.username) return '@' + u.username;
+  if (u.telegram_id !== undefined && u.telegram_id !== null && String(u.telegram_id) !== '') {
+    return String(u.telegram_id);
+  }
+  const name = u.first_name || u.firstName;
+  if (name) return String(name);
+  return 'unknown';
+}
+
 module.exports = {
   pad2,
   hourLetter,
@@ -123,4 +136,5 @@ module.exports = {
   seedToUint32,
   mulberry32,
   seededPickWinners,
+  displayWinner,
 };

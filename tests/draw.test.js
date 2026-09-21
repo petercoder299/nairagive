@@ -6,6 +6,7 @@ const {
   generateTicketCode,
   seededPickWinners,
   hourLetter,
+  displayWinner,
 } = require('../src/draw');
 
 describe('draw ids', () => {
@@ -78,5 +79,25 @@ describe('seeded winner picking (no Math.random)', () => {
     const w = seededPickWinners(tickets, { drawId: '20092026A', seedSecret: 's', count: 2 });
     assert.equal(w.length, 2);
     assert.notEqual(w[0].ticket_code, w[1].ticket_code);
+  });
+});
+
+describe('winner display chain (username → id → profile name)', () => {
+  it('prefers the public @username', () => {
+    assert.equal(displayWinner({ username: 'tunde', telegram_id: 123, first_name: 'T' }), '@tunde');
+  });
+
+  it('falls back to the telegram numeric ID', () => {
+    assert.equal(displayWinner({ username: null, telegram_id: 123456789, first_name: 'T' }), '123456789');
+    assert.equal(displayWinner({ telegram_id: 123456789 }), '123456789');
+  });
+
+  it('falls back to the profile name when no ID either', () => {
+    assert.equal(displayWinner({ username: null, telegram_id: null, first_name: 'Adaeze' }), 'Adaeze');
+  });
+
+  it('never renders bare @ or undefined', () => {
+    assert.equal(displayWinner({}), 'unknown');
+    assert.equal(displayWinner(null), 'unknown');
   });
 });

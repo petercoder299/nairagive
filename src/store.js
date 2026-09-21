@@ -103,7 +103,12 @@ async function getTicketsForDraw(drawId) {
 }
 
 async function getWinners(drawId) {
-  const res = await query('SELECT * FROM draw_winners WHERE draw_id=$1 ORDER BY position', [drawId]);
+  const res = await query(
+    `SELECT w.*, u.first_name FROM draw_winners w
+     LEFT JOIN users u ON u.telegram_id = w.telegram_id
+     WHERE w.draw_id = $1 ORDER BY w.position`,
+    [drawId]
+  );
   return res.rows;
 }
 
@@ -157,8 +162,9 @@ async function getWallet(telegramId) {
 
 async function getRecentResults(limit = 5) {
   const res = await query(
-    `SELECT d.id, d.amount, d.drawn_at, w.ticket_code, w.username
+    `SELECT d.id, d.amount, d.drawn_at, w.ticket_code, w.username, w.telegram_id, u.first_name
      FROM draws d LEFT JOIN draw_winners w ON w.draw_id = d.id
+     LEFT JOIN users u ON u.telegram_id = w.telegram_id
      WHERE d.status IN ('results','closed')
      ORDER BY d.drawn_at DESC NULLS LAST, d.id DESC LIMIT $1`,
     [limit]
