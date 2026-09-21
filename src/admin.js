@@ -122,7 +122,7 @@ function stat(k,v,cls){return "<div class='stat'><div class='k'>"+k+"</div><div 
 function render(){var t=DATA.totals||{};document.getElementById("stats").innerHTML=stat("Users",t.users)+stat("Draws",t.draws)+stat("Tickets",t.tickets)+stat("Winners",t.winners)+stat("Paid out",fmt(t.paidOut),"green")+stat("Pending",t.pendingCount+" · "+fmt(t.pendingSum),"gold");renderWd();renderG();renderD();document.getElementById("updated").textContent="Updated "+new Date().toLocaleTimeString()}
 function renderWd(){var list=(DATA.withdrawals||[]).filter(function(w){return wdTab==="pending"?w.status==="pending":w.status!=="pending"});var p=slice(list,"wd");document.getElementById("wdRows").innerHTML=p.items.map(function(w){var bank=[w.full_name,w.account_number,w.bank_name].filter(Boolean).join(" · ");var act=w.status==="pending"?"<button class='mini-ok' data-act='paid' data-id='"+w.id+"'>Paid</button><button class='mini-no' data-act='rejected' data-id='"+w.id+"'>Reject</button>":"";return "<tr><td>"+w.id+"</td><td>"+esc(w.username||w.telegram_id)+"</td><td class='num'>"+fmt(w.amount)+"</td><td>"+esc(bank)+"</td><td><span class='pill "+w.status+"'>"+w.status+"</span></td><td>"+dt(w.created_at)+"</td><td>"+act+"</td></tr>"}).join("")||"<tr><td colspan='7' class='muted'>Nothing here.</td></tr>";document.getElementById("pgWd").innerHTML=pagerHTML(p.page,p.total,"wd")}
 function schedOf(g){if(g.interval_minutes)return "every "+g.interval_minutes+"m";if(g.scheduled_at)return dt(g.scheduled_at);return "—"}
-function renderG(){var p=slice(DATA.giveaways||[],"g");document.getElementById("gRows").innerHTML=p.items.map(function(g){var done=g.status!=="active";return "<tr><td>"+g.id+"</td><td><b>"+esc(g.name)+"</b></td><td>"+esc(g.category)+"</td><td class='num'>"+fmt(g.amount)+"</td><td class='num'>"+g.winners_per_draw+"</td><td>"+schedOf(g)+"</td><td><span class='pill "+(done?"done":"pending")+"'>"+g.status+"</span></td><td>"+(done?"":"<button class='mini-no' data-stop='"+g.id+"'>Stop</button>")+"</td></tr>"}).join("")||"<tr><td colspan='8' class='muted'>No giveaways yet.</td></tr>";document.getElementById("pgG").innerHTML=pagerHTML(p.page,p.total,"g")}
+function renderG(){var p=slice(DATA.giveaways||[],"g");document.getElementById("gRows").innerHTML=p.items.map(function(g){var done=g.status!=="active";return "<tr><td>"+g.id+"</td><td><b>"+esc(g.name)+"</b></td><td>"+esc(g.category)+"</td><td class='num'>"+fmt(g.amount)+"</td><td class='num'>"+g.winners_per_draw+"</td><td>"+schedOf(g)+"</td><td><span class='pill "+(done?"done":"pending")+"'>"+g.status+"</span></td><td><button class='mini-ok' data-edit='"+g.id+"'>Sponsor</button>"+(done?"":"<button class='mini-no' data-stop='"+g.id+"'>Stop</button>")+"</td></tr>"}).join("")||"<tr><td colspan='8' class='muted'>No giveaways yet.</td></tr>";document.getElementById("pgG").innerHTML=pagerHTML(p.page,p.total,"g")}
 function renderD(){call("GET","/api/draws/current").then(function(d){document.getElementById("curInfo").value=d.drawId+" · "+d.phase+" · "+d.ticketCount+" entries"}).catch(function(){});
 var p=slice(DATA.recent||[],"d");document.getElementById("drawRows").innerHTML=p.items.map(function(r){return "<tr><td><b>"+esc(r.id)+"</b></td><td class='num'>"+fmt(r.amount)+"</td><td class='mono'>"+esc(r.ticket_code||"—")+"</td><td>"+esc(r.username?"@"+r.username:"—")+"</td></tr>"}).join("")||"<tr><td colspan='4' class='muted'>No draws yet.</td></tr>";document.getElementById("pgD").innerHTML=pagerHTML(p.page,p.total,"d")}
 document.getElementById("loginBtn").addEventListener("click",login);
@@ -133,6 +133,7 @@ document.getElementById("tabP").addEventListener("click",function(){wdTab="pendi
 document.getElementById("tabH").addEventListener("click",function(){wdTab="history";PG.wd=1;document.getElementById("tabH").classList.add("on");document.getElementById("tabP").classList.remove("on");renderWd()});
 document.getElementById("createBtn").addEventListener("click",function(){var b={name:val("g_name"),category:val("g_cat"),amount:+val("g_amt"),winners_per_draw:+val("g_win")||1,interval_minutes:val("g_int")?+val("g_int"):null,starts_at:val("g_start")?new Date(val("g_start")).toISOString():null,ends_at:val("g_end")?new Date(val("g_end")).toISOString():null,scheduled_at:val("g_sched")?new Date(val("g_sched")).toISOString():null,sponsor_name:val("g_sp")||undefined,rules:val("g_rules")||null,draw_prefix:val("g_prefix")||null,ticket_digits:val("g_digits")?+val("g_digits"):10};if(!b.name||!b.amount){toast("Name and amount are required.");return}call("POST","/api/giveaways",b).then(function(d){document.getElementById("g_out").innerHTML="<span class='pill pending'>created #"+d.id+"</span>";PG.g=1;return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Giveaway created.",true)}).catch(function(e){toast("Create failed: "+e.message)})});
 document.getElementById("triggerBtn").addEventListener("click",function(){call("POST","/api/draws/current/trigger",{}).then(function(d){toast("Draw triggered: "+(d.winners||[]).length+" winner(s).",true)}).catch(function(e){toast("Trigger failed: "+e.message)})});
+document.getElementById("gRows").addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-edit]"):null;if(b){var g=null;for(var i=0;i<DATA.giveaways.length;i++){if(String(DATA.giveaways[i].id)===b.getAttribute("data-edit"))g=DATA.giveaways[i]}if(!g)return;var nm=prompt("Sponsor name",g.sponsor_name||"");if(nm===null)return;var ln=prompt("Sponsor link",g.sponsor_link||"");if(ln===null)return;var bi=prompt("Sponsor bio",g.sponsor_bio||"");if(bi===null)return;call("PATCH","/api/giveaways/"+g.id,{sponsor_name:nm,sponsor_link:ln,sponsor_bio:bi}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Sponsor updated — live immediately.",true)}).catch(function(err){toast("Failed: "+err.message)});return}});
 document.getElementById("gRows").addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-stop]"):null;if(!b)return;var id=b.getAttribute("data-stop");if(!confirm("Stop giveaway #"+id+"? Open draws already created keep running."))return;call("PATCH","/api/giveaways/"+id,{status:"done"}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Giveaway stopped.",true)}).catch(function(err){toast("Failed: "+err.message)})});
 document.getElementById("wdRows").addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-act]"):null;if(!b)return;var id=b.getAttribute("data-id");var act=b.getAttribute("data-act");if(!confirm(act==="paid"?"Confirm withdrawal #"+id+" as PAID?":"Reject withdrawal #"+id+"? The amount will be refunded."))return;call("POST","/api/withdrawals/"+id+"/"+act,{}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast(act==="paid"?"Marked paid.":"Rejected and refunded.",true)}).catch(function(err){toast("Failed: "+err.message)})});
 document.addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-pgsec]"):null;if(!b||b.disabled)return;var sec=b.getAttribute("data-pgsec");if(!PG.hasOwnProperty(sec))return;PG[sec]+=parseInt(b.getAttribute("data-pgd"),10)||0;if(sec==="wd")renderWd();else if(sec==="g")renderG();else if(sec==="d")renderD()});
@@ -255,10 +256,27 @@ function createAdminApp() {
         vals.push(b.rules || null);
         sets.push(`rules = $${vals.length}`);
       }
-      if (!sets.length) return res.status(400).json({ error: 'nothing to update (status, scheduled_at, rules)' });
+      for (const f of ['sponsor_name', 'sponsor_link', 'sponsor_bio']) {
+        if (b[f] !== undefined) {
+          vals.push(b[f] || null);
+          sets.push(`${f} = $${vals.length}`);
+        }
+      }
+      if (!sets.length) {
+        return res.status(400).json({ error: 'nothing to update (status, scheduled_at, rules, sponsor_*)' });
+      }
       const r = await query(`UPDATE giveaways SET ${sets.join(', ')} WHERE id = $1 RETURNING *`, vals);
       if (!r.rows.length) return res.status(404).json({ error: 'not found' });
-      res.json(r.rows[0]);
+      const g = r.rows[0];
+      // Sponsor edits apply to the live open draw immediately — no recreate needed.
+      if (b.sponsor_name !== undefined || b.sponsor_link !== undefined || b.sponsor_bio !== undefined) {
+        await query(
+          `UPDATE draws SET sponsor_name = $2, sponsor_link = $3, sponsor_bio = $4
+           WHERE giveaway_id = $1 AND status = 'entry_open'`,
+          [req.params.id, g.sponsor_name, g.sponsor_link, g.sponsor_bio]
+        );
+      }
+      res.json(g);
     } catch (e) {
       res.status(500).json({ error: e.message });
     }
