@@ -352,22 +352,7 @@
   .tx-t { font-size: 14px; font-weight: 700; word-break: break-word; }
   .tx-d { font-size: 12px; color: var(--ink-3); font-weight: 500; margin-top: 1px; }
   .tx-a { font-weight: 800; font-size: 15px; white-space: nowrap; font-variant-numeric: tabular-nums; font-family: var(--head-font); color: var(--emerald-deep, #007A44); }
-  /* Demo + misc */
-  .modes { display: flex; gap: 8px; margin-bottom: 12px; }
-  .modes button {
-    flex: 1; padding: 10px; border-radius: 12px; border: 2.5px solid var(--ink);
-    background: #fff; color: var(--ink-2); font-weight: 800; font-size: 13px; font-family: var(--head-font);
-  }
-  .modes button.on { background: var(--ink); color: var(--gold-soft); border-color: var(--ink); }
-  .demobar {
-    background: linear-gradient(90deg, #FFD968, var(--gold-soft)); color: var(--ink);
-    border: 2.5px solid var(--ink);
-    font-weight: 800; font-size: 12px; border-radius: 12px; padding: 9px 11px;
-    margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px;
-    box-shadow: var(--shadow-hard);
-  }
-  .demobar button { border: 2px solid var(--ink); border-radius: 8px; background: #fff; color: var(--ink); font-weight: 800; padding: 6px 12px; font-size: 12px; flex: none; }
-  #demoFeed .tcard.flash { border-color: var(--coral); box-shadow: 4px 4px 0 var(--coral); }
+  /* Misc */
   .sponsor { border-left: 4px solid var(--coral); padding-left: 12px; margin: 14px 2px 0; font-size: 12.5px; color: var(--ink-2); font-weight: 500; line-height: 1.6; }
   .sponsor a { color: var(--coral); }
   .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
@@ -470,8 +455,6 @@
     <!-- 4a · HOURLY TICKET PAGE -->
     <section class="screen" id="s-hourly" data-title="Hourly Draw">
       <div class="page">
-        <div class="modes"><button id="modeLive" class="on" type="button">Live</button><button id="modeDemo" type="button">Demo draw</button></div>
-        <div class="demobar" id="demoBar" style="display:none"><span>DEMO — simulated, no real money</span><button id="demoSkip" type="button">Skip »</button></div>
         <span class="round-chip">DRAW · <span id="drawId">—</span></span>
         <div class="statusbar" id="statusbar"><span class="st"><span class="pulse"></span><span id="phase">…</span></span><span class="cd"><span id="countdown">--:--</span><small id="countLabel">until entry closes</small></span></div>
         <div class="pick-card">
@@ -491,8 +474,6 @@
         <div id="winners"></div>
         <div class="sec-head"><h2 style="font-size:20px">My entries</h2><span class="count" id="myCount">0 this round</span></div>
         <div class="cards" id="myTickets"><p class="muted small">No entries in this round yet.</p></div>
-        <div class="sec-head" id="demoFeedLabel" style="display:none"><h2 style="font-size:20px">Demo entries</h2><span class="count">simulated</span></div>
-        <div class="cards" id="demoFeed" style="display:none"></div>
         <div class="sponsor" id="sponsor"></div>
       </div>
     </section>
@@ -741,7 +722,6 @@ let serverSeen = false;
 let hourlyRules = '';
 let sponsoredRows = [];
 async function loadLive() {
-  if (demoMode) return;
   try {
     const d = await api('/api/draws/current');
     serverSeen = true;
@@ -865,7 +845,6 @@ async function loadMe() {
   }
 }
 async function claimTicket() {
-  if (demoMode) return demoClaim();
   if (!IN_TELEGRAM && !TEST_USER) return enableTestMode();
   el('claimBtn').disabled = true;
   try {
@@ -1001,158 +980,7 @@ document.getElementById('sponsored').addEventListener('click', async (e) => {
   }
 });
 
-// ---- DEMO mode: simulated full draw loop for UX testing (explicitly fake) ----
-let demoMode = false;
-let demo = null;
-let demoTimer = null;
-let demoShuffleFx = null;
-const DEMO_SECRET = 'demo-simulation';
-const DEMO_NAMES = ['Adaeze', 'Tunde', 'Ngozi', 'Emeka', 'Fatima', 'Yusuf', 'Chiamaka', 'Olumide', 'Aisha', 'Ibrahim', 'Nkechi', 'Segun', 'Zainab', 'Chidi'];
-function demoPhase() {
-  if (!demo) return 'entry_open';
-  return demo.min <= 50 ? 'entry_open' : demo.min <= 52 ? 'drawing' : 'results';
-}
-function demoId() {
-  const p = (n) => String(n).padStart(2, '0');
-  return p(demo.day) + p(demo.mon + 1) + demo.year + String.fromCharCode(65 + (demo.hour % 24));
-}
-function setMode(d) {
-  demoMode = d;
-  el('modeLive').classList.toggle('on', !d);
-  el('modeDemo').classList.toggle('on', d);
-  el('demoBar').style.display = d ? '' : 'none';
-  el('demoFeed').style.display = d ? '' : 'none';
-  el('demoFeedLabel').style.display = d ? '' : 'none';
-  if (demoTimer) { clearInterval(demoTimer); demoTimer = null; }
-  stopShuffleFx();
-  if (d) startDemo();
-  else { el('myTickets').innerHTML = '<p class="muted small">No entries in this round yet.</p>'; loadLive(); loadMe(); }
-}
-el('modeLive').addEventListener('click', () => setMode(false));
-el('modeDemo').addEventListener('click', () => setMode(true));
-el('demoSkip').addEventListener('click', () => { if (demo) demo.min = demo.min < 51 ? 51 : 53; });
-function startDemo() {
-  const now = new Date();
-  demo = { min: 0, hour: now.getHours(), day: now.getDate(), mon: now.getMonth(), year: now.getFullYear(), tickets: [], mine: [], winner: null, drawing: false, busy: false };
-  el('demoFeed').innerHTML = '';
-  el('myTickets').innerHTML = '<p class="muted small">No entries in this round yet.</p>';
-  el('winners').innerHTML = '';
-  demoTick();
-  demoTimer = setInterval(demoTick, 1000);
-}
-function demoTicket(id) {
-  return id + String(Math.floor(rnd() * 10000000000)).padStart(10, '0');
-}
-function demoClaim() {
-  if (!demo || demoPhase() !== 'entry_open') { el('claimNote').textContent = '[DEMO] Entry is closed right now.'; toast('Entry closed'); return; }
-  if (demo.mine.length >= 10) { el('claimNote').textContent = '[DEMO] Limit reached (10 tickets).'; return; }
-  const code = demoTicket(demoId());
-  demo.mine.push({ code, user: 'you' });
-  haptic('success');
-  confettiBurst(60);
-  toast('Demo ticket issued');
-  el('claimNote').textContent = '[DEMO] Ticket: ' + code + ' (' + demo.mine.length + '/10)';
-}
-async function demoTick() {
-  if (!demoMode || !demo || demo.busy) return;
-  demo.min++;
-  if (demo.min >= 60) {
-    demo.hour = (demo.hour + 1) % 24; demo.min = 0;
-    demo.tickets = []; demo.mine = []; demo.winner = null; demo.drawing = false;
-    el('demoFeed').innerHTML = '';
-  }
-  const id = demoId();
-  const phase = demoPhase();
-  if (phase === 'entry_open' && demo.tickets.length < 140) {
-    const k = 1 + Math.floor(rnd() * 3);
-    for (let i = 0; i < k && demo.tickets.length < 140; i++) {
-      const nm = DEMO_NAMES[Math.floor(rnd() * DEMO_NAMES.length)];
-      const code = demoTicket(id);
-      demo.tickets.push({ code, user: nm });
-      const li = document.createElement('div');
-      li.className = 'tcard';
-      li.style.marginBottom = '8px';
-      li.innerHTML = '<div class="tid">DEMO ENTRY</div><div class="trow"><span class="who">@' + nm.toLowerCase() + '<small class="mono">…' + code.slice(-6) + '</small></span></div>';
-      const feed = el('demoFeed');
-      feed.prepend(li);
-      while (feed.children.length > 6) feed.removeChild(feed.lastChild);
-    }
-  }
-  if (phase === 'drawing' && !demo.drawing) { demo.drawing = true; startShuffleFx(); }
-  if (phase === 'results') {
-    stopShuffleFx();
-    if (!demo.winner && (demo.tickets.length + demo.mine.length)) {
-      demo.busy = true;
-      try {
-        demo.winner = await demoPickWinner(demo.tickets.concat(demo.mine), id);
-      } catch (_) {}
-      demo.busy = false;
-    }
-  }
-  renderDraw({
-    drawId: id, phase, ticketCount: demo.tickets.length + demo.mine.length,
-    winners: demo.winner ? [{ ticket_code: demo.winner.code, username: demo.winner.user, prize_amount: 200, telegram_id: 0 }] : [],
-    draw: { amount: 200 },
-  }, true);
-  el('entries').textContent = demo.mine.length + '/10';
-  el('myCount').textContent = demo.mine.length + ' this round';
-  el('myBar').style.width = (demo.mine.length * 10) + '%';
-  el('myTickets').innerHTML = demo.mine.length
-    ? demo.mine.map((t) => '<div class="tcard"><div class="tcode-bar"></div><div class="tid">' + id + '</div><div class="trow"><span class="who"><span class="mono">' + t.code + '</span></span></div></div>').join('')
-    : '<p class="muted small">No entries in this round yet.</p>';
-  const open = phase === 'entry_open';
-  el('claimBtn').textContent = open ? 'Get ticket (' + demo.mine.length + '/10)' : 'Entry closed';
-  el('claimBtn').disabled = !open || demo.mine.length >= 10;
-  el('footDraw').textContent = id + ' · DEMO';
-}
-function startShuffleFx() {
-  stopShuffleFx();
-  demoShuffleFx = setInterval(() => {
-    const rows = document.querySelectorAll('#demoFeed .tcard');
-    rows.forEach((r) => r.classList.remove('flash'));
-    if (rows.length) rows[Math.floor(rnd() * rows.length)].classList.add('flash');
-  }, 150);
-}
-function stopShuffleFx() {
-  if (demoShuffleFx) { clearInterval(demoShuffleFx); demoShuffleFx = null; }
-  document.querySelectorAll('#demoFeed .flash').forEach((r) => r.classList.remove('flash'));
-}
-async function shaHex(str) {
-  try {
-    if (window.crypto && crypto.subtle) {
-      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-      return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
-    }
-  } catch (_) {}
-  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
-  for (let i = 0; i < str.length; i++) {
-    const ch = str.charCodeAt(i);
-    h1 = Math.imul(h1 ^ ch, 2654435761);
-    h2 = Math.imul(h2 ^ ch, 1597334677);
-  }
-  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-  return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
-}
-// Same algorithm as the server (src/draw.js): sort, seed, deterministic shuffle, take first.
-async function demoPickWinner(pool, drawId) {
-  const sorted = [...pool].sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
-  const seedStr = drawId + '|n=' + sorted.length + '|codes=' + sorted.map((t) => t.code).join(',') + '|secret=' + DEMO_SECRET;
-  const hex = await shaHex(seedStr);
-  let a = parseInt(hex.slice(0, 8), 16) >>> 0;
-  const rand = function () {
-    a |= 0; a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-  const arr = [...sorted];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
-  }
-  return arr[0];
-}
+// ---- Others list + full giveaway page ----
 // ---- Others list + full giveaway page ----
 let currentOther = null;
 async function loadOthers() {
@@ -1285,11 +1113,6 @@ function tickClock() {
   if (stack[stack.length - 1] === 's-other' && currentOther && currentOther.draw && currentOther.draw.entry_closes_at) {
     const left = Math.max(0, new Date(currentOther.draw.entry_closes_at).getTime() - Date.now());
     el('oCountdown').textContent = left > 0 ? fmtDHMS(Math.ceil(left / 1000)) : 'closed';
-  }
-  if (demoMode && demo) {
-    const left = demo.min <= 50 ? 51 - demo.min : demo.min <= 52 ? 53 - demo.min : 60 - demo.min;
-    el('countdown').textContent = left + 'm';
-    return;
   }
   if (!serverSeen) return;
   el('countdown').textContent = fmt(secsToBoundary(new Date()));

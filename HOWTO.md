@@ -54,9 +54,9 @@ empty = reads degrade gracefully; claiming needs a database — step 3.)
 npm start
 ```
 
-Open http://localhost:3000 — walk Home → Enter Giveaway → Cash → ₦200 Hourly →
-**Demo draw** for a full simulated cycle. To test real claiming in a desktop
-browser, tap **Enable browser test mode** (works because `ALLOW_TEST_MODE=true`).
+Open http://localhost:3000 — walk Home → Enter Giveaway → Cash → ₦200 Hourly.
+To test real claiming in a desktop browser, tap **Enable browser test mode**
+(works because `ALLOW_TEST_MODE=true`).
 
 > Never commit `.env` — `.gitignore` already excludes it.
 
