@@ -27,6 +27,8 @@ services:
         value: 200
       - key: MAX_TICKETS_PER_USER
         value: 10
+      - key: WITHDRAW_MIN
+        value: 100
       - key: SPONSOR_NAME
         value: NairaGiveBot
       - key: SPONSOR_LINK

@@ -5,6 +5,7 @@ const config = require('./config');
 const store = require('./store');
 const { query } = require('./db');
 const { getDrawId, getPhase } = require('./draw');
+const { validateWithdrawal } = require('./withdrawals');
 const { requireTelegramUserOrTest } = require('./telegramAuth');
 
 function mountMiniApp(app) {
@@ -147,6 +148,38 @@ function mountMiniApp(app) {
       res.json({ drawId, ticket_code: code, count, max: config.maxTicketsPerUser });
     } catch (e) {
       if (e.code === 'LIMIT') return res.status(429).json({ error: e.message });
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // My withdrawal requests
+  app.get('/api/miniapp/withdrawals', auth, async (req, res) => {
+    try {
+      res.json(await store.getUserWithdrawals(req.tgUser.id));
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Request a withdrawal (min ₦100). Balance is debited immediately;
+  // admin pays out manually, or rejects (which refunds).
+  app.post('/api/miniapp/withdrawals', auth, async (req, res) => {
+    try {
+      const v = validateWithdrawal(req.body || {}, config.withdrawMin);
+      if (!v.ok) return res.status(400).json({ error: v.error });
+      const u = req.tgUser;
+      await store.upsertUser(u.id, u.username, u.first_name).catch(() => {});
+      const r = await store.createWithdrawal({
+        telegramId: u.id,
+        username: u.username,
+        fullName: v.value.fullName,
+        accountNumber: v.value.accountNumber,
+        bankName: v.value.bankName,
+        amount: v.value.amount,
+      });
+      res.json({ withdrawal: r.withdrawal, balance: r.balance });
+    } catch (e) {
+      if (e.code === 'INSUFFICIENT') return res.status(400).json({ error: e.message });
       res.status(500).json({ error: e.message });
     }
   });

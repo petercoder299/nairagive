@@ -1,4 +1,4 @@
-const { query } = require('./db');
+const { query, getPool } = require('./db');
 const config = require('./config');
 const { generateTicketCode, seededPickWinners } = require('./draw');
 
@@ -185,6 +185,93 @@ async function getOverdueCustomDraws(now = new Date()) {
   return res.rows;
 }
 
+// ---- Withdrawals (balance debit + request are one transaction) ----
+async function createWithdrawal({ telegramId, username, fullName, accountNumber, bankName, amount }) {
+  const pool = getPool();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const u = await client.query(
+      `UPDATE users SET wallet_balance = wallet_balance - $2, updated_at = NOW()
+       WHERE telegram_id = $1 AND wallet_balance >= $2 RETURNING wallet_balance`,
+      [telegramId, amount]
+    );
+    if (!u.rows.length) {
+      const err = new Error('Insufficient balance.');
+      err.code = 'INSUFFICIENT';
+      throw err;
+    }
+    const w = await client.query(
+      `INSERT INTO withdrawals (telegram_id, username, full_name, account_number, bank_name, amount, status)
+       VALUES ($1,$2,$3,$4,$5,$6,'pending') RETURNING *`,
+      [telegramId, username || null, fullName, accountNumber, bankName, amount]
+    );
+    await client.query('COMMIT');
+    return { withdrawal: w.rows[0], balance: u.rows[0].wallet_balance };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+async function getUserWithdrawals(telegramId) {
+  const res = await query(
+    `SELECT id, full_name, account_number, bank_name, amount, status, created_at
+     FROM withdrawals WHERE telegram_id = $1 ORDER BY id DESC LIMIT 20`,
+    [telegramId]
+  );
+  return res.rows;
+}
+
+async function getWithdrawals(status = 'pending') {
+  if (status === 'all') {
+    const res = await query(`SELECT * FROM withdrawals ORDER BY id DESC LIMIT 100`);
+    return res.rows;
+  }
+  const res = await query(`SELECT * FROM withdrawals WHERE status = $1 ORDER BY id DESC LIMIT 100`, [status]);
+  return res.rows;
+}
+
+// Admin decision: 'paid' (money already debited at request time) or
+// 'rejected' (refunds the amount). Idempotent — only pending rows move.
+async function resolveWithdrawal(id, decision) {
+  if (decision !== 'paid' && decision !== 'rejected') throw new Error('Bad decision.');
+  const pool = getPool();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const cur = await client.query(`SELECT * FROM withdrawals WHERE id = $1 FOR UPDATE`, [id]);
+    if (!cur.rows.length) {
+      const err = new Error('Withdrawal not found.');
+      err.code = 'NOT_FOUND';
+      throw err;
+    }
+    const w = cur.rows[0];
+    if (w.status === 'pending') {
+      await client.query(`UPDATE withdrawals SET status = $2, processed_at = NOW() WHERE id = $1`, [
+        id,
+        decision,
+      ]);
+      if (decision === 'rejected') {
+        await client.query(
+          `UPDATE users SET wallet_balance = wallet_balance + $2, updated_at = NOW() WHERE telegram_id = $1`,
+          [w.telegram_id, w.amount]
+        );
+      }
+      w.status = decision;
+    }
+    await client.query('COMMIT');
+    return w;
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   upsertUser,
   ensureDraw,
@@ -202,4 +289,8 @@ module.exports = {
   markGiveawayDone,
   getOpenCustomDraws,
   getOverdueCustomDraws,
+  createWithdrawal,
+  getUserWithdrawals,
+  getWithdrawals,
+  resolveWithdrawal,
 };

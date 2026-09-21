@@ -72,3 +72,19 @@ CREATE TABLE IF NOT EXISTS giveaways (
 -- Upgrade for databases created before the rules column existed.
 -- Safe to re-run: IF NOT EXISTS. (npm run migrate runs this whole file.)
 ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS rules TEXT;
+
+-- User withdrawal requests (min ₦100, paid out manually by admin)
+CREATE TABLE IF NOT EXISTS withdrawals (
+  id SERIAL PRIMARY KEY,
+  telegram_id BIGINT NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+  username TEXT,
+  full_name TEXT NOT NULL,
+  account_number TEXT NOT NULL,
+  bank_name TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  processed_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_withdrawals_status ON withdrawals(status);
+CREATE INDEX IF NOT EXISTS idx_withdrawals_user ON withdrawals(telegram_id);

@@ -18,6 +18,7 @@ const config = {
   allowTestMode: requireEnv('ALLOW_TEST_MODE', 'false') === 'true',
   hourlyAmount: parseInt(requireEnv('HOURLY_AMOUNT', '200'), 10),
   maxTicketsPerUser: parseInt(requireEnv('MAX_TICKETS_PER_USER', '10'), 10),
+  withdrawMin: parseInt(requireEnv('WITHDRAW_MIN', '100'), 10),
   sponsor: {
     name: requireEnv('SPONSOR_NAME', 'NairaGiveBot'),
     link: requireEnv('SPONSOR_LINK', 'https://t.me/nairagivebot'),

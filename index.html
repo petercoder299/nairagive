@@ -362,6 +362,8 @@
   .sponsor { border-left: 4px solid var(--coral); padding-left: 12px; margin: 14px 2px 0; font-size: 12.5px; color: var(--ink-2); font-weight: 500; line-height: 1.6; }
   .sponsor a { color: var(--coral); }
   .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+  .field { display: flex; flex-direction: column; gap: 9px; }
+  .field input { border: 2.5px solid var(--ink); border-radius: 12px; padding: 12px 13px; font-family: inherit; font-size: 14px; font-weight: 600; background: #fff; color: var(--ink); width: 100%; }
   .muted { color: var(--ink-2); }
   .small { font-size: 13px; font-weight: 500; }
   .spacer { height: 22px; }
@@ -547,7 +549,19 @@
         <div class="spacer"></div>
         <div class="sec-head"><h2 style="font-size:20px">Win history</h2></div>
         <div class="panel" id="winsPanel"><div id="wins"><p class="muted small" style="padding:12px 0">Open via Telegram to see your wins.</p></div></div>
-        <p class="muted small" style="margin-top:12px">Withdrawals (OPay / bank) plus KYC arrive after the cash launch.</p>
+        <div class="spacer"></div>
+        <div class="sec-head"><h2 style="font-size:20px">Withdraw</h2><span class="count">min ₦100</span></div>
+        <div class="panel">
+          <div class="field" style="padding:12px 0">
+            <input id="wdName" placeholder="Full name on account" maxlength="100" autocomplete="off" />
+            <input id="wdAcct" placeholder="Account number (10 digits)" inputmode="numeric" maxlength="11" autocomplete="off" />
+            <input id="wdBank" placeholder="Bank name" maxlength="60" autocomplete="off" />
+            <input id="wdAmt" placeholder="Amount (₦, min 100)" inputmode="numeric" autocomplete="off" />
+            <button class="btn-p" id="wdBtn" type="button">Request withdrawal</button>
+          </div>
+        </div>
+        <div class="sec-head"><h2 style="font-size:20px">My requests</h2></div>
+        <div class="panel"><div id="wdMine"><p class="muted small" style="padding:12px 0">No requests yet.</p></div></div>
       </div>
     </section>
 
@@ -821,8 +835,35 @@ async function loadWallet() {
     el('wins').innerHTML = (w.wins && w.wins.length)
       ? w.wins.map((x) => '<div class="tx"><span class="tx-ic">₦</span><span class="tx-mid"><span class="tx-t">+₦' + x.prize_amount + '</span><span class="tx-d mono">' + x.ticket_code + ' · ' + x.draw_id + '</span></span></div>').join('')
       : '<p class="muted small" style="padding:12px 0">No winnings yet — claim tickets every hour.</p>';
+    loadWdMine();
   } catch (_) {}
 }
+async function loadWdMine() {
+  if (!IN_TELEGRAM && !TEST_USER) return;
+  try {
+    const rows = await api('/api/miniapp/withdrawals');
+    el('wdMine').innerHTML = rows.length
+      ? rows.map((w) => '<div class="tx"><span class="tx-ic">₦</span><span class="tx-mid"><span class="tx-t">₦' + w.amount + ' · ' + w.status + '</span><span class="tx-d">' + w.full_name + ' · ' + w.account_number + ' · ' + w.bank_name + '</span></span></div>').join('')
+      : '<p class="muted small" style="padding:12px 0">No requests yet.</p>';
+  } catch (_) {}
+}
+el('wdBtn').addEventListener('click', async () => {
+  if (!IN_TELEGRAM && !TEST_USER) { toast('Open via Telegram or test mode'); return; }
+  const btn = el('wdBtn');
+  btn.disabled = true;
+  try {
+    await api('/api/miniapp/withdrawals', { method: 'POST', body: JSON.stringify({ full_name: el('wdName').value, account_number: el('wdAcct').value, bank_name: el('wdBank').value, amount: Number(el('wdAmt').value) }) });
+    haptic('success');
+    toast('Withdrawal requested');
+    el('wdAmt').value = '';
+    await loadWallet();
+  } catch (e) {
+    haptic('error');
+    toast('Request failed');
+  } finally {
+    btn.disabled = false;
+  }
+});
 async function loadSponsored() {
   let rows = [];
   try {
