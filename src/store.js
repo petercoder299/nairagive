@@ -1,6 +1,7 @@
 const { query, getPool } = require('./db');
 const config = require('./config');
 const { generateTicketCode, seededPickWinners } = require('./draw');
+const { startOfHour } = require('./custom');
 
 async function upsertUser(telegramId, username, firstName) {
   await query(
@@ -65,14 +66,15 @@ async function countUserTicketsSince(drawId, telegramId, since) {
 }
 
 async function issueTicket(drawId, telegramId, username, digits = 10, perHour = false) {
-  // Enforce max 10 per user per draw — or per rolling hour for multi-day customs.
+  // Enforce max 10 per user per draw — or per calendar hour for multi-day
+  // customs (fresh 10 every :00, like the hourly rhythm).
   const count = perHour
-    ? await countUserTicketsSince(drawId, telegramId, new Date(Date.now() - 3600000))
+    ? await countUserTicketsSince(drawId, telegramId, startOfHour())
     : await countUserTickets(drawId, telegramId);
   if (count >= config.maxTicketsPerUser) {
     const err = new Error(
       perHour
-        ? `Ticket limit reached (max ${config.maxTicketsPerUser} per hour). Try again later.`
+        ? `Ticket limit reached (max ${config.maxTicketsPerUser} per hour). New tickets at the top of the hour.`
         : `Ticket limit reached (max ${config.maxTicketsPerUser} per draw).`
     );
     err.code = 'LIMIT';

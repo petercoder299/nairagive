@@ -6,6 +6,7 @@ const store = require('./store');
 const { query } = require('./db');
 const { getDrawId, getPhase } = require('./draw');
 const labelFor = require('./custom').drawLabel;
+const startOfHour = require('./custom').startOfHour;
 const { validateWithdrawal } = require('./withdrawals');
 const { requireTelegramUserOrTest } = require('./telegramAuth');
 
@@ -139,9 +140,9 @@ function mountMiniApp(app) {
     try {
       const draws = await store.getOpenCustomDraws().catch(() => []);
       const out = [];
-      const hourAgo = new Date(Date.now() - 3600000);
+      const hourStart = startOfHour();
       for (const d of draws) {
-        const myCount = await store.countUserTicketsSince(d.id, req.tgUser.id, hourAgo).catch(() => 0);
+        const myCount = await store.countUserTicketsSince(d.id, req.tgUser.id, hourStart).catch(() => 0);
         out.push({
           drawId: d.id,
           amount: d.amount,
@@ -181,7 +182,7 @@ function mountMiniApp(app) {
         if (g && g.ticket_digits) digits = g.ticket_digits;
       }
       const code = await store.issueTicket(drawId, u.id, u.username, digits, true);
-      const count = await store.countUserTicketsSince(drawId, u.id, new Date(Date.now() - 3600000));
+      const count = await store.countUserTicketsSince(drawId, u.id, startOfHour());
       res.json({ drawId, ticket_code: code, count, max: config.maxTicketsPerUser });
     } catch (e) {
       if (e.code === 'LIMIT') return res.status(429).json({ error: e.message });

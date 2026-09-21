@@ -93,6 +93,13 @@ function oneOffDrawId(idOrGiveaway) {
   return `G${g.id}-ONCE`;
 }
 
+// Start of the current clock hour (server local time, Africa/Lagos).
+// Custom draws allow 10 tickets per calendar hour: a fresh 10 every :00.
+function startOfHour(d = new Date()) {
+  const x = new Date(d);
+  x.setMinutes(0, 0, 0);
+  return x;
+}
 // Ticket label so users can tell draws apart: CASH, GADGET, NETFLIX…
 function drawLabel(draw, giveaway) {
   if (giveaway) {
@@ -114,4 +121,5 @@ module.exports = {
   windowCount,
   oneOffState,
   drawLabel,
+  startOfHour,
 };

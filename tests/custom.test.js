@@ -119,3 +119,20 @@ describe('ticket labels', () => {
     });
   });
 });
+
+describe('calendar-hour cap', () => {
+  it('startOfHour floors to :00:00 of the same hour', () => {
+    const d = new Date(2026, 8, 21, 14, 37, 22);
+    const s = custom.startOfHour(d);
+    assert.equal(s.getHours(), 14);
+    assert.equal(s.getMinutes(), 0);
+    assert.equal(s.getSeconds(), 0);
+    assert.equal(s.getDate(), 21);
+  });
+
+  it('a new hour means a fresh window', () => {
+    const a = custom.startOfHour(new Date(2026, 8, 21, 14, 59));
+    const b = custom.startOfHour(new Date(2026, 8, 21, 15, 0));
+    assert.ok(b.getTime() > a.getTime());
+  });
+});
