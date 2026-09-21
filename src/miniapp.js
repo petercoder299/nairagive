@@ -5,6 +5,7 @@ const config = require('./config');
 const store = require('./store');
 const { query } = require('./db');
 const { getDrawId, getPhase } = require('./draw');
+const labelFor = require('./custom').drawLabel;
 const { validateWithdrawal } = require('./withdrawals');
 const { requireTelegramUserOrTest } = require('./telegramAuth');
 
@@ -57,13 +58,16 @@ function mountMiniApp(app) {
     }
   });
 
-  // Sponsored / custom giveaways (public — also powers the preview)
-  app.get('/api/miniapp/sponsored', async (_req, res) => {
+  // Sponsored giveaways by category (public — also powers the preview).
+  // Cash screen shows sponsored CASH only; Others screen uses ?category=others.
+  app.get('/api/miniapp/sponsored', async (req, res) => {
     try {
+      const category = req.query.category || 'cash';
       const r = await query(
         `SELECT id, name, category, amount, winners_per_draw, interval_minutes,
                 starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules
-         FROM giveaways WHERE status = 'active' ORDER BY created_at DESC LIMIT 10`
+         FROM giveaways WHERE status = 'active' AND category = $1 ORDER BY created_at DESC LIMIT 20`,
+        [category]
       );
       res.json(r.rows);
     } catch (e) {
@@ -93,12 +97,38 @@ function mountMiniApp(app) {
     }
   });
 
-  // My tickets for a draw (defaults to current hour)
+  // My tickets for a draw (defaults to current hour), with ticket label.
   app.get('/api/miniapp/my-tickets', auth, async (req, res) => {
     try {
       const drawId = req.query.drawId || getDrawId(new Date());
-      const tickets = await store.getUserTickets(drawId, req.tgUser.id);
-      res.json({ drawId, tickets, max: config.maxTicketsPerUser });
+      const [tickets, draw] = await Promise.all([
+        store.getUserTickets(drawId, req.tgUser.id),
+        store.getDraw(drawId).catch(() => null),
+      ]);
+      let giveaway = null;
+      if (draw && draw.giveaway_id) {
+        giveaway = await store.getGiveaway(draw.giveaway_id).catch(() => null);
+      }
+      res.json({ drawId, tickets, max: config.maxTicketsPerUser, label: labelFor(draw, giveaway) });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Full draw detail for a giveaway page: draw + giveaway + winners + my tickets + label.
+  app.get('/api/miniapp/draw/:drawId', auth, async (req, res) => {
+    try {
+      const draw = await store.getDraw(req.params.drawId);
+      if (!draw) return res.status(404).json({ error: 'Draw not found.' });
+      let giveaway = null;
+      if (draw.giveaway_id) {
+        giveaway = await store.getGiveaway(draw.giveaway_id).catch(() => null);
+      }
+      const [winners, myTickets] = await Promise.all([
+        store.getWinners(draw.id).catch(() => []),
+        store.getUserTickets(draw.id, req.tgUser.id).catch(() => []),
+      ]);
+      res.json({ draw, giveaway, winners, myTickets, max: config.maxTicketsPerUser, label: labelFor(draw, giveaway) });
     } catch (e) {
       res.status(500).json({ error: e.message });
     }

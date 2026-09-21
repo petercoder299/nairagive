@@ -212,6 +212,15 @@
   }
   .tag.soon { background: transparent; color: var(--ink-3); border-color: var(--line); }
   /* Section heads */
+  .tchip {
+    display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 1px;
+    background: var(--ink); color: var(--gold-soft);
+    padding: 3px 9px; border-radius: 999px; margin-right: 6px; vertical-align: 1px;
+  }
+  .pager { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .pager .btn-g { width: auto; flex: 1; padding: 10px 6px; font-size: 12px; }
+  .pager .btn-g:disabled { opacity: 0.4; }
+  .pg-info { font-size: 12px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
   .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0 4px; }
   .sec-head h2 { font-family: var(--head-font); font-size: 24px; font-weight: 800; letter-spacing: -0.3px; }
   .count {
@@ -441,7 +450,7 @@
           <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Data Bundles</span><span class="menu-s">Mobile data</span></span><span class="tag soon">SOON</span></button>
           <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Gadgets</span><span class="menu-s">Phones &amp; devices</span></span><span class="tag soon">SOON</span></button>
           <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Food</span><span class="menu-s">Meals &amp; groceries</span></span><span class="tag soon">SOON</span></button>
-          <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Others</span><span class="menu-s">More giveaways</span></span><span class="tag soon">SOON</span></button>
+          <button class="menu-card" data-go="s-others" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Others</span><span class="menu-s">Gadgets, accounts &amp; more</span></span><span class="tag">LIVE</span></button>
         </div>
       </div>
     </section>
@@ -505,6 +514,36 @@
           <h3 id="rulesTitle" style="font-family:var(--head-font);font-size:19px;padding:14px 0 4px">Rules</h3>
           <p id="rulesBody" class="small" style="padding:0 0 14px;white-space:pre-line;line-height:1.7">Loading…</p>
         </div>
+      </div>
+    </section>
+
+    <!-- OTHERS LIST -->
+    <section class="screen" id="s-others" data-title="Others">
+      <div class="page">
+        <div class="sec-head"><h2>Others</h2><span class="count" id="othersCount">—</span></div>
+        <p class="sub">Gadgets, accounts, food and more.</p>
+        <div class="menu" id="others"><div class="empty"><div class="e-ic">○</div><p>loading…</p></div></div>
+      </div>
+    </section>
+
+    <!-- OTHER GIVEAWAY PAGE -->
+    <section class="screen" id="s-other" data-title="Giveaway">
+      <div class="page">
+        <span class="round-chip">DRAW · <span id="oDrawId">—</span></span>
+        <div class="statusbar" id="oStatusbar"><span class="st"><span class="pulse"></span><span id="oPhase">…</span></span><span class="cd"><span id="oCountdown">--:--</span><small id="oCountLabel">until entry closes</small></span></div>
+        <div class="pick-card">
+          <h3 id="oTitle">Giveaway</h3>
+          <p class="hint" id="oNote">Free entry.</p>
+          <button class="btn-p" id="oClaim" type="button">Get ticket</button>
+          <div class="meter"><i id="oBar"></i></div>
+          <div class="meter-label"><span>YOUR TICKETS</span><b id="oEntries">—</b></div>
+        </div>
+        <div class="spacer"></div>
+        <div id="oWinners"></div>
+        <div class="sec-head"><h2 style="font-size:20px">My entries</h2><span class="count" id="oMyCount">0</span></div>
+        <div class="cards" id="oMine"><p class="muted small">No entries yet.</p></div>
+        <button class="btn-g" id="oRulesBtn" type="button" style="margin-top:10px">Rules</button>
+        <div class="sponsor" id="oSponsor"></div>
       </div>
     </section>
 
@@ -592,7 +631,7 @@
 <script>
 // ---- Navigation stack: one screen at a time, like the bot flow ----
 const stack = ['s-home'];
-const TAB_FOR = { 's-home': 's-home', 's-hourly': 's-hourly', 's-cats': 's-hourly', 's-cash': 's-hourly', 's-sponsored': 's-hourly', 's-draws': 's-draws', 's-wallet': 's-wallet', 's-how': '', 's-contact': '' };
+const TAB_FOR = { 's-home': 's-home', 's-hourly': 's-hourly', 's-cats': 's-hourly', 's-cash': 's-hourly', 's-sponsored': 's-hourly', 's-others': 's-hourly', 's-other': 's-hourly', 's-draws': 's-draws', 's-wallet': 's-wallet', 's-how': '', 's-contact': '' };
 function renderNav() {
   const cur = stack[stack.length - 1];
   document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('show', s.id === cur));
@@ -606,6 +645,7 @@ function go(id) {
   stack.push(id);
   renderNav();
   if (id === 's-sponsored') loadSponsored();
+  if (id === 's-others') loadOthers();
   if (id === 's-wallet') loadWallet();
   if (id === 's-hourly') { loadLive(); loadMe(); }
   if (id === 's-draws') loadLive();
@@ -752,17 +792,47 @@ function renderDraw(d, fromApi) {
     ? 'Sponsor: <b>' + sp.sponsor_name + '</b> · <a href="' + sp.sponsor_link + '" target="_blank" rel="noopener">' + sp.sponsor_link + '</a><br>' + sp.sponsor_bio
     : 'Sponsor: <b>NairaGiveBot</b> — free hourly ₦200 giveaways.';
 }
-function renderMyTickets(me) {
-  const t = me.myTickets || [];
-  el('entries').textContent = t.length + '/' + me.draw.maxTickets;
+// ---- Paged ticket lists (20 per page) + ticket labels ----
+const PAGE_SIZE = 20;
+const pageIx = { hourly: 0, other: 0 };
+let hourlyCache = { tickets: [], drawId: '', max: 10, phase: '' };
+let otherCache = { tickets: [], drawId: '', max: 10 };
+function ticketCard(code, drawId, chip, title) {
+  return '<div class="tcard"><div class="tid"><span class="tchip">' + chip + '</span> ' + title + '<br>' + drawId + '</div><div class="trow"><span class="who"><span class="mono">' + code + '</span></span></div></div>';
+}
+function pagerHtml(key, page, totalPages) {
+  if (totalPages <= 1) return '';
+  return '<div class="pager"><button class="btn-g" type="button" data-pager="' + key + '" data-dir="-1"' + (page <= 0 ? ' disabled' : '') + '>‹ Prev</button>' +
+    '<span class="pg-info">Page ' + (page + 1) + ' of ' + totalPages + '</span>' +
+    '<button class="btn-g" type="button" data-pager="' + key + '" data-dir="1"' + (page >= totalPages - 1 ? ' disabled' : '') + '>Next ›</button></div>';
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pager]');
+  if (!b || b.disabled) return;
+  const key = b.getAttribute('data-pager');
+  pageIx[key] = Math.max(0, (pageIx[key] || 0) + Number(b.getAttribute('data-dir')));
+  if (key === 'hourly') rerenderHourlyMine();
+  else if (key === 'other') rerenderOtherMine();
+});
+function rerenderHourlyMine() {
+  const t = hourlyCache.tickets;
+  el('entries').textContent = t.length + '/' + hourlyCache.max;
   el('myCount').textContent = t.length + ' this round';
-  el('myBar').style.width = Math.min(100, (t.length / me.draw.maxTickets) * 100) + '%';
+  el('myBar').style.width = Math.min(100, (t.length / hourlyCache.max) * 100) + '%';
+  const totalPages = Math.max(1, Math.ceil(t.length / PAGE_SIZE));
+  pageIx.hourly = Math.min(pageIx.hourly, totalPages - 1);
+  const slice = t.slice(pageIx.hourly * PAGE_SIZE, (pageIx.hourly + 1) * PAGE_SIZE);
   el('myTickets').innerHTML = t.length
-    ? t.map((x) => '<div class="tcard"><div class="tcode-bar"></div><div class="tid">' + me.draw.drawId + '</div><div class="trow"><span class="who"><span class="mono">' + x + '</span></span></div></div>').join('')
+    ? slice.map((x) => ticketCard(x, hourlyCache.drawId, 'CASH', '₦200 Hourly')).join('') + pagerHtml('hourly', pageIx.hourly, totalPages)
     : '<p class="muted small">No entries in this round yet.</p>';
+}
+function renderMyTickets(me) {
+  hourlyCache = { tickets: me.myTickets || [], drawId: me.draw.drawId, max: me.draw.maxTickets, phase: me.draw.phase };
+  pageIx.hourly = 0;
+  rerenderHourlyMine();
   const open = me.draw.phase === 'entry_open';
-  el('claimBtn').textContent = open ? 'Get ticket (' + t.length + '/' + me.draw.maxTickets + ')' : 'Entry closed';
-  el('claimBtn').disabled = !open || t.length >= me.draw.maxTickets;
+  el('claimBtn').textContent = open ? 'Get ticket (' + hourlyCache.tickets.length + '/' + me.draw.maxTickets + ')' : 'Entry closed';
+  el('claimBtn').disabled = !open || hourlyCache.tickets.length >= me.draw.maxTickets;
 }
 async function loadMe() {
   if (!IN_TELEGRAM && !TEST_USER) {
@@ -1082,7 +1152,128 @@ async function demoPickWinner(pool, drawId) {
   }
   return arr[0];
 }
+// ---- Others list + full giveaway page ----
+let currentOther = null;
+async function loadOthers() {
+  let rows = [];
+  try {
+    rows = await api('/api/miniapp/sponsored?category=others');
+  } catch (_) {
+    el('others').innerHTML = '<div class="empty"><div class="e-ic">○</div><p>Others appear here when the server is running.</p></div>';
+    return;
+  }
+  let opens = [];
+  try {
+    opens = await api('/api/miniapp/custom-open');
+  } catch (_) { opens = []; }
+  const openById = {};
+  opens.forEach((o) => { if (o.giveaway && o.giveaway.category === 'others') openById[o.giveaway.id] = o; });
+  el('othersCount').textContent = rows.length ? rows.length + ' live' : 'none yet';
+  el('others').innerHTML = rows.length
+    ? rows.map((g) => {
+        const o = openById[g.id];
+        const state = o
+          ? 'Open now · closes ' + new Date(o.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+          : g.scheduled_at
+            ? 'Draws ' + new Date(g.scheduled_at).toLocaleString()
+            : 'Opens soon';
+        return '<button class="menu-card" data-other-open="' + g.id + '" type="button"><span class="menu-ic">☆</span><span class="menu-tx"><span class="menu-t">' + g.name +
+          '</span><span class="menu-s">' + state + '</span></span>' + (o ? '<span class="tag">LIVE</span>' : '<span class="chev">›</span>') + '</button>';
+      }).join('')
+    : '<div class="empty"><div class="e-ic">○</div><p>No other giveaways right now.</p></div>';
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-other-open]');
+  if (b) openOther(b.getAttribute('data-other-open'));
+});
+async function openOther(giveawayId) {
+  let opens = [];
+  try {
+    opens = await api('/api/miniapp/custom-open');
+  } catch (_) {}
+  const o = opens.find((x) => String(x.giveaway.id) === String(giveawayId));
+  if (!o) { toast('Not open yet'); return; }
+  try {
+    currentOther = await api('/api/miniapp/draw/' + encodeURIComponent(o.drawId));
+    pageIx.other = 0;
+    renderOther();
+    go('s-other');
+  } catch (e) {
+    toast('Could not open');
+  }
+}
+function renderOther() {
+  const d = currentOther;
+  if (!d) return;
+  const draw = d.draw;
+  const g = d.giveaway || {};
+  const label = d.label || { chip: 'OTHERS', title: g.name || 'Giveaway' };
+  const open = draw.status === 'entry_open';
+  el('oDrawId').textContent = draw.id;
+  el('oPhase').textContent = open ? 'Entries open' : (draw.status === 'results' ? 'Results out' : draw.status);
+  el('oStatusbar').classList.toggle('closed', !open);
+  el('oTitle').textContent = label.title + ' — ' + label.chip;
+  el('oCountLabel').textContent = open ? 'until entry closes' : 'entry closed';
+  el('oSponsor').innerHTML = draw.sponsor_name
+    ? 'Sponsor: <b>' + draw.sponsor_name + '</b>' + (draw.sponsor_link ? ' · <a href="' + draw.sponsor_link + '" target="_blank" rel="noopener">' + draw.sponsor_link + '</a>' : '') + (draw.sponsor_bio ? '<br>' + draw.sponsor_bio : '')
+    : '';
+  otherCache = { tickets: d.myTickets || [], drawId: draw.id, max: d.max };
+  rerenderOtherMine();
+  const t = otherCache.tickets;
+  el('oClaim').textContent = !open ? 'Entry closed' : 'Get ticket (' + t.length + '/' + d.max + ')';
+  el('oClaim').disabled = !open || t.length >= d.max;
+  const w = d.winners || [];
+  el('oWinners').innerHTML = w.length
+    ? w.map((x) => {
+        const prize = x.prize_amount > 0 ? ' · +₦' + x.prize_amount : '';
+        return '<div class="pick-card" style="margin-top:14px"><h3>Winning ticket</h3><p class="hint">@' + (x.username || x.telegram_id) + prize + '</p><p class="mono small">' + x.ticket_code + '</p></div>';
+      }).join('')
+    : '';
+  if (w.length && lastWinnerBurst !== draw.id) { lastWinnerBurst = draw.id; confettiBurst(90); }
+}
+function rerenderOtherMine() {
+  const t = otherCache.tickets;
+  const label = currentOther && currentOther.label ? currentOther.label : { chip: 'OTHERS', title: '' };
+  el('oEntries').textContent = t.length + '/' + otherCache.max;
+  el('oMyCount').textContent = t.length;
+  el('oBar').style.width = Math.min(100, (t.length / otherCache.max) * 100) + '%';
+  const totalPages = Math.max(1, Math.ceil(t.length / PAGE_SIZE));
+  pageIx.other = Math.min(pageIx.other, totalPages - 1);
+  const slice = t.slice(pageIx.other * PAGE_SIZE, (pageIx.other + 1) * PAGE_SIZE);
+  el('oMine').innerHTML = t.length
+    ? slice.map((x) => ticketCard(x, otherCache.drawId, label.chip, label.title)).join('') + pagerHtml('other', pageIx.other, totalPages)
+    : '<p class="muted small">No entries yet.</p>';
+}
+el('oClaim').addEventListener('click', async () => {
+  if (!currentOther) return;
+  if (!IN_TELEGRAM && !TEST_USER) return enableTestMode();
+  const drawId = currentOther.draw.id;
+  el('oClaim').disabled = true;
+  try {
+    const r = await api('/api/miniapp/custom-tickets', { method: 'POST', body: JSON.stringify({ drawId }) });
+    haptic('success');
+    confettiBurst(80);
+    toast('Ticket issued');
+    el('oNote').textContent = 'Ticket issued: ' + r.ticket_code + ' (' + r.count + '/' + r.max + ')';
+    currentOther = await api('/api/miniapp/draw/' + encodeURIComponent(drawId));
+    pageIx.other = 0;
+  } catch (e) {
+    haptic('error');
+    toast('Claim failed');
+    el('oNote').textContent = e.message;
+  } finally {
+    renderOther();
+  }
+});
+el('oRulesBtn').addEventListener('click', () => {
+  const g = currentOther && currentOther.giveaway;
+  showRules(g ? g.name + ' — Rules' : 'Rules', (g && g.rules) || 'No rules published for this giveaway yet.');
+});
 function tickClock() {
+  if (stack[stack.length - 1] === 's-other' && currentOther && currentOther.draw && currentOther.draw.entry_closes_at) {
+    const left = Math.max(0, new Date(currentOther.draw.entry_closes_at).getTime() - Date.now());
+    el('oCountdown').textContent = left > 0 ? fmt(Math.ceil(left / 1000)) : '0:00';
+  }
   if (demoMode && demo) {
     const left = demo.min <= 50 ? 51 - demo.min : demo.min <= 52 ? 53 - demo.min : 60 - demo.min;
     el('countdown').textContent = left + 'm';

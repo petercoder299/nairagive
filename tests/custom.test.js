@@ -97,3 +97,23 @@ describe('OG (other-category) draws', () => {
     assert.match(expected, /^OG\d{8}[A-X]$/);
   });
 });
+
+describe('ticket labels', () => {
+  it('hourly draws are CASH', () => {
+    assert.deepEqual(custom.drawLabel({ id: '20092026A', kind: 'hourly_200' }, null), {
+      chip: 'CASH',
+      title: '₦200 Hourly',
+    });
+  });
+
+  it('custom draws use category + name (netflix, gadget)', () => {
+    assert.deepEqual(custom.drawLabel({ id: 'OG30092026S', kind: 'custom' }, { category: 'others', name: 'Netflix Account — 1 Month' }), {
+      chip: 'OTHERS',
+      title: 'Netflix Account — 1 Month',
+    });
+    assert.deepEqual(custom.drawLabel({ id: 'G2-xxx', kind: 'custom' }, { category: 'gadgets', name: 'iPhone 16' }), {
+      chip: 'GADGETS',
+      title: 'iPhone 16',
+    });
+  });
+});

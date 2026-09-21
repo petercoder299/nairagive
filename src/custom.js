@@ -89,6 +89,14 @@ function oneOffDrawId(idOrGiveaway) {
   return `G${g.id}-ONCE`;
 }
 
+// Ticket label so users can tell draws apart: CASH, GADGET, NETFLIX…
+function drawLabel(draw, giveaway) {
+  if (giveaway) {
+    return { chip: String(giveaway.category || 'custom').toUpperCase(), title: giveaway.name };
+  }
+  return { chip: 'CASH', title: '₦200 Hourly' };
+}
+
 module.exports = {
   pad,
   fmtWindowUTC,
@@ -101,4 +109,5 @@ module.exports = {
   currentWindow,
   windowCount,
   oneOffState,
+  drawLabel,
 };
