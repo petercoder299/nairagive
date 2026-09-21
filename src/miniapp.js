@@ -105,7 +105,7 @@ function mountMiniApp(app) {
   // Open custom draws (auto-created by the scheduler worker) + my ticket count.
   app.get('/api/miniapp/custom-open', auth, async (req, res) => {
     try {
-      const draws = await store.getOpenCustomDraws();
+      const draws = await store.getOpenCustomDraws().catch(() => []);
       const out = [];
       for (const d of draws) {
         const myCount = await store.countUserTickets(d.id, req.tgUser.id).catch(() => 0);
