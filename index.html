@@ -782,9 +782,13 @@ async function loadLive() {
     let paid = 0; const seen = new Set();
     rows.forEach((x) => { seen.add(x.id); if (x.ticket_code) paid += (x.amount || 0); });
     el('recent').innerHTML = rows.length
-      ? rows.map((x) => '<div class="tcard"><div class="tid">' + x.id + ' · ₦' + x.amount + '</div><div class="trow"><span class="who">' +
-          (x.ticket_code ? '<span class="mono">' + x.ticket_code + '</span><small>' + dispW(x) + '</small>' : '<small>no entries</small>') +
-          '</span></div></div>').join('')
+      ? rows.map((x) => {
+          const title = x.giveaway_name || '₦200 Hourly';
+          const prize = x.giveaway_prize || (x.amount > 0 ? '₦' + Number(x.amount).toLocaleString() : '');
+          return '<div class="tcard"><div class="tid">' + x.id + '</div><div class="trow"><span class="who">' + title +
+            (prize ? '<small>' + prize + '</small>' : '') + '</span></div>' +
+            (x.ticket_code ? '<div class="tcode-bar"></div><div class="trow"><span class="who"><span class="mono">' + x.ticket_code + '</span><small>' + dispW(x) + '</small></span></div>' : '<small>no entries</small>') + '</div>';
+        }).join('')
       : '<div class="empty"><div class="e-ic">○</div><p>No results yet — first draw completes at :51–:53 past the hour.</p></div>';
     el('stDraws').textContent = seen.size;
     el('stPaid').textContent = '₦' + paid.toLocaleString();
@@ -1100,7 +1104,7 @@ async function loadSponsored() {
         const official = g.sponsored === false;
         return '<div class="tcard"><div class="tid">' + (official ? 'OFFICIAL' : 'SPONSORED') + ' · ' + g.category + '</div><div class="trow"><span class="who">' + g.name +
           '<small>' + when + (official ? ' · Official NairaGiveBot draw' : ' · Sponsor: ' + (g.sponsor_name || '—')) + '</small></span>' +
-          '<span class="prz">₦' + g.amount + '</span></div>' + action + rulesBtn + '</div>';
+          '<span class="prz">' + (g.prize_text || '₦' + g.amount) + '</span></div>' + action + rulesBtn + '</div>';
       }).join('')
     : '<div class="empty"><div class="e-ic">○</div><p>No sponsored giveaways right now — the hourly draw is live.</p></div>';
 }
@@ -1242,7 +1246,7 @@ function renderOther() {
   const w = d.winners || [];
   el('oWinners').innerHTML = w.length
     ? w.map((x) => {
-        const prize = x.prize_amount > 0 ? ' · +₦' + x.prize_amount : '';
+        const prize = d.prizeText ? ' · ' + d.prizeText : (x.prize_amount > 0 ? ' · +₦' + x.prize_amount : '');
         return '<div class="pick-card" style="margin-top:14px"><h3>Winning ticket</h3><p class="hint">' + dispW(x) + prize + '</p><p class="mono small">' + x.ticket_code + '</p></div>';
       }).join('')
     : '';

@@ -1,0 +1,11 @@
+-- Paste this into Neon Dashboard -> SQL Editor, then press Run.
+-- Run it once with database "neondb" selected, then switch to
+-- "neondb_test" (top-left picker) and run it again.
+
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS spotlight BOOLEAN NOT NULL DEFAULT false;
+
+UPDATE giveaways SET spotlight = true
+WHERE category = 'cash' AND name LIKE '%50,000 Cash%';
+
+SELECT id, name, spotlight, status FROM giveaways ORDER BY id;
+-- The last query must show the 50,000 Cash row with spotlight = true.

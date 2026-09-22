@@ -66,7 +66,7 @@ function mountMiniApp(app) {
     const category = req.query.category || 'cash';
     const fullSelect = (extraWhere) =>
       `SELECT id, name, category, amount, winners_per_draw, interval_minutes,
-              starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, sponsored, spotlight
+              starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, sponsored, spotlight, prize_text
        FROM giveaways WHERE status = 'active' AND category = $1${extraWhere} ORDER BY created_at DESC LIMIT 20`;
     try {
       try {
@@ -141,7 +141,10 @@ function mountMiniApp(app) {
         store.getUserTickets(draw.id, req.tgUser.id).catch(() => []),
         store.countUserTicketsSince(draw.id, req.tgUser.id, startOfHour()).catch(() => 0),
       ]);
-      res.json({ draw, giveaway, winners, myTickets, myHourCount, max: config.maxTicketsPerUser, label: labelFor(draw, giveaway) });
+      const prizeText =
+        (giveaway && giveaway.prize_text) ||
+        (draw.amount > 0 ? '₦' + Number(draw.amount).toLocaleString('en-NG') : null);
+      res.json({ draw, giveaway, winners, myTickets, myHourCount, max: config.maxTicketsPerUser, label: labelFor(draw, giveaway), prizeText });
     } catch (e) {
       res.status(500).json({ error: e.message });
     }

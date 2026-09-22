@@ -164,9 +164,11 @@ async function getWallet(telegramId) {
 
 async function getRecentResults(limit = 5) {
   const res = await query(
-    `SELECT d.id, d.amount, d.drawn_at, w.ticket_code, w.username, w.telegram_id, u.first_name
+    `SELECT d.id, d.amount, d.drawn_at, d.giveaway_id, w.ticket_code, w.username, w.telegram_id, u.first_name,
+            g.name AS giveaway_name, g.prize_text AS giveaway_prize
      FROM draws d LEFT JOIN draw_winners w ON w.draw_id = d.id
      LEFT JOIN users u ON u.telegram_id = w.telegram_id
+     LEFT JOIN giveaways g ON g.id = d.giveaway_id
      WHERE d.status IN ('results','closed')
      ORDER BY d.drawn_at DESC NULLS LAST, d.id DESC LIMIT $1`,
     [limit]

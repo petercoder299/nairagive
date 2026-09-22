@@ -1,6 +1,7 @@
 const { Telegraf, Markup } = require('telegraf');
 const config = require('./config');
 const { getDrawId, getPhase, displayWinner } = require('./draw');
+const { prizeLabel } = require('./custom');
 const store = require('./store');
 const { trackChat } = require('./scheduler');
 
@@ -131,7 +132,7 @@ function createBot() {
       });
       return;
     }
-    const lines = custom.map((g) => `• ${g.name} — ₦${g.amount} x${g.winners_per_draw}${g.sponsored === false ? ' (Official)' : ''}`);
+    const lines = custom.map((g) => `• ${g.name} — ${prizeLabel(g)} x${g.winners_per_draw}${g.sponsored === false ? ' (Official)' : ''}`);
     await ctx.reply(`🤝 *Sponsored Giveaways*\n\n${lines.join('\n')}\n\nCustom entry flows coming next. Hourly is live now:`, {
       parse_mode: 'Markdown',
       ...Markup.inlineKeyboard([[Markup.button.callback('💵 Open ₦200 Hourly', 'cash:hourly')]]),
@@ -228,9 +229,13 @@ function createBot() {
       await ctx.reply('No results yet. First draw completes at :51–:53 past the hour.');
       return;
     }
-    const lines = rows.map((r) =>
-      r.ticket_code ? `• ${r.id} (₦${r.amount}): \`${r.ticket_code}\` ${displayWinner(r)}` : `• ${r.id}: no entries`
-    );
+    const lines = rows.map((r) => {
+      const title = r.giveaway_name || '₦200 Hourly';
+      const prize = r.giveaway_prize || (r.amount > 0 ? '₦' + Number(r.amount).toLocaleString() : '');
+      return r.ticket_code
+        ? `• *${title}*${prize ? ` (${prize})` : ''}\n  \`${r.ticket_code}\` ${displayWinner(r)}`
+        : `• ${r.id}: no entries`;
+    });
     await ctx.reply(`🏆 *Recent results*\n\n${lines.join('\n')}`, { parse_mode: 'Markdown' });
   });
 

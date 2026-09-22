@@ -86,7 +86,8 @@ button.mini-no{background:transparent;color:var(--red);border:1px solid #4a2c2c;
 <div class="box">
 <input id="g_name" placeholder="Name — e.g. Evening Splash"/>
 <select id="g_cat"><option>cash</option><option>airtime</option><option>data</option><option>gadgets</option><option>food</option><option>others</option></select>
-<input id="g_amt" type="number" placeholder="Amount ₦"/>
+<input id="g_amt" type="number" placeholder="Amount ₦ (0 for non-cash)"/>
+<input id="g_prize" placeholder="Prize text — e.g. 1 Netflix Account"/>
 <input id="g_win" type="number" placeholder="Winners per draw" value="1"/>
 <input id="g_int" type="number" placeholder="Interval min (blank = one-off)"/>
 <input id="g_start" type="datetime-local"/><input id="g_end" type="datetime-local"/>
@@ -126,14 +127,14 @@ function renderWd(){var list=(DATA.withdrawals||[]).filter(function(w){return wd
 function schedOf(g){if(g.interval_minutes)return "every "+g.interval_minutes+"m";if(g.scheduled_at)return dt(g.scheduled_at);return "—"}
 function renderG(){var p=slice(DATA.giveaways||[],"g");document.getElementById("gRows").innerHTML=p.items.map(function(g){var done=g.status!=="active";return "<tr><td>"+g.id+"</td><td><b>"+esc(g.name)+"</b></td><td>"+esc(g.category)+"</td><td class='num'>"+fmt(g.amount)+"</td><td class='num'>"+g.winners_per_draw+"</td><td>"+schedOf(g)+"</td><td><span class='pill "+(done?"done":"pending")+"'>"+g.status+"</span></td><td><button class='mini-ok' data-edit='"+g.id+"'>Sponsor</button><button class='mini-ok' data-spot='"+g.id+"' title='Toggle Cash spotlight'>"+(g.spotlight?"★":"☆")+"</button>"+(done?"":"<button class='mini-no' data-stop='"+g.id+"'>Stop</button>")+"</td></tr>"}).join("")||"<tr><td colspan='8' class='muted'>No giveaways yet.</td></tr>";document.getElementById("pgG").innerHTML=pagerHTML(p.page,p.total,"g")}
 function renderD(){call("GET","/api/draws/current").then(function(d){document.getElementById("curInfo").value=d.drawId+" · "+d.phase+" · "+d.ticketCount+" entries"}).catch(function(){});
-var p=slice(DATA.recent||[],"d");document.getElementById("drawRows").innerHTML=p.items.map(function(r){return "<tr><td><b>"+esc(r.id)+"</b></td><td class='num'>"+fmt(r.amount)+"</td><td class='mono'>"+esc(r.ticket_code||"—")+"</td><td>"+esc(r.username?"@"+r.username:"—")+"</td></tr>"}).join("")||"<tr><td colspan='4' class='muted'>No draws yet.</td></tr>";document.getElementById("pgD").innerHTML=pagerHTML(p.page,p.total,"d")}
+var p=slice(DATA.recent||[],"d");document.getElementById("drawRows").innerHTML=p.items.map(function(r){return "<tr><td><b>"+esc(r.id)+"</b></td><td class='num'>"+esc(r.giveaway_prize||(r.amount>0?fmt(r.amount):"—"))+"</td><td class='mono'>"+esc(r.ticket_code||"—")+"</td><td>"+esc(r.username?"@"+r.username:(r.telegram_id!=null&&r.telegram_id!==undefined?r.telegram_id:(r.first_name||"—")))+"</td></tr>"}).join("")||"<tr><td colspan='4' class='muted'>No draws yet.</td></tr>";document.getElementById("pgD").innerHTML=pagerHTML(p.page,p.total,"d")}
 document.getElementById("loginBtn").addEventListener("click",login);
 keyEl.addEventListener("keydown",function(e){if(e.key==="Enter")login()});
 document.getElementById("logoutBtn").addEventListener("click",function(){KEY="";DATA=null;try{sessionStorage.removeItem("ng_admin")}catch(e){}keyEl.value="";document.getElementById("dash").style.display="none";document.getElementById("gate").style.display="block";document.getElementById("refreshBtn").style.display="none";document.getElementById("logoutBtn").style.display="none"});
 document.getElementById("refreshBtn").addEventListener("click",function(){if(!DATA)return;call("GET","/api/admin/overview").then(function(j){DATA=j;render();toast("Refreshed.",true)}).catch(function(e){toast("Refresh failed: "+e.message)})});
 document.getElementById("tabP").addEventListener("click",function(){wdTab="pending";PG.wd=1;document.getElementById("tabP").classList.add("on");document.getElementById("tabH").classList.remove("on");renderWd()});
 document.getElementById("tabH").addEventListener("click",function(){wdTab="history";PG.wd=1;document.getElementById("tabH").classList.add("on");document.getElementById("tabP").classList.remove("on");renderWd()});
-document.getElementById("createBtn").addEventListener("click",function(){var b={name:val("g_name"),category:val("g_cat"),amount:+val("g_amt"),winners_per_draw:+val("g_win")||1,interval_minutes:val("g_int")?+val("g_int"):null,starts_at:val("g_start")?new Date(val("g_start")).toISOString():null,ends_at:val("g_end")?new Date(val("g_end")).toISOString():null,scheduled_at:val("g_sched")?new Date(val("g_sched")).toISOString():null,sponsor_name:val("g_sp")||undefined,rules:val("g_rules")||null,draw_prefix:val("g_prefix")||null,ticket_digits:val("g_digits")?+val("g_digits"):10,sponsored:document.getElementById("g_sponsored").checked,spotlight:document.getElementById("g_spot").checked};if(!b.name||!b.amount){toast("Name and amount are required.");return}call("POST","/api/giveaways",b).then(function(d){document.getElementById("g_out").innerHTML="<span class='pill pending'>created #"+d.id+"</span>";PG.g=1;return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Giveaway created.",true)}).catch(function(e){toast("Create failed: "+e.message)})});
+document.getElementById("createBtn").addEventListener("click",function(){var b={name:val("g_name"),category:val("g_cat"),amount:+val("g_amt"),winners_per_draw:+val("g_win")||1,interval_minutes:val("g_int")?+val("g_int"):null,starts_at:val("g_start")?new Date(val("g_start")).toISOString():null,ends_at:val("g_end")?new Date(val("g_end")).toISOString():null,scheduled_at:val("g_sched")?new Date(val("g_sched")).toISOString():null,sponsor_name:val("g_sp")||undefined,rules:val("g_rules")||null,draw_prefix:val("g_prefix")||null,ticket_digits:val("g_digits")?+val("g_digits"):10,sponsored:document.getElementById("g_sponsored").checked,spotlight:document.getElementById("g_spot").checked,prize_text:val("g_prize")||null};if(!b.name||!(b.amount>0||b.prize_text)){toast("Name plus amount or prize text is required.");return}call("POST","/api/giveaways",b).then(function(d){document.getElementById("g_out").innerHTML="<span class='pill pending'>created #"+d.id+"</span>";PG.g=1;return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Giveaway created.",true)}).catch(function(e){toast("Create failed: "+e.message)})});
 document.getElementById("triggerBtn").addEventListener("click",function(){call("POST","/api/draws/current/trigger",{}).then(function(d){toast("Draw triggered: "+(d.winners||[]).length+" winner(s).",true)}).catch(function(e){toast("Trigger failed: "+e.message)})});
 document.getElementById("gRows").addEventListener("click",function(e){var s=e.target.closest?e.target.closest("[data-spot]"):null;if(s){var gid=s.getAttribute("data-spot");var cur=null;for(var i=0;i<DATA.giveaways.length;i++){if(String(DATA.giveaways[i].id)===gid)cur=DATA.giveaways[i]}call("PATCH","/api/giveaways/"+gid,{spotlight:!(cur&&cur.spotlight)}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Spotlight updated.",true)}).catch(function(err){toast("Failed: "+err.message)});return}});
 document.getElementById("gRows").addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-edit]"):null;if(b){var g=null;for(var i=0;i<DATA.giveaways.length;i++){if(String(DATA.giveaways[i].id)===b.getAttribute("data-edit"))g=DATA.giveaways[i]}if(!g)return;var nm=prompt("Sponsor name",g.sponsor_name||"");if(nm===null)return;var ln=prompt("Sponsor link",g.sponsor_link||"");if(ln===null)return;var bi=prompt("Sponsor bio",g.sponsor_bio||"");if(bi===null)return;call("PATCH","/api/giveaways/"+g.id,{sponsor_name:nm,sponsor_link:ln,sponsor_bio:bi}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Sponsor updated — live immediately.",true)}).catch(function(err){toast("Failed: "+err.message)});return}});
@@ -215,7 +216,9 @@ function createAdminApp() {
   app.post('/api/giveaways', requireAdmin, async (req, res) => {
     try {
       const b = req.body || {};
-      if (!b.name || !b.amount) return res.status(400).json({ error: 'name and amount required' });
+      if (!b.name || !(Number(b.amount) > 0 || b.prize_text)) {
+        return res.status(400).json({ error: 'name plus amount or prize text required' });
+      }
       const prefix = (b.draw_prefix || '').trim().toUpperCase() || null;
       const sponsored = b.sponsored === undefined ? true : !!b.sponsored;
       const spotlight = !!b.spotlight;
@@ -225,12 +228,12 @@ function createAdminApp() {
         seq = s.rows[0].n;
       }
       const r = await query(
-        `INSERT INTO giveaways (name, category, amount, winners_per_draw, interval_minutes, starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, draw_prefix, ticket_digits, sponsored, draw_seq, spotlight, status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,'active') RETURNING *`,
+        `INSERT INTO giveaways (name, category, amount, winners_per_draw, interval_minutes, starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, draw_prefix, ticket_digits, sponsored, draw_seq, spotlight, prize_text, status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,'active') RETURNING *`,
         [
           b.name,
           b.category || 'cash',
-          b.amount,
+          Number(b.amount) || 0,
           b.winners_per_draw || 1,
           b.interval_minutes || null,
           b.starts_at || null,
@@ -245,6 +248,7 @@ function createAdminApp() {
           sponsored,
           seq,
           spotlight,
+          b.prize_text || null,
         ]
       );
       res.json(r.rows[0]);

@@ -152,6 +152,23 @@ describe('ticket labels', () => {
   });
 });
 
+describe('prize labels', () => {
+  it('prefers prize_text for non-cash prizes', () => {
+    assert.equal(custom.prizeLabel({ amount: 0, prize_text: '1 Netflix Account' }), '1 Netflix Account');
+    assert.equal(custom.prizeLabel({ amount: 0, prize_text: '₦50,000 Food Credit' }), '₦50,000 Food Credit');
+  });
+
+  it('falls back to ₦amount for cash', () => {
+    assert.equal(custom.prizeLabel({ amount: 200 }), '₦200');
+    assert.equal(custom.prizeLabel({ amount: 100000 }), '₦100,000');
+  });
+
+  it('renders a dash when there is no prize info', () => {
+    assert.equal(custom.prizeLabel({ amount: 0 }), '—');
+    assert.equal(custom.prizeLabel({}), '—');
+  });
+});
+
 describe('calendar-hour cap', () => {
   it('startOfHour floors to :00:00 of the same hour', () => {
     const d = new Date(2026, 8, 21, 14, 37, 22);

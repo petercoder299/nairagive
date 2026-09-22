@@ -106,6 +106,13 @@ function startOfHour(d = new Date()) {
   x.setMinutes(0, 0, 0);
   return x;
 }
+// Human prize label: prize_text wins (non-cash), else ₦amount, else em dash.
+function prizeLabel(giveawayOrDraw) {
+  const g = giveawayOrDraw || {};
+  if (g.prize_text) return g.prize_text;
+  if (Number(g.amount) > 0) return '₦' + Number(g.amount).toLocaleString('en-NG');
+  return '—';
+}
 // Ticket label so users can tell draws apart: CASH, GADGET, NETFLIX…
 function drawLabel(draw, giveaway) {
   if (giveaway) {
@@ -128,5 +135,6 @@ module.exports = {
   windowCount,
   oneOffState,
   drawLabel,
+  prizeLabel,
   startOfHour,
 };
