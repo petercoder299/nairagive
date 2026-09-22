@@ -123,6 +123,13 @@ describe('entry-stamped tickets', () => {
     assert.ok(custom.ticketPrefixFor({ id: 6, draw_prefix: 'CASH', draw_seq: 1 }, d).startsWith('CASH01'));
     assert.ok(custom.ticketPrefixFor({ id: 6, draw_prefix: 'CASH' }, d).startsWith('CASH06'));
   });
+
+  it('entry stamp ignores the draw id: FD01 draw, enter 23 Sep 01:56 -> FD0123092026B', () => {
+    // Draw FD0122092026A is days old; a ticket claimed 23 Sep at 01:56
+    // must still stamp the ENTRY moment, not the draw id.
+    const g = { id: 5, draw_prefix: 'FD', draw_seq: 1 };
+    assert.equal(custom.ticketPrefixFor(g, new Date(2026, 8, 23, 1, 56)), 'FD0123092026B');
+  });
 });
 
 describe('ticket labels', () => {
