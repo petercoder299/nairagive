@@ -113,6 +113,15 @@ function prizeLabel(giveawayOrDraw) {
   if (Number(g.amount) > 0) return '₦' + Number(g.amount).toLocaleString('en-NG');
   return '—';
 }
+// Only CASH draws touch the wallet. Non-cash wins (gadgets, food,
+// accounts…) are recorded with prize 0 and redeemed via the admin.
+// Hourly is always cash; customs follow their giveaway category.
+function isCashDraw(draw, giveaway) {
+  if (!draw) return false;
+  if (draw.kind === 'hourly_200') return true;
+  if (draw.kind === 'custom') return !!giveaway && giveaway.category === 'cash';
+  return false;
+}
 // Ticket label so users can tell draws apart: CASH, GADGET, NETFLIX…
 function drawLabel(draw, giveaway) {
   if (giveaway) {
@@ -136,5 +145,6 @@ module.exports = {
   oneOffState,
   drawLabel,
   prizeLabel,
+  isCashDraw,
   startOfHour,
 };

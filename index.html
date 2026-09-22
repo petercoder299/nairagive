@@ -481,6 +481,7 @@
     <!-- 4a · HOURLY TICKET PAGE -->
     <section class="screen" id="s-hourly" data-title="Hourly Draw">
       <div class="page">
+        <button class="btn-g" id="playHomeBtn" type="button" style="margin-bottom:12px">← Back to Home</button>
         <span class="round-chip">DRAW · <span id="drawId">—</span></span>
         <div class="statusbar" id="statusbar"><span class="st"><span class="pulse"></span><span id="phase">…</span></span><span class="cd"><span id="countdown">--:--</span><small id="countLabel">until entry closes</small></span></div>
         <button class="round-chip" id="sponsorBtnHourly" type="button">About Sponsor</button>
@@ -581,8 +582,9 @@
     <!-- DRAWS -->
     <section class="screen" id="s-draws" data-title="Draws">
       <div class="page">
-        <div class="sec-head"><h2>Previous draws</h2><span class="count" id="drawsDraw">—</span></div>
-        <p class="sub">Winning tickets &amp; owners. Seeded draws — verifiable, never Math.random.</p>
+        <button class="btn-g" id="drawsHomeBtn" type="button" style="margin-bottom:12px">← Back to Home</button>
+        <div class="sec-head"><h2>Winning Tickets &amp; Winners</h2><span class="count" id="drawsDraw">—</span></div>
+        <p class="sub">Seeded Draws. Contact Admin to redeem prize.</p>
         <div class="cards" id="recent"><div class="empty"><div class="e-ic">○</div><p>loading…</p></div></div>
       </div>
     </section>
@@ -706,6 +708,8 @@ function goHome() {
   window.scrollTo(0, 0);
 }
 document.getElementById('walletHomeBtn').addEventListener('click', goHome);
+document.getElementById('playHomeBtn').addEventListener('click', goHome);
+document.getElementById('drawsHomeBtn').addEventListener('click', goHome);
 document.getElementById('walletPill').addEventListener('click', () => go('s-wallet'));
 
 // ---- Clock helpers (display only — all draw data comes from the server) ----

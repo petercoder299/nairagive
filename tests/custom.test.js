@@ -185,3 +185,22 @@ describe('calendar-hour cap', () => {
     assert.ok(b.getTime() > a.getTime());
   });
 });
+
+describe('cash-only wallet rule', () => {
+  it('hourly draws are always cash', () => {
+    assert.equal(custom.isCashDraw({ kind: 'hourly_200' }, null), true);
+  });
+
+  it('custom draws follow the giveaway category', () => {
+    assert.equal(custom.isCashDraw({ kind: 'custom' }, { category: 'cash' }), true);
+    assert.equal(custom.isCashDraw({ kind: 'custom' }, { category: 'others' }), false);
+    assert.equal(custom.isCashDraw({ kind: 'custom' }, { category: 'food' }), false);
+    assert.equal(custom.isCashDraw({ kind: 'custom' }, { category: 'gadgets' }), false);
+    assert.equal(custom.isCashDraw({ kind: 'custom' }, null), false);
+  });
+
+  it('unknown kinds never touch the wallet', () => {
+    assert.equal(custom.isCashDraw({ kind: 'mystery' }, { category: 'cash' }), false);
+    assert.equal(custom.isCashDraw(null, null), false);
+  });
+});

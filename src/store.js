@@ -1,7 +1,7 @@
 const { query, getPool } = require('./db');
 const config = require('./config');
 const { generateTicketCode, seededPickWinners } = require('./draw');
-const { startOfHour } = require('./custom');
+const { startOfHour, isCashDraw } = require('./custom');
 
 async function upsertUser(telegramId, username, firstName) {
   await query(
@@ -118,7 +118,10 @@ async function setDrawStatus(drawId, status) {
   await query('UPDATE draws SET status=$2 WHERE id=$1', [drawId, status]);
 }
 
-// Seeded draw: picks winners_count winners, credits wallets, records draw_winners.
+// Seeded draw: picks winners_count winners, records them, and credits
+// wallets — but ONLY for cash draws. Non-cash wins record prize 0 and are
+// redeemed via the admin, so the wallet can only ever hold cash winnings
+// (which is all withdrawals can touch).
 async function runSeededDraw(drawId) {
   const draw = await getDraw(drawId);
   if (!draw) throw new Error(`Draw not found: ${drawId}`);
@@ -140,17 +143,26 @@ async function runSeededDraw(drawId) {
     count: draw.winners_count || 1,
   });
 
+  let cash = draw.kind === 'hourly_200';
+  if (draw.kind === 'custom' && draw.giveaway_id) {
+    const g = await getGiveaway(draw.giveaway_id).catch(() => null);
+    cash = isCashDraw(draw, g);
+  }
+  const prize = cash ? draw.amount : 0;
+
   for (let i = 0; i < winners.length; i++) {
     const w = winners[i];
     await query(
       `INSERT INTO draw_winners (draw_id, ticket_code, telegram_id, username, prize_amount, position)
        VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING`,
-      [drawId, w.ticket_code, w.telegram_id, w.username || null, draw.amount, i + 1]
+      [drawId, w.ticket_code, w.telegram_id, w.username || null, prize, i + 1]
     );
-    await query('UPDATE users SET wallet_balance = wallet_balance + $2, updated_at=NOW() WHERE telegram_id=$1', [
-      w.telegram_id,
-      draw.amount,
-    ]);
+    if (cash) {
+      await query('UPDATE users SET wallet_balance = wallet_balance + $2, updated_at=NOW() WHERE telegram_id=$1', [
+        w.telegram_id,
+        prize,
+      ]);
+    }
   }
   await query(`UPDATE draws SET status='results', drawn_at=NOW() WHERE id=$1`, [drawId]);
   return getWinners(drawId);
