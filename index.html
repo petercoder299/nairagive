@@ -212,6 +212,20 @@
   }
   .tag.soon { background: transparent; color: var(--ink-3); border-color: var(--line); }
   /* Section heads */
+  .spot-strip { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 12px; margin-bottom: 4px; scrollbar-width: none; }
+  .spot-strip::-webkit-scrollbar { display: none; }
+  .spot {
+    flex: 0 0 188px; text-align: left; font-family: inherit; cursor: pointer;
+    color: #FFE9B8; background: linear-gradient(160deg, #3A2A00, #2A1A12);
+    border: 2.5px solid var(--gold-soft); border-radius: 18px; padding: 14px;
+    box-shadow: var(--shadow-hard);
+  }
+  .spot:active { transform: scale(0.97); }
+  .spot small { display: block; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: var(--gold-soft); }
+  .spot b { display: block; font-family: var(--head-font); font-size: 26px; font-weight: 800; margin: 4px 0; }
+  .spot span.st { font-size: 12px; opacity: 0.85; line-height: 1.5; }
+  .spot.ghost { background: #fff; color: var(--ink-2); border-style: dashed; border-color: var(--ink-3); box-shadow: none; cursor: default; }
+  .spot.ghost small { color: var(--ink-3); }
   .tchip {
     display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 1px;
     background: var(--ink); color: var(--gold-soft);
@@ -443,13 +457,22 @@
     <!-- 3 · CASH -->
     <section class="screen" id="s-cash" data-title="Cash / Money">
       <div class="page">
-        <div class="sec-head"><h2>Cash</h2><span class="count" id="cashCount">hourly + special</span></div>
-        <p class="sub">Hourly draw, official draws and sponsored draws.</p>
+        <div class="sec-head"><h2>Cash</h2><span class="count" id="cashCount">spotlight</span></div>
+        <p class="sub">Tonight's featured draws, house draws and sponsored draws.</p>
+        <div class="spot-strip" id="cashSpots"></div>
         <div class="menu">
-          <button class="menu-card hero-cta" data-go="s-hourly" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">₦200 An Hour Giveaway</span><span class="menu-s" id="hourlySub">Every hour, on the hour</span></span><span class="chev">›</span></button>
-          <button class="menu-card hero-cta" id="cash50kBtn" type="button" style="display:none"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">₦50,000 Cash Giveaway</span><span class="menu-s" id="cash50kSub">Official draw</span></span><span class="chev">›</span></button>
-          <button class="menu-card" data-go="s-sponsored" type="button"><span class="menu-ic">☆</span><span class="menu-tx"><span class="menu-t">Sponsored Giveaways</span><span class="menu-s" id="sponsoredSub">Special draws from sponsors</span></span><span class="chev">›</span></button>
+          <button class="menu-card hero-cta" data-go="s-naira" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">Naira Giveaways</span><span class="menu-s">Win Cash Daily</span></span><span class="chev">›</span></button>
+          <button class="menu-card" data-go="s-sponsored" type="button"><span class="menu-ic">☆</span><span class="menu-tx"><span class="menu-t">Sponsored Cash Giveaways</span><span class="menu-s" id="sponsoredSub">Special draws from sponsors</span></span><span class="chev">›</span></button>
         </div>
+      </div>
+    </section>
+
+    <!-- NAIRA GIVEAWAYS LIST -->
+    <section class="screen" id="s-naira" data-title="Naira Giveaways">
+      <div class="page">
+        <div class="sec-head"><h2>Naira Giveaways</h2><span class="count">Win Cash Daily</span></div>
+        <p class="sub">Official house draws — no sponsors, prizes paid by us.</p>
+        <div class="menu" id="nairaList"><div class="empty"><div class="e-ic">○</div><p>loading…</p></div></div>
       </div>
     </section>
 
@@ -623,7 +646,7 @@
 <script>
 // ---- Navigation stack: one screen at a time, like the bot flow ----
 const stack = ['s-home'];
-const TAB_FOR = { 's-home': 's-home', 's-hourly': 's-hourly', 's-cats': 's-hourly', 's-cash': 's-hourly', 's-sponsored': 's-hourly', 's-others': 's-hourly', 's-food': 's-hourly', 's-other': 's-hourly', 's-draws': 's-draws', 's-wallet': 's-wallet', 's-how': '', 's-contact': '' };
+const TAB_FOR = { 's-home': 's-home', 's-hourly': 's-hourly', 's-cats': 's-hourly', 's-cash': 's-hourly', 's-naira': 's-hourly', 's-sponsored': 's-hourly', 's-others': 's-hourly', 's-food': 's-hourly', 's-other': 's-hourly', 's-draws': 's-draws', 's-wallet': 's-wallet', 's-how': '', 's-contact': '' };
 function renderNav() {
   const cur = stack[stack.length - 1];
   document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('show', s.id === cur));
@@ -637,7 +660,9 @@ function go(id) {
   stack.push(id);
   renderNav();
   if (id === 's-sponsored') loadSponsored();
-  if (id === 's-cash') loadCashOfficial();
+  if (id === 's-cash') loadCash();
+  if (id === 's-naira') loadNaira();
+  if (id === 's-cash') loadCash();
   if (id === 's-others') loadOthers();
   if (id === 's-food') loadFoods();
   if (id === 's-wallet') loadWallet();
@@ -777,7 +802,6 @@ function renderDraw(d, fromApi) {
   el('drawId').textContent = d.drawId;
   el('drawIdHome').textContent = d.drawId;
   el('drawsDraw').textContent = d.drawId;
-  el('hourlySub').textContent = 'Draw ' + d.drawId + ' · ' + (phaseLabel[d.phase] || d.phase).toLowerCase();
   el('footDraw').textContent = d.drawId + ' · ' + (phaseLabel[d.phase] || d.phase);
   el('phase').textContent = phaseLabel[d.phase] || d.phase;
   el('phaseHome').textContent = phaseLabel[d.phase] || d.phase;
@@ -942,29 +966,88 @@ el('wdBtn').addEventListener('click', async () => {
     btn.disabled = false;
   }
 });
-async function loadCashOfficial() {
-  const btn = el('cash50kBtn');
-  btn.style.display = 'none';
-  el('cashCount').textContent = 'hourly + special';
+async function loadCash() {
+  el('cashCount').textContent = 'spotlight';
   let rows = [];
   try {
     rows = await api('/api/miniapp/sponsored');
-  } catch (_) { return; }
+  } catch (_) { rows = []; }
   const official = rows.filter((g) => g.sponsored === false);
-  if (!official.length) return;
+  const sponsored = rows.filter((g) => g.sponsored !== false);
   let opens = [];
   try {
     opens = await api('/api/miniapp/custom-open');
   } catch (_) { opens = []; }
-  const open = opens.find((o) => official.some((g) => g.id === o.giveaway.id));
-  const target = open ? official.find((g) => g.id === open.giveaway.id) : official[0];
-  el('cash50kSub').textContent = open
-    ? 'Open now · closes ' + new Date(open.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-    : (target.scheduled_at ? 'Draws ' + new Date(target.scheduled_at).toLocaleString() : 'Opens soon');
-  btn.style.display = '';
-  btn.onclick = () => { if (open) openOther(target.id); else toast('Not open yet'); };
-  el('cashCount').textContent = '3 draws';
+  const openOf = (gid) => opens.find((o) => o.giveaway && o.giveaway.id === gid);
+  let live = null;
+  try {
+    live = await api('/api/draws/current');
+  } catch (_) {}
+  const spots = [];
+  spots.push({
+    kind: 'hourly',
+    title: '₦200 Hourly',
+    prize: '₦' + ((live && live.draw && live.draw.amount) || 200),
+    meta: live ? ('Draw ' + live.drawId) : 'Every hour',
+    live: !!(live && live.phase === 'entry_open'),
+  });
+  if (official[0]) {
+    const o = openOf(official[0].id);
+    spots.push({
+      kind: 'giveaway', id: official[0].id, title: official[0].name,
+      prize: '₦' + Number(official[0].amount || 0).toLocaleString(),
+      meta: o ? 'Open now' : 'Opens soon', live: !!o,
+    });
+  }
+  if (sponsored[0]) {
+    const o = openOf(sponsored[0].id);
+    spots.push({
+      kind: 'giveaway', id: sponsored[0].id, title: sponsored[0].name,
+      prize: '₦' + Number(sponsored[0].amount || 0).toLocaleString(),
+      meta: o ? 'Sponsored · open' : 'Sponsored', live: !!o,
+    });
+  }
+  while (spots.length < 3) spots.push(null);
+  el('cashSpots').innerHTML = spots.slice(0, 3).map((s) => {
+    if (!s) return '<div class="spot ghost"><small>SPOTLIGHT</small><b>???</b><span class="st">More heat soon</span></div>';
+    const goAttr = s.kind === 'hourly' ? 'data-spot-go="s-hourly"' : 'data-spot-open="' + s.id + '"';
+    return '<button class="spot" type="button" ' + goAttr + '><small>' + (s.live ? '● LIVE' : 'SPOTLIGHT') + '</small><b>' + s.prize + '</b><span class="st">' + s.title + ' · ' + s.meta + '</span></button>';
+  }).join('');
+  el('cashCount').textContent = '3 spotlight';
 }
+async function loadNaira() {
+  const box = el('nairaList');
+  let rows = [];
+  try {
+    rows = await api('/api/miniapp/sponsored');
+  } catch (_) {
+    box.innerHTML = '<div class="empty"><div class="e-ic">○</div><p>Draws appear here when the server is running.</p></div>';
+    return;
+  }
+  const official = rows.filter((g) => g.sponsored === false);
+  let opens = [];
+  try {
+    opens = await api('/api/miniapp/custom-open');
+  } catch (_) { opens = []; }
+  const openById = {};
+  opens.forEach((o) => { openById[o.giveaway.id] = o; });
+  let html = '<button class="menu-card hero-cta" data-spot-go="s-hourly" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">₦200 An Hour Giveaway</span><span class="menu-s">Every hour, on the hour</span></span><span class="chev">›</span></button>';
+  html += official.map((g) => {
+    const o = openById[g.id];
+    const sub = o
+      ? 'Open now · closes ' + new Date(o.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+      : (g.scheduled_at ? 'Draws ' + new Date(g.scheduled_at).toLocaleString() : 'Opens soon');
+    return '<button class="menu-card" data-other-open="' + g.id + '" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">' + g.name +
+      '</span><span class="menu-s">' + sub + '</span></span>' + (o ? '<span class="tag">LIVE</span>' : '<span class="chev">›</span>') + '</button>';
+  }).join('');
+  box.innerHTML = html;
+}
+document.addEventListener('click', (e) => {
+  const g = e.target.closest('[data-spot-go]');
+  if (g) { go(g.getAttribute('data-spot-go')); return; }
+  const o = e.target.closest('[data-spot-open]');
+  if (o) openOther(o.getAttribute('data-spot-open'));
+});
 async function loadSponsored() {
   let rows = [];
   try {
