@@ -443,10 +443,11 @@
     <!-- 3 · CASH -->
     <section class="screen" id="s-cash" data-title="Cash / Money">
       <div class="page">
-        <div class="sec-head"><h2>Cash</h2><span class="count">2 draws</span></div>
-        <p class="sub">Hourly draw plus special sponsored draws.</p>
+        <div class="sec-head"><h2>Cash</h2><span class="count" id="cashCount">hourly + special</span></div>
+        <p class="sub">Hourly draw, official draws and sponsored draws.</p>
         <div class="menu">
           <button class="menu-card hero-cta" data-go="s-hourly" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">₦200 An Hour Giveaway</span><span class="menu-s" id="hourlySub">Every hour, on the hour</span></span><span class="chev">›</span></button>
+          <button class="menu-card hero-cta" id="cash50kBtn" type="button" style="display:none"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">₦50,000 Cash Giveaway</span><span class="menu-s" id="cash50kSub">Official draw</span></span><span class="chev">›</span></button>
           <button class="menu-card" data-go="s-sponsored" type="button"><span class="menu-ic">☆</span><span class="menu-tx"><span class="menu-t">Sponsored Giveaways</span><span class="menu-s" id="sponsoredSub">Special draws from sponsors</span></span><span class="chev">›</span></button>
         </div>
       </div>
@@ -636,6 +637,7 @@ function go(id) {
   stack.push(id);
   renderNav();
   if (id === 's-sponsored') loadSponsored();
+  if (id === 's-cash') loadCashOfficial();
   if (id === 's-others') loadOthers();
   if (id === 's-food') loadFoods();
   if (id === 's-wallet') loadWallet();
@@ -940,6 +942,29 @@ el('wdBtn').addEventListener('click', async () => {
     btn.disabled = false;
   }
 });
+async function loadCashOfficial() {
+  const btn = el('cash50kBtn');
+  btn.style.display = 'none';
+  el('cashCount').textContent = 'hourly + special';
+  let rows = [];
+  try {
+    rows = await api('/api/miniapp/sponsored');
+  } catch (_) { return; }
+  const official = rows.filter((g) => g.sponsored === false);
+  if (!official.length) return;
+  let opens = [];
+  try {
+    opens = await api('/api/miniapp/custom-open');
+  } catch (_) { opens = []; }
+  const open = opens.find((o) => official.some((g) => g.id === o.giveaway.id));
+  const target = open ? official.find((g) => g.id === open.giveaway.id) : official[0];
+  el('cash50kSub').textContent = open
+    ? 'Open now · closes ' + new Date(open.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    : (target.scheduled_at ? 'Draws ' + new Date(target.scheduled_at).toLocaleString() : 'Opens soon');
+  btn.style.display = '';
+  btn.onclick = () => { if (open) openOther(target.id); else toast('Not open yet'); };
+  el('cashCount').textContent = '3 draws';
+}
 async function loadSponsored() {
   let rows = [];
   try {
@@ -948,6 +973,7 @@ async function loadSponsored() {
     el('sponsored').innerHTML = '<div class="empty"><div class="e-ic">○</div><p>Sponsored giveaways appear here when the server is running.</p></div>';
     return;
   }
+  rows = rows.filter((g) => g.sponsored !== false);
   let opens = [];
   try {
     opens = await api('/api/miniapp/custom-open');
