@@ -46,3 +46,17 @@ describe('withdrawal validation (min ₦100)', () => {
     assert.equal(validateWithdrawal({ ...good, bank_name: '' }, 100).ok, false);
   });
 });
+
+describe('manual adjustBalance validation (no DB touched)', () => {
+  const { adjustBalance } = require('../src/store');
+
+  it('rejects non-numeric telegram IDs', async () => {
+    await assert.rejects(adjustBalance('abc', 100), /Telegram ID/);
+    await assert.rejects(adjustBalance(-5, 100), /Telegram ID/);
+  });
+
+  it('rejects zero and non-numeric amounts', async () => {
+    await assert.rejects(adjustBalance(123, 0), /nonzero/);
+    await assert.rejects(adjustBalance(123, NaN), /nonzero/);
+  });
+});

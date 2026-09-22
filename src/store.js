@@ -304,6 +304,26 @@ async function getWithdrawals(status = 'pending') {
   return res.rows;
 }
 
+// Manual admin adjustment by telegram numeric ID (positive = add).
+async function adjustBalance(telegramId, amount) {
+  const id = Number(telegramId);
+  if (!Number.isInteger(id) || id <= 0) {
+    const err = new Error('Telegram ID must be a positive number.');
+    err.code = 'BAD_ID';
+    throw err;
+  }
+  if (!Number.isFinite(amount) || amount === 0 || Math.abs(amount) > 100000000) {
+    const err = new Error('Amount must be a nonzero number.');
+    err.code = 'BAD_AMOUNT';
+    throw err;
+  }
+  await query(`INSERT INTO users (telegram_id) VALUES ($1) ON CONFLICT (telegram_id) DO NOTHING`, [id]);
+  const r = await query(
+    `UPDATE users SET wallet_balance = wallet_balance + $2, updated_at = NOW() WHERE telegram_id = $1 RETURNING wallet_balance`,
+    [id, Math.trunc(amount)]
+  );
+  return { telegram_id: id, balance: r.rows[0].wallet_balance };
+}
 // Admin decision: 'paid' (money already debited at request time) or
 // 'rejected' (refunds the amount). Idempotent — only pending rows move.
 async function resolveWithdrawal(id, decision) {
@@ -367,4 +387,5 @@ module.exports = {
   countWalletWins,
   getWithdrawals,
   resolveWithdrawal,
+  adjustBalance,
 };

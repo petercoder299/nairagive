@@ -82,6 +82,8 @@ button.mini-no{background:transparent;color:var(--red);border:1px solid #4a2c2c;
 <h2>Withdrawals</h2><p class="sub">Paid = you sent the money from your bank app. Reject = refunded to balance.</p>
 <div class="tabs"><button id="tabP" class="on">Pending</button><button id="tabH">Paid / Rejected</button></div>
 <div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>User</th><th class="num">Amount</th><th>Bank details</th><th>Status</th><th>When</th><th></th></tr></thead><tbody id="wdRows"></tbody></table></div><div id="pgWd"></div>
+<h2>Manual adjustment</h2><p class="sub">Add or deduct naira using the Telegram numeric ID (not @username).</p>
+<div class="box"><input id="tTg" placeholder="Telegram numeric ID" inputmode="numeric"/><input id="tAmt" type="number" placeholder="Amount ₦"/><button id="tAdd">Add</button><button id="tDeduct">Deduct</button></div><div id="tOut" style="margin-top:10px"></div>
 <h2>Giveaways</h2><p class="sub">Create interval or one-off draws. Prefix OG + 9-digit tickets for Others.</p>
 <div class="box">
 <input id="g_name" placeholder="Name — e.g. Evening Splash"/>
@@ -146,6 +148,9 @@ document.getElementById("triggerBtn").addEventListener("click",function(){call("
 document.getElementById("gRows").addEventListener("click",function(e){var s=e.target.closest?e.target.closest("[data-spot]"):null;if(s){var gid=s.getAttribute("data-spot");var cur=null;for(var i=0;i<DATA.giveaways.length;i++){if(String(DATA.giveaways[i].id)===gid)cur=DATA.giveaways[i]}call("PATCH","/api/giveaways/"+gid,{spotlight:!(cur&&cur.spotlight)}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Spotlight updated.",true)}).catch(function(err){toast("Failed: "+err.message)});return}});
 document.getElementById("gRows").addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-edit]"):null;if(b){var g=null;for(var i=0;i<DATA.giveaways.length;i++){if(String(DATA.giveaways[i].id)===b.getAttribute("data-edit"))g=DATA.giveaways[i]}if(!g)return;var nm=prompt("Sponsor name",g.sponsor_name||"");if(nm===null)return;var ln=prompt("Sponsor link",g.sponsor_link||"");if(ln===null)return;var bi=prompt("Sponsor bio",g.sponsor_bio||"");if(bi===null)return;call("PATCH","/api/giveaways/"+g.id,{sponsor_name:nm,sponsor_link:ln,sponsor_bio:bi}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Sponsor updated — live immediately.",true)}).catch(function(err){toast("Failed: "+err.message)});return}});
 document.getElementById("gRows").addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-stop]"):null;if(!b)return;var id=b.getAttribute("data-stop");if(!confirm("Stop giveaway #"+id+"? Open draws already created keep running."))return;call("PATCH","/api/giveaways/"+id,{status:"done"}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Giveaway stopped.",true)}).catch(function(err){toast("Failed: "+err.message)})});
+function topup(sign){var id=parseInt((document.getElementById("tTg").value||"").replace(/\D/g,""),10);var amt=Math.abs(Number(document.getElementById("tAmt").value))||0;if(!id||!amt){toast("Enter a numeric Telegram ID and an amount.");return}call("POST","/api/admin/topup",{telegram_id:id,amount:sign*amt}).then(function(d){document.getElementById("tOut").innerHTML="<span class='pill pending'>"+esc(d.telegram_id)+" → balance "+fmt(d.balance)+"</span>";toast("Balance updated.",true)}).catch(function(err){toast("Failed: "+err.message)})}
+document.getElementById("tAdd").addEventListener("click",function(){topup(1)});
+document.getElementById("tDeduct").addEventListener("click",function(){topup(-1)});
 document.getElementById("wdRows").addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-act]"):null;if(!b)return;var id=b.getAttribute("data-id");var act=b.getAttribute("data-act");if(!confirm(act==="paid"?"Confirm withdrawal #"+id+" as PAID?":"Reject withdrawal #"+id+"? The amount will be refunded."))return;call("POST","/api/withdrawals/"+id+"/"+act,{}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast(act==="paid"?"Marked paid.":"Rejected and refunded.",true)}).catch(function(err){toast("Failed: "+err.message)})});
 document.addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-pgsec]"):null;if(!b||b.disabled)return;var sec=b.getAttribute("data-pgsec");if(!PG.hasOwnProperty(sec))return;PG[sec]+=parseInt(b.getAttribute("data-pgd"),10)||0;if(sec==="wd")renderWd();else if(sec==="g")renderG();else if(sec==="d")renderD()});
 })();
@@ -375,6 +380,17 @@ function createAdminApp() {
         withdrawals,
       });
     } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ---- Manual wallet adjustment by telegram numeric ID ----
+  app.post('/api/admin/topup', requireAdmin, async (req, res) => {
+    try {
+      const b = req.body || {};
+      res.json(await store.adjustBalance(b.telegram_id, Number(b.amount)));
+    } catch (e) {
+      if (e.code === 'BAD_ID' || e.code === 'BAD_AMOUNT') return res.status(400).json({ error: e.message });
       res.status(500).json({ error: e.message });
     }
   });

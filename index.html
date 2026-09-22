@@ -631,6 +631,7 @@
             <input id="wdBank" placeholder="Bank name" maxlength="60" autocomplete="off" />
             <input id="wdAmt" placeholder="Amount (₦, min 100)" inputmode="numeric" autocomplete="off" />
             <button class="btn-p" id="wdBtn" type="button">Request withdrawal</button>
+            <p class="muted small" id="wdNote" style="margin-top:8px"></p>
           </div>
         </div>
         <div class="sec-head"><h2 style="font-size:20px">My requests</h2></div>
@@ -1050,14 +1051,16 @@ el('wdBtn').addEventListener('click', async () => {
   const btn = el('wdBtn');
   btn.disabled = true;
   try {
-    await api('/api/miniapp/withdrawals', { method: 'POST', body: JSON.stringify({ full_name: el('wdName').value, account_number: el('wdAcct').value, bank_name: el('wdBank').value, amount: Number(el('wdAmt').value) }) });
+    const r = await api('/api/miniapp/withdrawals', { method: 'POST', body: JSON.stringify({ full_name: el('wdName').value, account_number: el('wdAcct').value, bank_name: el('wdBank').value, amount: Number(el('wdAmt').value) }) });
     haptic('success');
     toast('Withdrawal requested');
+    el('wdNote').textContent = 'Requested ₦' + r.withdrawal.amount + ' — new balance ₦' + r.balance + '.';
     el('wdAmt').value = '';
     await loadWallet();
   } catch (e) {
     haptic('error');
     toast('Request failed');
+    el('wdNote').textContent = 'Failed: ' + e.message;
   } finally {
     btn.disabled = false;
   }
