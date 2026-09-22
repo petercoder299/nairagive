@@ -441,7 +441,7 @@
     <!-- 2 · CATEGORIES -->
     <section class="screen" id="s-cats" data-title="Enter Giveaway">
       <div class="page">
-        <div class="sec-head"><h2>Categories</h2><span class="count">1 live</span></div>
+        <div class="sec-head"><h2>Categories</h2><span class="count" id="catsCount">—</span></div>
         <p class="sub">Pick a giveaway category to enter.</p>
         <div class="menu">
           <button class="menu-card" data-go="s-cash" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">Cash / Money</span><span class="menu-s">Hourly draws · live</span></span><span class="tag">LIVE</span></button>
@@ -1356,6 +1356,10 @@ function confettiTick() {
 renderNav();
 loadLive();
 loadMe();
+(function countLiveCats() {
+  const n = document.querySelectorAll('#s-cats .menu-card:not([disabled])').length;
+  el('catsCount').textContent = n + ' live';
+})();
 setInterval(loadLive, 30000);
 setInterval(tickClock, 1000);
 tickClock();
