@@ -5,5 +5,6 @@ node_modules/
 deen.txt
 # local spec notes — never commit
 giveaways.txt
+newone.txt
 # generated deploy secrets — never commit
 render-secrets.txt

@@ -204,11 +204,21 @@ async function getOpenCustomDraws() {
 }
 
 // Custom draws of one giveaway whose entry window has passed but never drawn.
+// Also catches legacy rows with no entry_closes_at whose giveaway window is
+// over (interval ended or one-off scheduled time passed) — those would
+// otherwise stay open (and enterable) forever.
 async function getOverdueCustomDraws(now = new Date()) {
   const res = await query(
-    `SELECT * FROM draws
-     WHERE kind = 'custom' AND status = 'entry_open'
-       AND entry_closes_at IS NOT NULL AND entry_closes_at <= $1`,
+    `SELECT d.* FROM draws d
+     LEFT JOIN giveaways g ON g.id = d.giveaway_id
+     WHERE d.kind = 'custom' AND d.status = 'entry_open'
+       AND (
+         (d.entry_closes_at IS NOT NULL AND d.entry_closes_at <= $1)
+         OR (d.entry_closes_at IS NULL AND (
+           (g.interval_minutes IS NOT NULL AND g.ends_at IS NOT NULL AND g.ends_at <= $1)
+           OR (g.interval_minutes IS NULL AND g.scheduled_at IS NOT NULL AND g.scheduled_at <= $1)
+         ))
+       )`,
     [now.toISOString()]
   );
   return res.rows;

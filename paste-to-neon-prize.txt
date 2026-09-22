@@ -1,0 +1,18 @@
+-- Paste this into Neon Dashboard -> SQL Editor, then press Run.
+-- Run it once with database "neondb" selected, then switch to
+-- "neondb_test" (top-left picker) and run it again.
+
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS prize_text TEXT;
+
+UPDATE giveaways SET prize_text = '1 Netflix Account'
+WHERE name LIKE '%Netflix%' AND prize_text IS NULL;
+
+UPDATE giveaways SET prize_text = '₦50,000 Food Credit'
+WHERE (name LIKE '%Cactus%' OR name LIKE '%Black Bell%')
+AND prize_text IS NULL;
+
+UPDATE giveaways SET prize_text = '₦50,000'
+WHERE name LIKE '%50,000 Cash%' AND prize_text IS NULL;
+
+SELECT id, name, prize_text, status FROM giveaways ORDER BY id;
+-- Every row should show its prize text. Past draws pick it up automatically.

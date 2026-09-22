@@ -263,6 +263,8 @@
     font-variant-numeric: tabular-nums; display: inline-block; margin-bottom: 12px;
     box-shadow: 3px 3px 0 rgba(42, 26, 18, 0.25);
   }
+  button.round-chip { cursor: pointer; font-family: inherit; border: none; width: 100%; margin-bottom: 12px; }
+  button.round-chip:active { transform: scale(0.98); }
   /* Winner coins — single gold style */
   .balls { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
   .ball {
@@ -481,10 +483,11 @@
       <div class="page">
         <span class="round-chip">DRAW · <span id="drawId">—</span></span>
         <div class="statusbar" id="statusbar"><span class="st"><span class="pulse"></span><span id="phase">…</span></span><span class="cd"><span id="countdown">--:--</span><small id="countLabel">until entry closes</small></span></div>
+        <button class="round-chip" id="sponsorBtnHourly" type="button">About Sponsor</button>
         <div class="pick-card">
           <h3>Get your tickets</h3>
           <p class="hint" id="claimNote">Max 10 tickets per hour. Free entry.</p>
-          <button class="btn-p" id="claimBtn" type="button">Get ticket</button>
+          <button class="btn-p" id="claimBtn" type="button">Enter lucky draw</button>
           <div class="meter"><i id="myBar"></i></div>
           <div class="meter-label"><span>YOUR TICKETS (10 TICKETS EVERY HOUR)</span><b id="entries">—</b></div>
           <div class="phases" style="display:none">
@@ -493,7 +496,7 @@
             <div class="ph" data-k="results"><i></i></div>
           </div>
         </div>
-        <button class="btn-g" id="rulesBtnHourly" type="button" style="margin-top:10px">Rules for this draw</button>
+        <button class="btn-g" id="rulesBtnHourly" type="button" style="margin-top:10px">RULES FOR THIS DRAW</button>
         <div class="spacer"></div>
         <div id="winners"></div>
         <div class="sec-head"><h2 style="font-size:20px">My entries</h2><span class="count" id="myCount">0 this round</span></div>
@@ -546,19 +549,32 @@
         <span class="round-chip">DRAW · <span id="oDrawId">—</span></span>
         <div class="sub" id="oCloses">—</div>
         <div class="statusbar" id="oStatusbar"><span class="st"><span class="pulse"></span><span id="oPhase">…</span></span><span class="cd"><span id="oCountdown">--:--</span><small id="oCountLabel">until entry closes</small></span></div>
+        <button class="round-chip" id="oSponsorBtn" type="button">About Sponsor</button>
         <div class="pick-card">
           <h3 id="oTitle">Giveaway</h3>
           <p class="hint" id="oNote">Free entry.</p>
-          <button class="btn-p" id="oClaim" type="button">Get ticket</button>
+          <button class="btn-p" id="oClaim" type="button">Enter lucky draw</button>
           <div class="meter"><i id="oBar"></i></div>
           <div class="meter-label"><span>YOUR TICKETS (10 TICKETS EVERY HOUR)</span><b id="oEntries">—</b></div>
         </div>
         <div class="spacer"></div>
         <div id="oWinners"></div>
+        <button class="btn-g" id="oRulesBtn" type="button">RULES FOR THIS DRAW</button>
         <div class="sec-head"><h2 style="font-size:20px">My entries</h2><span class="count" id="oMyCount">0</span></div>
         <div class="cards" id="oMine"><p class="muted small">No entries yet.</p></div>
-        <button class="btn-g" id="oRulesBtn" type="button" style="margin-top:10px">Rules</button>
         <div class="sponsor" id="oSponsor"></div>
+      </div>
+    </section>
+
+    <!-- SPONSOR -->
+    <section class="screen" id="s-sponsor" data-title="About Sponsor">
+      <div class="page">
+        <div class="sec-head"><h2>About Sponsor</h2></div>
+        <div class="panel">
+          <h3 id="spName" style="font-family:var(--head-font);font-size:19px;padding:14px 0 4px">Sponsor</h3>
+          <div id="spRows"></div>
+          <p id="spBio" class="small" style="padding:10px 0 14px;white-space:pre-line;line-height:1.7"></p>
+        </div>
       </div>
     </section>
 
@@ -579,7 +595,7 @@
           <ol class="how" id="howList" style="padding:14px 6px 14px 26px">
             <li>Tap <b>Enter Giveaway</b> and pick a category.</li>
             <li>Pick <b>Cash / Money</b>, then the hourly draw.</li>
-            <li>Tap <b>Get ticket</b> — up to 10 per hour.</li>
+            <li>Tap <b>Enter lucky draw</b> — up to 10 per hour.</li>
             <li>Entry <b>:00–:50</b>, draw <b>:51–:52</b>, results <b>:53–:59</b>.</li>
             <li>Winnings land in your <b>Wallet</b> automatically.</li>
           </ol>
@@ -759,7 +775,7 @@ function syncMainButton() {
   try {
     if (!tg || !tg.MainButton || (!IN_TELEGRAM && !TEST_USER)) return;
     if (stack[stack.length - 1] !== 's-hourly') { tg.MainButton.hide(); return; }
-    tg.MainButton.setText('GET TICKET');
+    tg.MainButton.setText('ENTER LUCKY DRAW');
     tg.MainButton.show();
   } catch (_) {}
 }
@@ -802,6 +818,7 @@ async function loadLive() {
     } catch (_) {}
   }
 }
+let hourlySponsor = null;
 function renderDraw(d, fromApi) {
   el('drawId').textContent = d.drawId;
   el('drawIdHome').textContent = d.drawId;
@@ -828,6 +845,7 @@ function renderDraw(d, fromApi) {
   el('sponsor').innerHTML = sp
     ? 'Sponsor: <b>' + sp.sponsor_name + '</b><br>Link: <a href="' + sp.sponsor_link + '" target="_blank" rel="noopener">' + sp.sponsor_link + '</a><br>' + sp.sponsor_bio
     : 'Sponsor: <b>NairaGiveBot</b> — free hourly ₦200 giveaways.';
+  hourlySponsor = sp ? { name: sp.sponsor_name, link: sp.sponsor_link, bio: sp.sponsor_bio } : null;
 }
 // ---- Paged ticket lists (20 per page) + ticket labels ----
 const PAGE_SIZE = 20;
@@ -868,7 +886,7 @@ function renderMyTickets(me) {
   pageIx.hourly = 0;
   rerenderHourlyMine();
   const open = me.draw.phase === 'entry_open';
-  el('claimBtn').textContent = open ? 'Get ticket (' + hourlyCache.tickets.length + '/' + me.draw.maxTickets + ')' : 'Entry closed';
+  el('claimBtn').textContent = open ? 'Enter lucky draw (' + hourlyCache.tickets.length + '/' + me.draw.maxTickets + ')' : 'Entry closed';
   el('claimBtn').disabled = !open || hourlyCache.tickets.length >= me.draw.maxTickets;
 }
 async function loadMe() {
@@ -927,6 +945,53 @@ function showRules(title, body) {
   el('rulesBody').textContent = body || 'No rules published for this giveaway yet.';
   go('s-rules');
 }
+function spVal(v) {
+  const s = String(v);
+  if (/^https?:\/\//i.test(s)) return '<a href="' + s + '" target="_blank" rel="noopener">' + s + '</a>';
+  return s;
+}
+function showSponsor(title, info) {
+  const sp = info || {};
+  el('spName').textContent = title || sp.name || 'Sponsor';
+  const rows = [
+    ['Location', sp.location],
+    ['Phone', sp.phone],
+    ['Website', sp.website],
+    ['Link', sp.link],
+    ['Twitter/X', sp.twitter],
+    ['Facebook', sp.facebook],
+    ['Instagram', sp.instagram],
+    ['LinkedIn', sp.linkedin],
+  ].filter((r) => r[1]);
+  el('spRows').innerHTML = rows.length
+    ? rows.map((r) => '<div class="prow"><span class="k">' + r[0] + '</span><span class="v" style="font-size:15px;white-space:normal;word-break:break-all;text-align:right">' + spVal(r[1]) + '</span></div>').join('')
+    : '<p class="muted small" style="padding:8px 0">No contact details provided.</p>';
+  el('spBio').textContent = sp.bio || '';
+  go('s-sponsor');
+}
+el('sponsorBtnHourly').addEventListener('click', () => {
+  showSponsor('About Sponsor', hourlySponsor || {
+    name: 'NairaGiveBot',
+    link: '',
+    bio: 'Free hourly giveaways for our community.',
+  });
+});
+el('oSponsorBtn').addEventListener('click', () => {
+  const g = currentOther && currentOther.giveaway;
+  const d = currentOther && currentOther.draw;
+  showSponsor(g ? g.name : 'About Sponsor', {
+    name: (g && g.name) || (d && d.sponsor_name) || 'Sponsor',
+    link: (g && (g.sponsor_link || g.link)) || (d && d.sponsor_link) || '',
+    bio: (g && g.sponsor_bio) || (d && d.sponsor_bio) || '',
+    location: g && g.sponsor_location,
+    phone: g && g.sponsor_phone,
+    website: g && g.sponsor_website,
+    twitter: g && g.sponsor_twitter,
+    facebook: g && g.sponsor_facebook,
+    instagram: g && g.sponsor_instagram,
+    linkedin: g && g.sponsor_linkedin,
+  });
+});
 el('rulesBtnHourly').addEventListener('click', () => {
   showRules('₦200 Hourly — Rules', hourlyRules || 'Entry is free. Max 10 tickets per hour. Entry :00–:50, draw :51–:52, results :53–:59. One winner, paid to Wallet automatically.');
 });
@@ -1239,7 +1304,7 @@ function renderOther() {
   otherCache = { tickets: d.myTickets || [], drawId: draw.id, max: d.max };
   rerenderOtherMine();
   const hc = (d.myHourCount !== undefined && d.myHourCount !== null) ? d.myHourCount : otherCache.tickets.length;
-  el('oClaim').textContent = !open ? 'Entry closed' : 'Get ticket (' + hc + '/' + d.max + ')';
+  el('oClaim').textContent = !open ? 'Entry closed' : 'Enter lucky draw (' + hc + '/' + d.max + ')';
   el('oClaim').disabled = !open || hc >= d.max;
   el('oEntries').textContent = hc + '/' + d.max;
   el('oBar').style.width = Math.min(100, (hc / d.max) * 100) + '%';

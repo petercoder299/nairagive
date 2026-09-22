@@ -26,6 +26,18 @@ function getDrawId(date = new Date()) {
   return `${dd}${mm}${yyyy}${letter}`;
 }
 
+// Hourly cash draw identity. With a prefix (NG) the flagship hourly uses
+// PREFIX + 01 + DDMMYYYY + hour letter (e.g. NG0122092026A); entry hour always
+// equals draw hour, so tickets stamp identically. Empty prefix = legacy format.
+function hourlyDrawId(date = new Date(), prefix = 'NG') {
+  if (!prefix) return getDrawId(date);
+  const d = new Date(date);
+  const dd = pad2(d.getDate());
+  const mm = pad2(d.getMonth() + 1);
+  const yyyy = d.getFullYear();
+  return `${prefix}01${dd}${mm}${yyyy}${hourLetter(d.getHours())}`;
+}
+
 function parseDrawId(drawId) {
   // e.g. 20092026A
   const m = /^(\d{2})(\d{2})(\d{4})([A-X])$/.exec(drawId);
@@ -129,6 +141,7 @@ module.exports = {
   hourLetter,
   letterToHour,
   getDrawId,
+  hourlyDrawId,
   parseDrawId,
   getPhase,
   getPhaseForDraw,

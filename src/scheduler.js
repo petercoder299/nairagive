@@ -1,5 +1,5 @@
 const cron = require('node-cron');
-const { getDrawId, getPhase, displayWinner } = require('./draw');
+const { getDrawId, getPhase, displayWinner, hourlyDrawId } = require('./draw');
 const custom = require('./custom');
 const store = require('./store');
 const config = require('./config');
@@ -12,7 +12,7 @@ function trackChat(id) {
 }
 
 async function tick(now = new Date()) {
-  const drawId = getDrawId(now);
+  const drawId = hourlyDrawId(now, config.hourlyPrefix);
   const phase = getPhase(now);
   const min = now.getMinutes();
 

@@ -7,6 +7,7 @@ const {
   seededPickWinners,
   hourLetter,
   displayWinner,
+  hourlyDrawId,
 } = require('../src/draw');
 
 describe('draw ids', () => {
@@ -99,5 +100,17 @@ describe('winner display chain (username → id → profile name)', () => {
   it('never renders bare @ or undefined', () => {
     assert.equal(displayWinner({}), 'unknown');
     assert.equal(displayWinner(null), 'unknown');
+  });
+});
+
+describe('hourly draw ids', () => {
+  it('NG prefix gives NG01 + date + letter (Sep 22 00:15 -> NG0122092026A)', () => {
+    assert.equal(hourlyDrawId(new Date(2026, 8, 22, 0, 15), 'NG'), 'NG0122092026A');
+  });
+
+  it('empty prefix keeps the legacy plain format', () => {
+    const d = new Date(2026, 8, 22, 0, 15);
+    assert.equal(hourlyDrawId(d, ''), getDrawId(d));
+    assert.equal(hourlyDrawId(d, ''), '22092026A');
   });
 });

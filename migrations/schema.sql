@@ -71,6 +71,13 @@ CREATE TABLE IF NOT EXISTS giveaways (
   draw_seq INTEGER,
   spotlight BOOLEAN NOT NULL DEFAULT false,
   prize_text TEXT,
+  sponsor_location TEXT,
+  sponsor_phone TEXT,
+  sponsor_website TEXT,
+  sponsor_twitter TEXT,
+  sponsor_facebook TEXT,
+  sponsor_instagram TEXT,
+  sponsor_linkedin TEXT,
   status TEXT NOT NULL DEFAULT 'active',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -84,6 +91,13 @@ ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsored BOOLEAN NOT NULL DEFAUL
 ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS draw_seq INTEGER;
 ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS spotlight BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS prize_text TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_location TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_phone TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_website TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_twitter TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_facebook TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_instagram TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_linkedin TEXT;
 
 -- User withdrawal requests (min ₦100, paid out manually by admin)
 CREATE TABLE IF NOT EXISTS withdrawals (

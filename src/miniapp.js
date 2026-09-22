@@ -4,7 +4,7 @@
 const config = require('./config');
 const store = require('./store');
 const { query } = require('./db');
-const { getDrawId, getPhase } = require('./draw');
+const { getDrawId, getPhase, hourlyDrawId } = require('./draw');
 const labelFor = require('./custom').drawLabel;
 const startOfHour = require('./custom').startOfHour;
 const ticketPrefixFor = require('./custom').ticketPrefixFor;
@@ -19,7 +19,7 @@ function mountMiniApp(app) {
     try {
       const u = req.tgUser;
       const now = new Date();
-      const drawId = getDrawId(now);
+      const drawId = hourlyDrawId(now, config.hourlyPrefix);
       const phase = getPhase(now);
       await store.upsertUser(u.id, u.username, u.first_name).catch(() => {});
       await store.ensureDraw({ drawId }).catch(() => {});
@@ -97,7 +97,7 @@ function mountMiniApp(app) {
           error: 'Entry is closed right now. Winners picked :51–:52, results :53–:59. New draw at the top of the hour.',
         });
       }
-      const drawId = getDrawId(now);
+      const drawId = hourlyDrawId(now, config.hourlyPrefix);
       await store.upsertUser(u.id, u.username, u.first_name).catch(() => {});
       await store.ensureDraw({ drawId }).catch(() => {});
       const code = await store.issueTicket(drawId, u.id, u.username);
@@ -112,7 +112,7 @@ function mountMiniApp(app) {
   // My tickets for a draw (defaults to current hour), with ticket label.
   app.get('/api/miniapp/my-tickets', auth, async (req, res) => {
     try {
-      const drawId = req.query.drawId || getDrawId(new Date());
+      const drawId = req.query.drawId || hourlyDrawId(new Date(), config.hourlyPrefix);
       const [tickets, draw] = await Promise.all([
         store.getUserTickets(drawId, req.tgUser.id),
         store.getDraw(drawId).catch(() => null),

@@ -17,6 +17,8 @@ const config = {
   // works fully in a desktop browser without Telegram. Never enable in prod.
   allowTestMode: requireEnv('ALLOW_TEST_MODE', 'false') === 'true',
   hourlyAmount: parseInt(requireEnv('HOURLY_AMOUNT', '200'), 10),
+  // Prefix for hourly draw IDs, e.g. NG0122092026A. Empty = legacy DDMMYYYY+letter.
+  hourlyPrefix: requireEnv('HOURLY_PREFIX', 'NG'),
   maxTicketsPerUser: parseInt(requireEnv('MAX_TICKETS_PER_USER', '10'), 10),
   withdrawMin: parseInt(requireEnv('WITHDRAW_MIN', '100'), 10),
   sponsor: {
@@ -32,7 +34,7 @@ const config = {
   },
   howToUse: requireEnv(
     'HOW_TO_USE_TEXT',
-    'HOW TO USE\n\n1. Tap Enter Giveaway\n2. Pick a category (start with Cash/Money)\n3. Pick "₦200 Hourly Giveaway"\n4. Tap "Get Ticket" (max 10 tickets per hour)\n5. Entry open :00-:50 each hour. Winner picked :51-:52. Result shown :53-:59.\n6. Winnings go to Wallet.'
+    'HOW TO USE\n\n1. Tap Enter Giveaway\n2. Pick a category (start with Cash/Money)\n3. Pick "₦200 Hourly Giveaway"\n4. Tap "Enter Lucky Draw" (max 10 tickets per hour)\n5. Entry open :00-:50 each hour. Winner picked :51-:52. Result shown :53-:59.\n6. Winnings go to Wallet.'
   ),
   rulesText: requireEnv(
     'RULES_TEXT',

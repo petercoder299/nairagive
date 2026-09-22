@@ -1,6 +1,6 @@
 const { Telegraf, Markup } = require('telegraf');
 const config = require('./config');
-const { getDrawId, getPhase, displayWinner } = require('./draw');
+const { getDrawId, getPhase, displayWinner, hourlyDrawId } = require('./draw');
 const { prizeLabel } = require('./custom');
 const store = require('./store');
 const { trackChat } = require('./scheduler');
@@ -28,7 +28,7 @@ function entryPageText(drawId, phase, count, tickets) {
     `🎟️ Your tickets this draw: ${count}/${config.maxTicketsPerUser}\n` +
     (tickets.length ? tickets.map((t) => `• \`${t}\``).join('\n') + '\n\n' : '\n') +
     `🤝 *Sponsor:* ${sponsor.name}\n🔗 ${sponsor.link}\n📝 ${sponsor.bio}\n\n` +
-    `Tap "🎫 Get Ticket" to enter (max ${config.maxTicketsPerUser} per hour).`
+    `Tap "🎫 Enter Lucky Draw" to enter (max ${config.maxTicketsPerUser} per hour).`
   );
 }
 
@@ -143,7 +143,7 @@ function createBot() {
     await ctx.answerCbQuery();
     trackChat(ctx.chat && ctx.chat.id);
     const now = new Date();
-    const drawId = getDrawId(now);
+    const drawId = hourlyDrawId(now, config.hourlyPrefix);
     const phase = getPhase(now);
     const u = ctx.from;
     await store.upsertUser(u.id, u.username, u.first_name).catch(() => {});
@@ -167,7 +167,7 @@ function createBot() {
     await ctx.reply(entryPageText(drawId, phase, count, tickets), {
       parse_mode: 'Markdown',
       ...Markup.inlineKeyboard([
-        [Markup.button.callback('🎫 Get Ticket', 'ticket:get')],
+        [Markup.button.callback('🎫 Enter Lucky Draw', 'ticket:get')],
         [Markup.button.callback('🔄 Refresh', 'cash:hourly')],
         [Markup.button.callback('🏆 Last Results', 'results:last')],
         [Markup.button.callback('📜 Rules', 'rules:hourly')],
@@ -178,7 +178,7 @@ function createBot() {
   bot.action('ticket:get', async (ctx) => {
     await ctx.answerCbQuery('Issuing ticket...');
     const now = new Date();
-    const drawId = getDrawId(now);
+    const drawId = hourlyDrawId(now, config.hourlyPrefix);
     if (getPhase(now) !== 'entry_open') {
       await ctx.reply('⛔ Entry is closed right now. Winners are being picked (51–52) / results showing (53–59). Come back at the top of the hour!');
       return;
@@ -211,10 +211,10 @@ function createBot() {
 
   bot.action('ticket:mine', async (ctx) => {
     await ctx.answerCbQuery();
-    const drawId = getDrawId(new Date());
+    const drawId = hourlyDrawId(new Date(), config.hourlyPrefix);
     const tickets = await store.getUserTickets(drawId, ctx.from.id).catch(() => []);
     if (!tickets.length) {
-      await ctx.reply(`No tickets yet in draw \`${drawId}\`. Tap 🎫 Get Ticket!`, { parse_mode: 'Markdown' });
+      await ctx.reply(`No tickets yet in draw \`${drawId}\`. Tap Enter Lucky Draw!`, { parse_mode: 'Markdown' });
       return;
     }
     await ctx.reply(`📋 *Your tickets in ${drawId}:*\n\n${tickets.map((t) => `• \`${t}\``).join('\n')}`, {
