@@ -22,7 +22,7 @@ const config = {
   maxTicketsPerUser: parseInt(requireEnv('MAX_TICKETS_PER_USER', '10'), 10),
   withdrawMin: parseInt(requireEnv('WITHDRAW_MIN', '100'), 10),
   sponsor: {
-    name: requireEnv('SPONSOR_NAME', 'NairaGiveBot'),
+    name: requireEnv('SPONSOR_NAME', 'NaijaGiveawayBot'),
     link: requireEnv('SPONSOR_LINK', 'https://t.me/nairagivebot'),
     bio: requireEnv('SPONSOR_BIO', 'Proudly powering free hourly ₦200 giveaways for our community.'),
   },

@@ -1,4 +1,4 @@
-# NairaGiveBot — Free Setup Guide (GitHub + Neon + Render)
+# NaijaGiveawayBot — Free Setup Guide (GitHub + Neon + Render)
 
 Run the whole stack for **₦0**: code on GitHub (free), Postgres on Neon (free tier),
 backend + Mini App on Render (free tier), bot on Telegram (free).
@@ -144,7 +144,7 @@ variables from the table above (`TZ=Africa/Lagos`, `ALLOW_TEST_MODE=false`,
 
 1. Talk to [@BotFather](https://t.me/BotFather) → `/newbot` → name it →
    copy the token into Render's `BOT_TOKEN` (auto-redeploys).
-2. Still in BotFather: `/newapp` → choose your bot → title `NairaGiveBot` →
+2. Still in BotFather: `/newapp` → choose your bot → title `NaijaGiveawayBot` →
    upload any square photo → Web App URL = `https://YOUR-APP.onrender.com/`.
 3. (Recommended) BotFather → Bot Settings → Menu Button → set it to your Web
    App URL. The server also calls `setChatMenuButton` on boot.

@@ -1,4 +1,4 @@
--- Neon (Postgres) schema for NairaGiveBot
+-- Neon (Postgres) schema for NaijaGiveawayBot
 -- Run with: npm run migrate  (uses DATABASE_URL)
 
 CREATE TABLE IF NOT EXISTS users (

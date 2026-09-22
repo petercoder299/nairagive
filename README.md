@@ -1,4 +1,4 @@
-# NairaGiveBot 🎟️
+# NaijaGiveawayBot 🎟️
 
 Telegram bot that gives away money, airtime, data, gadgets, food. **Cash first:** ₦200 hourly giveaway.
 
@@ -75,7 +75,7 @@ Interval giveaways: set `interval_minutes`, `starts_at`, `ends_at` — the sched
 ## Telegram Mini App setup
 
 1. Deploy so `index.html` has a public HTTPS URL (Render gives one), set `MINI_APP_URL` to it.
-2. In [@BotFather](https://t.me/BotFather): `/newapp` → pick your bot → title `NairaGiveBot` → photo → Web App URL = `MINI_APP_URL`.
+2. In [@BotFather](https://t.me/BotFather): `/newapp` → pick your bot → title `NaijaGiveawayBot` → photo → Web App URL = `MINI_APP_URL`.
 3. (Recommended) BotFather → Bot Settings → Menu Button → configure the Web App URL so the menu button opens the Mini App. The server also tries `setChatMenuButton` on boot (see `setupMiniAppMenu`).
 4. Restart the bot, send `/start` → "Open Mini App" button, or send `/app`.
 5. Inside Telegram the page signs you in via `initData` (`GET /api/me`), claims tickets (`POST /api/miniapp/tickets`), shows wallet + your tickets. Opened in a normal browser it is a read-only preview.

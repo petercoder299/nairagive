@@ -41,7 +41,7 @@ function createBot() {
     await store.upsertUser(u.id, u.username, u.first_name).catch((e) => console.error('[bot] upsert', e.message));
     trackChat(ctx.chat && ctx.chat.id);
     await ctx.reply(
-      `👋 Welcome ${u.first_name || 'friend'}!\n\nNairaGiveBot gives away money, airtime, data, gadgets & food.\nChoose an option below:`,
+      `👋 Welcome ${u.first_name || 'friend'}!\n\nNaijaGiveawayBot gives away money, airtime, data, gadgets & food.\nChoose an option below:`,
       mainMenu()
     );
     if (config.miniAppUrl) {
@@ -60,7 +60,7 @@ function createBot() {
       return;
     }
     await ctx.reply(
-      'Tap to open the NairaGiveBot Mini App:',
+      'Tap to open the NaijaGiveawayBot Mini App:',
       Markup.inlineKeyboard([[Markup.button.webApp('Open Mini App', config.miniAppUrl)]])
     );
   });
@@ -155,7 +155,7 @@ function createBot() {
       const winners = await store.getWinners(drawId).catch(() => []);
       let extra = '';
       if (winners.length) {
-        extra = `\n\n🏆 Winners:\n${winners.map((w) => `• \`${w.ticket_code}\` — ${displayWinner(w)}`).join('\n')}`;
+        extra = `\n\n🏆 Winners:\n${winners.map((w) => `• \`${w.ticket_code}\` — Winner: ${displayWinner(w)}`).join('\n')}`;
       }
       await ctx.reply(entryPageText(drawId, phase, count, tickets) + extra, {
         parse_mode: 'Markdown',
@@ -233,7 +233,7 @@ function createBot() {
       const title = r.giveaway_name || '₦200 Hourly';
       const prize = r.giveaway_prize || (r.amount > 0 ? '₦' + Number(r.amount).toLocaleString() : '');
       return r.ticket_code
-        ? `• *${title}*${prize ? ` (${prize})` : ''}\n  \`${r.ticket_code}\` ${displayWinner(r)}`
+        ? `• *${title}*${prize ? ` (${prize})` : ''}\n  \`${r.ticket_code}\` Winner: ${displayWinner(r)}`
         : `• ${r.id}: no entries`;
     });
     await ctx.reply(`🏆 *Recent results*\n\n${lines.join('\n')}`, { parse_mode: 'Markdown' });

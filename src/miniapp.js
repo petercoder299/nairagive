@@ -243,6 +243,21 @@ function mountMiniApp(app) {
     }
   });
 
+  // Win history, 10 per page, with giveaway name + prize.
+  app.get('/api/miniapp/wins', auth, async (req, res) => {
+    try {
+      const perPage = 10;
+      const page = Math.max(0, parseInt(req.query.page || '0', 10) || 0);
+      const [total, wins] = await Promise.all([
+        store.countWalletWins(req.tgUser.id).catch(() => 0),
+        store.getWalletWins(req.tgUser.id, perPage, page * perPage).catch(() => []),
+      ]);
+      res.json({ wins, page, totalPages: Math.max(1, Math.ceil(total / perPage)), total });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   return app;
 }
 

@@ -4,14 +4,14 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta name="theme-color" content="#FFF6E9" />
-<title>NairaGiveBot — Win ₦200 Every Hour</title>
-<meta name="description" content="NairaGiveBot Mini App — free hourly ₦200 cash giveaway." />
+<title>NaijaGiveawayBot — Win ₦200 Every Hour</title>
+<meta name="description" content="NaijaGiveawayBot Mini App — free hourly ₦200 cash giveaway." />
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
-  /* NairaGiveBot "Sunbeam" — bright sticker-book system, original layout. */
+  /* NaijaGiveawayBot "Sunbeam" — bright sticker-book system, original layout. */
   :root {
     --bg: #FFF6E9;
     --surface: #ffffff;
@@ -410,7 +410,7 @@
 
   <header class="topbar">
     <div class="tb-left"><button class="back-btn" id="backBtn" type="button" aria-label="Back">&#8592;</button></div>
-    <div class="brand"><span class="brand-mark">₦</span><span class="brand-name">NairaGiveBot<small>Win every hour</small></span></div>
+    <div class="brand"><span class="brand-mark">₦</span><span class="brand-name">NaijaGiveawayBot<small>Win every hour</small></span></div>
     <button class="wallet-pill" id="walletPill" type="button" aria-label="Wallet"><span class="dot" id="dot"></span><span id="conn" style="display:none">live</span><span id="walletPillBal">₦0</span></button>
   </header>
 
@@ -611,6 +611,7 @@
     <!-- WALLET -->
     <section class="screen" id="s-wallet" data-title="Wallet">
       <div class="page">
+        <button class="btn-g" id="walletHomeBtn" type="button" style="margin-bottom:12px">← Back to Home</button>
         <div class="bal-card">
           <div class="bal-k">Balance</div>
           <div class="bal-v">₦<span id="walletBal">0</span></div>
@@ -644,7 +645,7 @@
           <p id="contactText">Questions or sponsorships? Reach us via Telegram.</p>
           <p style="margin-top:12px"><a class="btn-p" id="contactBtn" href="https://t.me/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">Message us</a></p>
         </div>
-        <div class="foot"><span class="mono" id="footDraw">—</span><br />NairaGiveBot · hourly ₦200 · cash first</div>
+        <div class="foot"><span class="mono" id="footDraw">—</span><br />NaijaGiveawayBot · hourly ₦200 · cash first</div>
       </div>
     </section>
   </main>
@@ -698,6 +699,13 @@ document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () 
   window.scrollTo(0, 0);
 }));
 document.getElementById('backBtn').addEventListener('click', back);
+function goHome() {
+  stack.length = 0;
+  stack.push('s-home');
+  renderNav();
+  window.scrollTo(0, 0);
+}
+document.getElementById('walletHomeBtn').addEventListener('click', goHome);
 document.getElementById('walletPill').addEventListener('click', () => go('s-wallet'));
 
 // ---- Clock helpers (display only — all draw data comes from the server) ----
@@ -803,7 +811,7 @@ async function loadLive() {
           const prize = x.giveaway_prize || (x.amount > 0 ? '₦' + Number(x.amount).toLocaleString() : '');
           return '<div class="tcard"><div class="tid">' + x.id + '</div><div class="trow"><span class="who">' + title +
             (prize ? '<small>' + prize + '</small>' : '') + '</span></div>' +
-            (x.ticket_code ? '<div class="tcode-bar"></div><div class="trow"><span class="who"><span class="mono">' + x.ticket_code + '</span><small>' + dispW(x) + '</small></span></div>' : '<small>no entries</small>') + '</div>';
+            (x.ticket_code ? '<div class="tcode-bar"></div><div class="trow"><span class="who"><span class="mono">' + x.ticket_code + '</span><small>Winner: ' + dispW(x) + '</small></span></div>' : '<small>no entries</small>') + '</div>';
         }).join('')
       : '<div class="empty"><div class="e-ic">○</div><p>No results yet — first draw completes at :51–:53 past the hour.</p></div>';
     el('stDraws').textContent = seen.size;
@@ -835,7 +843,7 @@ function renderDraw(d, fromApi) {
     ? w.map((x) => {
         const tail = String(x.ticket_code).replace(/\D/g, '').slice(-5).padStart(5, '0');
         const coins = tail.split('').map((n, i) => '<span class="ball reveal" style="animation-delay:' + (i * 0.12) + 's">' + n + '</span>').join('');
-        return '<div class="pick-card" style="margin-top:14px"><h3>Winning ticket</h3><p class="hint">' + dispW(x) + ' · +₦' + x.prize_amount + '</p>' +
+        return '<div class="pick-card" style="margin-top:14px"><h3>Winning ticket</h3><p class="hint">Winner: ' + dispW(x) + ' · +₦' + x.prize_amount + '</p>' +
           '<div class="balls">' + coins + '</div>' +
           '<div class="tcode-bar"></div><p class="mono small">' + x.ticket_code + '</p></div>';
       }).join('')
@@ -844,7 +852,7 @@ function renderDraw(d, fromApi) {
   const sp = (d.draw && (d.draw.sponsor_name || d.draw.sponsor_bio)) ? d.draw : null;
   el('sponsor').innerHTML = sp
     ? 'Sponsor: <b>' + sp.sponsor_name + '</b><br>Link: <a href="' + sp.sponsor_link + '" target="_blank" rel="noopener">' + sp.sponsor_link + '</a><br>' + sp.sponsor_bio
-    : 'Sponsor: <b>NairaGiveBot</b> — free hourly ₦200 giveaways.';
+    : 'Sponsor: <b>NaijaGiveawayBot</b> — free hourly ₦200 giveaways.';
   hourlySponsor = sp ? { name: sp.sponsor_name, link: sp.sponsor_link, bio: sp.sponsor_bio } : null;
 }
 // ---- Paged ticket lists (20 per page) + ticket labels ----
@@ -868,6 +876,7 @@ document.addEventListener('click', (e) => {
   pageIx[key] = Math.max(0, (pageIx[key] || 0) + Number(b.getAttribute('data-dir')));
   if (key === 'hourly') rerenderHourlyMine();
   else if (key === 'other') rerenderOtherMine();
+  else if (key === 'wins') loadWins(pageIx.wins);
 });
 function rerenderHourlyMine() {
   const t = hourlyCache.tickets;
@@ -971,7 +980,7 @@ function showSponsor(title, info) {
 }
 el('sponsorBtnHourly').addEventListener('click', () => {
   showSponsor('About Sponsor', hourlySponsor || {
-    name: 'NairaGiveBot',
+    name: 'NaijaGiveawayBot',
     link: '',
     bio: 'Free hourly giveaways for our community.',
   });
@@ -1003,11 +1012,25 @@ async function loadWallet() {
     el('walletPillBal').textContent = '₦' + (w.balance || 0);
     el('walletBal').textContent = w.balance || 0;
     el('walletHint').textContent = 'Balance: ₦' + (w.balance || 0);
-    el('wins').innerHTML = (w.wins && w.wins.length)
-      ? w.wins.map((x) => '<div class="tx"><span class="tx-ic">₦</span><span class="tx-mid"><span class="tx-t">+₦' + x.prize_amount + '</span><span class="tx-d mono">' + x.ticket_code + ' · ' + x.draw_id + '</span></span></div>').join('')
-      : '<p class="muted small" style="padding:12px 0">No winnings yet — claim tickets every hour.</p>';
+    loadWins(0);
     loadWdMine();
   } catch (_) {}
+}
+async function loadWins(page) {
+  pageIx.wins = Math.max(0, page || 0);
+  let data = { wins: [], page: 0, totalPages: 1 };
+  try {
+    data = await api('/api/miniapp/wins?page=' + pageIx.wins);
+    pageIx.wins = data.page || 0;
+  } catch (_) {}
+  const rows = data.wins || [];
+  el('wins').innerHTML = rows.length
+    ? rows.map((x) => {
+        const prize = x.giveaway_prize || ((x.prize_amount > 0 || x.amount > 0) ? '+₦' + (x.prize_amount || x.amount) : '');
+        const title = x.giveaway_name || '₦200 Hourly';
+        return '<div class="tx"><span class="tx-ic">₦</span><span class="tx-mid"><span class="tx-t">' + title + (prize ? ' · ' + prize : '') + '</span><span class="tx-d mono">' + x.ticket_code + ' · ' + x.draw_id + '</span></span></div>';
+      }).join('') + pagerHtml('wins', data.page || 0, data.totalPages || 1)
+    : '<p class="muted small" style="padding:12px 0">No winnings yet — claim tickets every hour.</p>';
 }
 async function loadWdMine() {
   if (!IN_TELEGRAM && !TEST_USER) return;
@@ -1147,8 +1170,9 @@ async function loadSponsored() {
   } catch (_) { opens = []; }
   const openByGiveaway = {};
   opens.forEach((o) => { openByGiveaway[o.giveaway.id] = o; });
-  el('sponsoredSub').textContent = rows.length ? rows.length + ' special draws' : 'Special draws from sponsors';
-  el('sponsoredCount').textContent = opens.length ? opens.length + ' open' : 'none open';
+  el('sponsoredSub').textContent = rows.length ? rows.length + ' sponsored cash draws' : 'Sponsored cash giveaways';
+  const cashOpens = opens.filter((o) => rows.some((g) => g.id === o.giveaway.id));
+  el('sponsoredCount').textContent = cashOpens.length ? cashOpens.length + ' open' : 'none right now';
   sponsoredRows = rows;
   el('sponsored').innerHTML = rows.length
     ? rows.map((g) => {
@@ -1168,10 +1192,10 @@ async function loadSponsored() {
           : '';
         const official = g.sponsored === false;
         return '<div class="tcard"><div class="tid">' + (official ? 'OFFICIAL' : 'SPONSORED') + ' · ' + g.category + '</div><div class="trow"><span class="who">' + g.name +
-          '<small>' + when + (official ? ' · Official NairaGiveBot draw' : ' · Sponsor: ' + (g.sponsor_name || '—')) + '</small></span>' +
+          '<small>' + when + (official ? ' · Official NaijaGiveawayBot draw' : ' · Sponsor: ' + (g.sponsor_name || '—')) + '</small></span>' +
           '<span class="prz">' + (g.prize_text || '₦' + g.amount) + '</span></div>' + action + rulesBtn + '</div>';
       }).join('')
-    : '<div class="empty"><div class="e-ic">○</div><p>No sponsored giveaways right now — the hourly draw is live.</p></div>';
+    : '<div class="empty"><div class="e-ic">○</div><p>No sponsored cash giveaways right now — check the Naira list or the hourly draw.</p></div>';
 }
 document.getElementById('sponsored').addEventListener('click', (e) => {
   const rb = e.target.closest('[data-rules]');
@@ -1312,7 +1336,7 @@ function renderOther() {
   el('oWinners').innerHTML = w.length
     ? w.map((x) => {
         const prize = d.prizeText ? ' · ' + d.prizeText : (x.prize_amount > 0 ? ' · +₦' + x.prize_amount : '');
-        return '<div class="pick-card" style="margin-top:14px"><h3>Winning ticket</h3><p class="hint">' + dispW(x) + prize + '</p><p class="mono small">' + x.ticket_code + '</p></div>';
+        return '<div class="pick-card" style="margin-top:14px"><h3>Winning ticket</h3><p class="hint">Winner: ' + dispW(x) + prize + '</p><p class="mono small">' + x.ticket_code + '</p></div>';
       }).join('')
     : '';
   if (w.length && lastWinnerBurst !== draw.id) { lastWinnerBurst = draw.id; confettiBurst(90); }

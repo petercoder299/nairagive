@@ -17,7 +17,7 @@ function requireAdmin(req, res, next) {
 
 function dashboardHtml() {
   return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>NairaGiveBot — Admin</title>
+<title>NaijaGiveawayBot — Admin</title>
 <style>
 :root{--bg:#0e0e0f;--surface:#161618;--surface2:#1c1c1f;--ink:#f4f3ef;--ink2:#b3b1ab;--ink3:#7e7d78;--line:#262629;--gold:#d3b168;--green:#7bc98f;--red:#e08a8a}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -92,7 +92,7 @@ button.mini-no{background:transparent;color:var(--red);border:1px solid #4a2c2c;
 <input id="g_int" type="number" placeholder="Interval min (blank = one-off)"/>
 <input id="g_start" type="datetime-local"/><input id="g_end" type="datetime-local"/>
 <input id="g_sched" type="datetime-local" value="2026-10-05T18:00"/>
-<input id="g_sp" placeholder="Sponsor name" value="NairaGiveBot"/>
+<input id="g_sp" placeholder="Sponsor name" value="NaijaGiveawayBot"/>
 <input id="g_rules" placeholder="Rules (shown to users)"/>
 <input id="g_sloc" placeholder="Sponsor location"/>
 <input id="g_sphone" placeholder="Sponsor phone"/>
@@ -159,7 +159,7 @@ function createAdminApp() {
   const indexFile = path.join(__dirname, '..', 'index.html');
   app.get('/', (_req, res) => {
     if (fs.existsSync(indexFile)) return res.sendFile(indexFile);
-    res.send('NairaGiveBot is running. Admin at /admin');
+    res.send('NaijaGiveawayBot is running. Admin at /admin');
   });
   app.get('/admin', (_req, res) => res.send(dashboardHtml()));
   app.get('/health', (_req, res) => res.json({ ok: true, now: new Date().toISOString() }));

@@ -1,0 +1,29 @@
+-- Export / delete / add draws. Paste into Neon Dashboard -> SQL Editor.
+-- Run on "neondb" (switch picker for "neondb_test").
+-- Copy any result grid into a .txt file to keep it.
+
+-- ============================================================
+-- 1. EXPORT every draw with ALL values (one JSON object per row).
+--    Delete a line in your .txt to drop that draw from your records.
+-- ============================================================
+SELECT row_to_json(d) FROM draws d ORDER BY d.created_at DESC;
+
+-- Export one draw's tickets the same way (replace the id):
+-- SELECT row_to_json(t) FROM tickets t WHERE t.draw_id = 'DRAW_ID_HERE' ORDER BY t.created_at;
+
+-- ============================================================
+-- 2. DELETE a draw (its tickets + winner rows delete automatically).
+--    Replace DRAW_ID_HERE, check the counts first.
+-- ============================================================
+-- SELECT id, status,
+--        (SELECT COUNT(*) FROM tickets t WHERE t.draw_id = d.id) AS tickets
+-- FROM draws d WHERE d.id = 'DRAW_ID_HERE';
+-- DELETE FROM draws WHERE id = 'DRAW_ID_HERE';
+
+-- ============================================================
+-- 3. ADD a draw manually. giveaway_id must match a row in giveaways
+--    (or NULL for hourly-style draws). Status: entry_open | drawing
+--    | results | closed.
+-- ============================================================
+-- INSERT INTO draws (id, kind, giveaway_id, amount, winners_count, hour_started_at, entry_closes_at, status, sponsor_name, sponsor_link, sponsor_bio, created_at, drawn_at)
+-- VALUES ('DRAW_ID_HERE', 'custom', 3, 200, 1, NOW(), '2026-10-04T18:00:00+01:00', 'entry_open', 'Naira Giveaways', 'https://t.me/naijagiveawaybot', 'Bio here', NOW(), NULL);

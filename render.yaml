@@ -32,7 +32,7 @@ services:
       - key: WITHDRAW_MIN
         value: 100
       - key: SPONSOR_NAME
-        value: NairaGiveBot
+        value: NaijaGiveawayBot
       - key: SPONSOR_LINK
         value: https://t.me/nairagivebot
       - key: SPONSOR_BIO

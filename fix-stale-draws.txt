@@ -1,0 +1,100 @@
+-- Fix stale open draws + create draft giveaways.
+-- Paste into Neon Dashboard -> SQL Editor, press Run.
+-- Run once on "neondb", then switch to "neondb_test" and run again.
+-- Section 1 only READS. Sections 2-4 write. Run in order.
+
+-- ============================================================
+-- 0. Make sure all columns exist (safe to re-run, changes nothing if present)
+-- ============================================================
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS rules TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS draw_prefix TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS ticket_digits INTEGER NOT NULL DEFAULT 10;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsored BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS draw_seq INTEGER;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS spotlight BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS prize_text TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_location TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_phone TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_website TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_twitter TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_facebook TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_instagram TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_linkedin TEXT;
+
+-- ============================================================
+-- 1. AUDIT: what is stale and open right now (read-only)
+-- ============================================================
+SELECT d.id, d.status, d.giveaway_id, g.name, d.entry_closes_at,
+       (SELECT COUNT(*) FROM tickets t WHERE t.draw_id = d.id) AS tickets,
+       (SELECT COUNT(*) FROM draw_winners w WHERE w.draw_id = d.id) AS winners
+FROM draws d LEFT JOIN giveaways g ON g.id = d.giveaway_id
+WHERE d.kind = 'custom' AND d.status = 'entry_open'
+ORDER BY d.created_at;
+
+-- ============================================================
+-- 2. BACKFILL closing times from each giveaway's schedule,
+--    so old draws without one close on time by themselves
+-- ============================================================
+UPDATE draws d SET entry_closes_at = g.scheduled_at
+FROM giveaways g
+WHERE d.giveaway_id = g.id
+  AND d.status = 'entry_open'
+  AND d.entry_closes_at IS NULL
+  AND g.scheduled_at IS NOT NULL;
+
+-- ============================================================
+-- 3. CLOSE stale draws that have NO tickets (nothing to draw,
+--    no entries lost). Draws WITH tickets are left for the
+--    worker, which draws their winners fairly on next tick.
+-- ============================================================
+UPDATE draws d SET status = 'closed', drawn_at = NOW()
+FROM giveaways g
+WHERE d.giveaway_id = g.id
+  AND d.kind = 'custom'
+  AND d.status = 'entry_open'
+  AND d.id NOT IN (SELECT draw_id FROM tickets)
+  AND (d.entry_closes_at <= NOW()
+    OR (d.entry_closes_at IS NULL AND (
+      (g.interval_minutes IS NOT NULL AND g.ends_at IS NOT NULL AND g.ends_at <= NOW())
+      OR (g.interval_minutes IS NULL AND g.scheduled_at IS NOT NULL AND g.scheduled_at <= NOW())
+    )));
+
+-- ============================================================
+-- 4. DRAFT giveaways (invisible until you set prize + schedule
+--    in /admin and flip them to active)
+-- ============================================================
+INSERT INTO giveaways (name, category, amount, winners_per_draw, sponsor_name, sponsor_link, sponsor_bio, rules, draw_prefix, ticket_digits, sponsored, draw_seq, spotlight, prize_text, status)
+SELECT 'Airtime Giveaway', 'airtime', 0, 1, NULL, NULL, NULL,
+  'Details coming soon — set prize, schedule and sponsor in /admin, then flip to active.',
+  'AT', 10, true, 1, false, NULL, 'draft'
+WHERE NOT EXISTS (SELECT 1 FROM giveaways WHERE draw_prefix = 'AT');
+
+INSERT INTO giveaways (name, category, amount, winners_per_draw, sponsor_name, sponsor_link, sponsor_bio, rules, draw_prefix, ticket_digits, sponsored, draw_seq, spotlight, prize_text, status)
+SELECT 'Data Bundle Giveaway', 'data', 0, 1, NULL, NULL, NULL,
+  'Details coming soon — set prize, schedule and sponsor in /admin, then flip to active.',
+  'DBUN', 10, true, 1, false, NULL, 'draft'
+WHERE NOT EXISTS (SELECT 1 FROM giveaways WHERE draw_prefix = 'DBUN');
+
+INSERT INTO giveaways (name, category, amount, winners_per_draw, sponsor_name, sponsor_link, sponsor_bio, rules, draw_prefix, ticket_digits, sponsored, draw_seq, spotlight, prize_text, status)
+SELECT 'Gadget Giveaway', 'gadgets', 0, 1, NULL, NULL, NULL,
+  'Details coming soon — set prize, schedule and sponsor in /admin, then flip to active.',
+  'GAD', 10, true, 1, false, NULL, 'draft'
+WHERE NOT EXISTS (SELECT 1 FROM giveaways WHERE draw_prefix = 'GAD');
+
+INSERT INTO giveaways (name, category, amount, winners_per_draw, sponsor_name, sponsor_link, sponsor_bio, rules, draw_prefix, ticket_digits, sponsored, draw_seq, spotlight, prize_text, status)
+SELECT 'Sponsored Cash Giveaway', 'cash', 0, 1, NULL, NULL, NULL,
+  'Details coming soon — set prize, schedule and sponsor in /admin, then flip to active.',
+  'SCG', 10, true, 1, false, NULL, 'draft'
+WHERE NOT EXISTS (SELECT 1 FROM giveaways WHERE draw_prefix = 'SCG');
+
+-- ============================================================
+-- 5. VERIFY: drafts present, no stale opens left (except draws
+--    whose window genuinely has not closed yet)
+-- ============================================================
+SELECT id, name, category, status, draw_prefix, scheduled_at FROM giveaways ORDER BY id;
+
+SELECT d.id, d.status, d.entry_closes_at,
+       (SELECT COUNT(*) FROM tickets t WHERE t.draw_id = d.id) AS tickets
+FROM draws d
+WHERE d.kind = 'custom' AND d.status = 'entry_open'
+ORDER BY d.created_at;

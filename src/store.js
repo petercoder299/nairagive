@@ -264,6 +264,25 @@ async function getUserWithdrawals(telegramId) {
   return res.rows;
 }
 
+async function getWalletWins(telegramId, limit = 10, offset = 0) {
+  const res = await query(
+    `SELECT w.draw_id, w.ticket_code, w.prize_amount, w.created_at, d.amount,
+            g.name AS giveaway_name, g.prize_text AS giveaway_prize
+     FROM draw_winners w
+     JOIN draws d ON d.id = w.draw_id
+     LEFT JOIN giveaways g ON g.id = d.giveaway_id
+     WHERE w.telegram_id = $1
+     ORDER BY w.created_at DESC LIMIT $2 OFFSET $3`,
+    [telegramId, limit, offset]
+  );
+  return res.rows;
+}
+
+async function countWalletWins(telegramId) {
+  const res = await query('SELECT COUNT(*)::int AS c FROM draw_winners WHERE telegram_id = $1', [telegramId]);
+  return res.rows[0].c;
+}
+
 async function getWithdrawals(status = 'pending') {
   if (status === 'all') {
     const res = await query(`SELECT * FROM withdrawals ORDER BY id DESC LIMIT 100`);
@@ -332,6 +351,8 @@ module.exports = {
   getOverdueCustomDraws,
   createWithdrawal,
   getUserWithdrawals,
+  getWalletWins,
+  countWalletWins,
   getWithdrawals,
   resolveWithdrawal,
 };
