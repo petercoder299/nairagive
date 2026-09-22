@@ -1050,7 +1050,7 @@ async function loadNaira() {
   html += official.map((g) => {
     const o = openById[g.id];
     const sub = o
-      ? 'Open now · closes ' + new Date(o.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+      ? 'Open now · closes ' + new Date(o.closesAt).toLocaleString([], { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
       : (g.scheduled_at ? 'Draws ' + new Date(g.scheduled_at).toLocaleString() : 'Opens soon');
     return '<button class="menu-card" data-other-open="' + g.id + '" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">' + g.name +
       '</span><span class="menu-s">' + sub + '</span></span>' + (o ? '<span class="tag">LIVE</span>' : '<span class="chev">›</span>') + '</button>';
@@ -1085,7 +1085,7 @@ async function loadSponsored() {
     ? rows.map((g) => {
         const o = openByGiveaway[g.id];
         const when = o
-          ? 'Open now · closes ' + new Date(o.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+          ? 'Open now · closes ' + new Date(o.closesAt).toLocaleString([], { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
           : g.scheduled_at
             ? 'Draws ' + new Date(g.scheduled_at).toLocaleString()
             : (g.interval_minutes && g.starts_at && g.ends_at)
@@ -1153,7 +1153,7 @@ async function loadCategoryList(category, listId, countId) {
     ? rows.map((g) => {
         const o = openById[g.id];
         const state = o
-          ? 'Open now · closes ' + new Date(o.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+          ? 'Open now · closes ' + new Date(o.closesAt).toLocaleString([], { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
           : g.scheduled_at
             ? 'Draws ' + new Date(g.scheduled_at).toLocaleString()
             : 'Opens soon';
@@ -1184,7 +1184,7 @@ async function loadOthers() {
     ? rows.map((g) => {
         const o = openById[g.id];
         const state = o
-          ? 'Open now · closes ' + new Date(o.closesAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+          ? 'Open now · closes ' + new Date(o.closesAt).toLocaleString([], { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
           : g.scheduled_at
             ? 'Draws ' + new Date(g.scheduled_at).toLocaleString()
             : 'Opens soon';
