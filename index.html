@@ -215,7 +215,7 @@
   .spot-strip { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 12px; margin-bottom: 4px; scrollbar-width: none; }
   .spot-strip::-webkit-scrollbar { display: none; }
   .spot {
-    flex: 0 0 188px; text-align: left; font-family: inherit; cursor: pointer;
+    flex: 0 0 78%; text-align: left; font-family: inherit; cursor: pointer;
     color: #FFE9B8; background: linear-gradient(160deg, #3A2A00, #2A1A12);
     border: 2.5px solid var(--gold-soft); border-radius: 18px; padding: 14px;
     box-shadow: var(--shadow-hard);
@@ -966,6 +966,18 @@ el('wdBtn').addEventListener('click', async () => {
     btn.disabled = false;
   }
 });
+let spotIx = 0;
+let spotTimer = null;
+function spotStep() {
+  if (document.hidden) return;
+  if (stack[stack.length - 1] !== 's-cash') return;
+  const strip = document.getElementById('cashSpots');
+  if (!strip || !strip.children.length) return;
+  spotIx = (spotIx + 1) % strip.children.length;
+  const w = strip.children[0].offsetWidth + 10;
+  strip.scrollTo({ left: spotIx * w, behavior: 'smooth' });
+}
+if (!spotTimer) spotTimer = setInterval(spotStep, 20000);
 async function loadCash() {
   el('cashCount').textContent = 'spotlight';
   let rows = [];
@@ -1014,6 +1026,9 @@ async function loadCash() {
     return '<button class="spot" type="button" ' + goAttr + '><small>' + (s.live ? '● LIVE' : 'SPOTLIGHT') + '</small><b>' + s.prize + '</b><span class="st">' + s.title + ' · ' + s.meta + '</span></button>';
   }).join('');
   el('cashCount').textContent = '3 spotlight';
+  spotIx = 0;
+  const strip = el('cashSpots');
+  if (strip) strip.scrollTo({ left: 0 });
 }
 async function loadNaira() {
   const box = el('nairaList');
