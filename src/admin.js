@@ -95,6 +95,7 @@ button.mini-no{background:transparent;color:var(--red);border:1px solid #4a2c2c;
 <input id="g_rules" placeholder="Rules (shown to users)"/>
 <input id="g_prefix" placeholder="Draw prefix (e.g. OG)" size="8"/>
 <input id="g_digits" type="number" placeholder="Ticket digits" value="10"/>
+<label style="display:flex;align-items:center;gap:8px;font-size:13px"><input id="g_sponsored" type="checkbox" checked style="flex:none;min-width:0;width:auto"/> Sponsored (show sponsor)</label>
 <button id="createBtn">Create</button></div><div id="g_out" style="margin-top:10px"></div>
 <div style="overflow-x:auto;margin-top:10px"><table><thead><tr><th>ID</th><th>Name</th><th>Cat</th><th class="num">Amount</th><th class="num">Winners</th><th>Schedule</th><th>Status</th><th></th></tr></thead><tbody id="gRows"></tbody></table></div><div id="pgG"></div>
 <h2>Draws</h2><p class="sub">Live draw, manual trigger and recent results.</p>
@@ -131,7 +132,7 @@ document.getElementById("logoutBtn").addEventListener("click",function(){KEY="";
 document.getElementById("refreshBtn").addEventListener("click",function(){if(!DATA)return;call("GET","/api/admin/overview").then(function(j){DATA=j;render();toast("Refreshed.",true)}).catch(function(e){toast("Refresh failed: "+e.message)})});
 document.getElementById("tabP").addEventListener("click",function(){wdTab="pending";PG.wd=1;document.getElementById("tabP").classList.add("on");document.getElementById("tabH").classList.remove("on");renderWd()});
 document.getElementById("tabH").addEventListener("click",function(){wdTab="history";PG.wd=1;document.getElementById("tabH").classList.add("on");document.getElementById("tabP").classList.remove("on");renderWd()});
-document.getElementById("createBtn").addEventListener("click",function(){var b={name:val("g_name"),category:val("g_cat"),amount:+val("g_amt"),winners_per_draw:+val("g_win")||1,interval_minutes:val("g_int")?+val("g_int"):null,starts_at:val("g_start")?new Date(val("g_start")).toISOString():null,ends_at:val("g_end")?new Date(val("g_end")).toISOString():null,scheduled_at:val("g_sched")?new Date(val("g_sched")).toISOString():null,sponsor_name:val("g_sp")||undefined,rules:val("g_rules")||null,draw_prefix:val("g_prefix")||null,ticket_digits:val("g_digits")?+val("g_digits"):10};if(!b.name||!b.amount){toast("Name and amount are required.");return}call("POST","/api/giveaways",b).then(function(d){document.getElementById("g_out").innerHTML="<span class='pill pending'>created #"+d.id+"</span>";PG.g=1;return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Giveaway created.",true)}).catch(function(e){toast("Create failed: "+e.message)})});
+document.getElementById("createBtn").addEventListener("click",function(){var b={name:val("g_name"),category:val("g_cat"),amount:+val("g_amt"),winners_per_draw:+val("g_win")||1,interval_minutes:val("g_int")?+val("g_int"):null,starts_at:val("g_start")?new Date(val("g_start")).toISOString():null,ends_at:val("g_end")?new Date(val("g_end")).toISOString():null,scheduled_at:val("g_sched")?new Date(val("g_sched")).toISOString():null,sponsor_name:val("g_sp")||undefined,rules:val("g_rules")||null,draw_prefix:val("g_prefix")||null,ticket_digits:val("g_digits")?+val("g_digits"):10,sponsored:document.getElementById("g_sponsored").checked};if(!b.name||!b.amount){toast("Name and amount are required.");return}call("POST","/api/giveaways",b).then(function(d){document.getElementById("g_out").innerHTML="<span class='pill pending'>created #"+d.id+"</span>";PG.g=1;return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Giveaway created.",true)}).catch(function(e){toast("Create failed: "+e.message)})});
 document.getElementById("triggerBtn").addEventListener("click",function(){call("POST","/api/draws/current/trigger",{}).then(function(d){toast("Draw triggered: "+(d.winners||[]).length+" winner(s).",true)}).catch(function(e){toast("Trigger failed: "+e.message)})});
 document.getElementById("gRows").addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-edit]"):null;if(b){var g=null;for(var i=0;i<DATA.giveaways.length;i++){if(String(DATA.giveaways[i].id)===b.getAttribute("data-edit"))g=DATA.giveaways[i]}if(!g)return;var nm=prompt("Sponsor name",g.sponsor_name||"");if(nm===null)return;var ln=prompt("Sponsor link",g.sponsor_link||"");if(ln===null)return;var bi=prompt("Sponsor bio",g.sponsor_bio||"");if(bi===null)return;call("PATCH","/api/giveaways/"+g.id,{sponsor_name:nm,sponsor_link:ln,sponsor_bio:bi}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Sponsor updated — live immediately.",true)}).catch(function(err){toast("Failed: "+err.message)});return}});
 document.getElementById("gRows").addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-stop]"):null;if(!b)return;var id=b.getAttribute("data-stop");if(!confirm("Stop giveaway #"+id+"? Open draws already created keep running."))return;call("PATCH","/api/giveaways/"+id,{status:"done"}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Giveaway stopped.",true)}).catch(function(err){toast("Failed: "+err.message)})});
@@ -213,9 +214,16 @@ function createAdminApp() {
     try {
       const b = req.body || {};
       if (!b.name || !b.amount) return res.status(400).json({ error: 'name and amount required' });
+      const prefix = (b.draw_prefix || '').trim().toUpperCase() || null;
+      const sponsored = b.sponsored === undefined ? true : !!b.sponsored;
+      let seq = null;
+      if (prefix) {
+        const s = await query(`SELECT COALESCE(MAX(draw_seq),0)::int + 1 AS n FROM giveaways WHERE draw_prefix = $1`, [prefix]).catch(() => ({ rows: [{ n: 1 }] }));
+        seq = s.rows[0].n;
+      }
       const r = await query(
-        `INSERT INTO giveaways (name, category, amount, winners_per_draw, interval_minutes, starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, draw_prefix, ticket_digits, status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'active') RETURNING *`,
+        `INSERT INTO giveaways (name, category, amount, winners_per_draw, interval_minutes, starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, draw_prefix, ticket_digits, sponsored, draw_seq, status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'active') RETURNING *`,
         [
           b.name,
           b.category || 'cash',
@@ -225,12 +233,14 @@ function createAdminApp() {
           b.starts_at || null,
           b.ends_at || null,
           b.scheduled_at || null,
-          b.sponsor_name || config.sponsor.name,
-          b.sponsor_link || config.sponsor.link,
-          b.sponsor_bio || config.sponsor.bio,
+          sponsored ? b.sponsor_name || config.sponsor.name : b.sponsor_name || null,
+          sponsored ? b.sponsor_link || config.sponsor.link : b.sponsor_link || null,
+          sponsored ? b.sponsor_bio || config.sponsor.bio : b.sponsor_bio || null,
           b.rules || null,
-          b.draw_prefix || null,
+          prefix,
           b.ticket_digits || 10,
+          sponsored,
+          seq,
         ]
       );
       res.json(r.rows[0]);

@@ -7,6 +7,7 @@ const { query } = require('./db');
 const { getDrawId, getPhase } = require('./draw');
 const labelFor = require('./custom').drawLabel;
 const startOfHour = require('./custom').startOfHour;
+const ticketPrefixFor = require('./custom').ticketPrefixFor;
 const { validateWithdrawal } = require('./withdrawals');
 const { requireTelegramUserOrTest } = require('./telegramAuth');
 
@@ -66,7 +67,7 @@ function mountMiniApp(app) {
       const category = req.query.category || 'cash';
       const r = await query(
         `SELECT id, name, category, amount, winners_per_draw, interval_minutes,
-                starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules
+                starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, sponsored
          FROM giveaways WHERE status = 'active' AND category = $1 ORDER BY created_at DESC LIMIT 20`,
         [category]
       );
@@ -157,6 +158,7 @@ function mountMiniApp(app) {
             category: d.giveaway_category,
             sponsor: d.g_sponsor_name,
             rules: d.g_rules,
+            sponsored: d.g_sponsored,
           },
         });
       }
@@ -176,13 +178,18 @@ function mountMiniApp(app) {
         return res.status(403).json({ error: 'That draw is not open for entry right now.' });
       }
       await store.upsertUser(u.id, u.username, u.first_name).catch(() => {});
-      // OG (other-category) draws use 9-digit tickets; cash customs use 10.
+      // Entry-stamped tickets: PREFIX + entry date + entry hour letter
+      // (e.g. entering 12:30am 23 Sep → CASH0123092026A + random digits).
       let digits = 10;
+      let stamp = null;
       if (draw.giveaway_id) {
         const g = await store.getGiveaway(draw.giveaway_id).catch(() => null);
-        if (g && g.ticket_digits) digits = g.ticket_digits;
+        if (g) {
+          if (g.ticket_digits) digits = g.ticket_digits;
+          if (g.draw_prefix) stamp = ticketPrefixFor(g, new Date());
+        }
       }
-      const code = await store.issueTicket(drawId, u.id, u.username, digits, true);
+      const code = await store.issueTicket(drawId, u.id, u.username, digits, true, stamp);
       const count = await store.countUserTicketsSince(drawId, u.id, startOfHour());
       res.json({ drawId, ticket_code: code, count, max: config.maxTicketsPerUser });
     } catch (e) {

@@ -100,6 +100,19 @@ describe('OG (other-category) draws', () => {
   });
 });
 
+describe('entry-stamped tickets', () => {
+  it('stamps entry date + hour (enter 23 Sep 00:30 -> CASH0123092026A)', () => {
+    const g = { id: 6, draw_prefix: 'CASH', draw_seq: 1 };
+    assert.equal(custom.ticketPrefixFor(g, new Date(2026, 8, 23, 0, 30)), 'CASH0123092026A');
+  });
+
+  it('uses draw_seq when set, row id otherwise', () => {
+    const d = new Date(2026, 8, 21, 12, 0);
+    assert.ok(custom.ticketPrefixFor({ id: 6, draw_prefix: 'CASH', draw_seq: 1 }, d).startsWith('CASH01'));
+    assert.ok(custom.ticketPrefixFor({ id: 6, draw_prefix: 'CASH' }, d).startsWith('CASH06'));
+  });
+});
+
 describe('ticket labels', () => {
   it('hourly draws are CASH', () => {
     assert.deepEqual(custom.drawLabel({ id: '20092026A', kind: 'hourly_200' }, null), {

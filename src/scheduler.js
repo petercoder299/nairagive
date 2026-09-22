@@ -46,6 +46,8 @@ async function tick(now = new Date()) {
 }
 
 function sponsorOf(g) {
+  // Official (non-sponsored) draws carry no sponsor — pages hide the block.
+  if (g.sponsored === false) return { name: null, link: null, bio: null };
   return {
     name: g.sponsor_name || config.sponsor.name,
     link: g.sponsor_link || config.sponsor.link,

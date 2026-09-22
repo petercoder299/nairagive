@@ -973,8 +973,9 @@ async function loadSponsored() {
         const rulesBtn = g.rules
           ? '<button class="btn-g" style="margin-top:10px" data-rules="' + g.id + '">Rules</button>'
           : '';
-        return '<div class="tcard"><div class="tid">SPONSORED · ' + g.category + '</div><div class="trow"><span class="who">' + g.name +
-          '<small>' + when + ' · Sponsor: ' + (g.sponsor_name || '—') + '</small></span>' +
+        const official = g.sponsored === false;
+        return '<div class="tcard"><div class="tid">' + (official ? 'OFFICIAL' : 'SPONSORED') + ' · ' + g.category + '</div><div class="trow"><span class="who">' + g.name +
+          '<small>' + when + (official ? ' · Official NairaGiveBot draw' : ' · Sponsor: ' + (g.sponsor_name || '—')) + '</small></span>' +
           '<span class="prz">₦' + g.amount + '</span></div>' + action + rulesBtn + '</div>';
       }).join('')
     : '<div class="empty"><div class="e-ic">○</div><p>No sponsored giveaways right now — the hourly draw is live.</p></div>';
@@ -1103,7 +1104,8 @@ function renderOther() {
   el('oStatusbar').classList.toggle('closed', !open);
   el('oTitle').textContent = label.title + ' — ' + label.chip;
   el('oCountLabel').textContent = open ? 'until entry closes' : 'entry closed';
-  el('oSponsor').innerHTML = draw.sponsor_name
+  const showSp = g && g.sponsored !== false && draw.sponsor_name;
+  el('oSponsor').innerHTML = showSp
     ? 'Sponsor: <b>' + draw.sponsor_name + '</b>' + (draw.sponsor_link ? '<br>Link: <a href="' + draw.sponsor_link + '" target="_blank" rel="noopener">' + draw.sponsor_link + '</a>' : '') + (draw.sponsor_bio ? '<br>' + draw.sponsor_bio : '')
     : '';
   otherCache = { tickets: d.myTickets || [], drawId: draw.id, max: d.max };

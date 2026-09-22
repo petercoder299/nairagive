@@ -131,7 +131,7 @@ function createBot() {
       });
       return;
     }
-    const lines = custom.map((g) => `• ${g.name} — ₦${g.amount} x${g.winners_per_draw}`);
+    const lines = custom.map((g) => `• ${g.name} — ₦${g.amount} x${g.winners_per_draw}${g.sponsored === false ? ' (Official)' : ''}`);
     await ctx.reply(`🤝 *Sponsored Giveaways*\n\n${lines.join('\n')}\n\nCustom entry flows coming next. Hourly is live now:`, {
       parse_mode: 'Markdown',
       ...Markup.inlineKeyboard([[Markup.button.callback('💵 Open ₦200 Hourly', 'cash:hourly')]]),

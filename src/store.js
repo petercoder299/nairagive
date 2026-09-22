@@ -65,7 +65,7 @@ async function countUserTicketsSince(drawId, telegramId, since) {
   return res.rows[0].c;
 }
 
-async function issueTicket(drawId, telegramId, username, digits = 10, perHour = false) {
+async function issueTicket(drawId, telegramId, username, digits = 10, perHour = false, ticketPrefix = null) {
   // Enforce max 10 per user per draw — or per calendar hour for multi-day
   // customs (fresh 10 every :00, like the hourly rhythm).
   const count = perHour
@@ -82,7 +82,7 @@ async function issueTicket(drawId, telegramId, username, digits = 10, perHour = 
   }
   // Generate unique non-sequential code
   for (let i = 0; i < 10; i++) {
-    const code = generateTicketCode(drawId, new Set(), digits);
+    const code = generateTicketCode(ticketPrefix || drawId, new Set(), digits);
     try {
       await query('INSERT INTO tickets (ticket_code, draw_id, telegram_id, username) VALUES ($1,$2,$3,$4)', [
         code,
@@ -193,7 +193,7 @@ async function markGiveawayDone(id) {
 async function getOpenCustomDraws() {
   const res = await query(
     `SELECT d.*, g.name AS giveaway_name, g.category AS giveaway_category,
-            g.sponsor_name AS g_sponsor_name, g.rules AS g_rules
+            g.sponsor_name AS g_sponsor_name, g.rules AS g_rules, g.sponsored AS g_sponsored
      FROM draws d JOIN giveaways g ON g.id = d.giveaway_id
      WHERE d.kind = 'custom' AND d.status = 'entry_open'
      ORDER BY d.entry_closes_at NULLS LAST, d.id`

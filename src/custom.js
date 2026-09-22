@@ -30,16 +30,22 @@ function hourLetterLocal(d) {
   return String.fromCharCode(65 + new Date(d).getHours());
 }
 
-// Draw ID for an interval window. Giveaways with a draw_prefix (e.g. 'OG'
-// for Others) use PREFIX + 2-digit giveaway number + DDMMYYYY + hour letter
-// of the window start (e.g. giveaway #1 opening 12:33am 21 Sep → OG0121092026A).
-// Others use G<id>-<UTC>.
+// Ticket/draw prefix for a giveaway at a given moment:
+// PREFIX + 2-digit sequence + local DDMMYYYY + local hour letter.
+// E.g. entering 12:30am 23 Sep on the first CASH giveaway stamps CASH0123092026A.
+// seq = draw_seq (per-prefix order) falling back to the row id.
+function ticketPrefixFor(g, date) {
+  const d = new Date(date);
+  const seq = g.draw_seq || g.id;
+  return `${g.draw_prefix}${pad(seq)}${fmtLocalDay(d)}${hourLetterLocal(d)}`;
+}
+
+// Draw ID for an interval window: the prefix stamped at the window start
+// (e.g. giveaway #1 opening 12:33am 21 Sep → OG0121092026A).
+// Giveaways without a prefix use G<id>-<UTC>.
 function customDrawId(idOrGiveaway, windowStart) {
   const g = typeof idOrGiveaway === 'object' && idOrGiveaway !== null ? idOrGiveaway : { id: idOrGiveaway };
-  if (g.draw_prefix) {
-    const d = new Date(windowStart);
-    return `${g.draw_prefix}${pad(g.id)}${fmtLocalDay(d)}${hourLetterLocal(d)}`;
-  }
+  if (g.draw_prefix) return ticketPrefixFor(g, windowStart);
   return `G${g.id}-${fmtWindowUTC(new Date(windowStart))}`;
 }
 
@@ -113,6 +119,7 @@ module.exports = {
   fmtWindowUTC,
   fmtLocalDay,
   hourLetterLocal,
+  ticketPrefixFor,
   customDrawId,
   oneOffDrawId,
   isIntervalGiveaway,
