@@ -764,6 +764,12 @@ async function loadLive() {
   } catch (_) {
     el('recent').innerHTML = '<div class="empty"><div class="e-ic">○</div><p><b>Connection failed.</b></p><p class="muted small">Could not reach the server.</p></div>';
   }
+  if (stack[stack.length - 1] === 's-other' && currentOther) {
+    try {
+      currentOther = await api('/api/miniapp/draw/' + encodeURIComponent(currentOther.draw.id));
+      renderOther();
+    } catch (_) {}
+  }
 }
 function renderDraw(d, fromApi) {
   el('drawId').textContent = d.drawId;
@@ -1102,9 +1108,11 @@ function renderOther() {
     : '';
   otherCache = { tickets: d.myTickets || [], drawId: draw.id, max: d.max };
   rerenderOtherMine();
-  const t = otherCache.tickets;
-  el('oClaim').textContent = !open ? 'Entry closed' : 'Get ticket (' + t.length + '/' + d.max + ')';
-  el('oClaim').disabled = !open || t.length >= d.max;
+  const hc = (d.myHourCount !== undefined && d.myHourCount !== null) ? d.myHourCount : otherCache.tickets.length;
+  el('oClaim').textContent = !open ? 'Entry closed' : 'Get ticket (' + hc + '/' + d.max + ')';
+  el('oClaim').disabled = !open || hc >= d.max;
+  el('oEntries').textContent = hc + '/' + d.max;
+  el('oBar').style.width = Math.min(100, (hc / d.max) * 100) + '%';
   const w = d.winners || [];
   el('oWinners').innerHTML = w.length
     ? w.map((x) => {

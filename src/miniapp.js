@@ -125,11 +125,12 @@ function mountMiniApp(app) {
       if (draw.giveaway_id) {
         giveaway = await store.getGiveaway(draw.giveaway_id).catch(() => null);
       }
-      const [winners, myTickets] = await Promise.all([
+      const [winners, myTickets, myHourCount] = await Promise.all([
         store.getWinners(draw.id).catch(() => []),
         store.getUserTickets(draw.id, req.tgUser.id).catch(() => []),
+        store.countUserTicketsSince(draw.id, req.tgUser.id, startOfHour()).catch(() => 0),
       ]);
-      res.json({ draw, giveaway, winners, myTickets, max: config.maxTicketsPerUser, label: labelFor(draw, giveaway) });
+      res.json({ draw, giveaway, winners, myTickets, myHourCount, max: config.maxTicketsPerUser, label: labelFor(draw, giveaway) });
     } catch (e) {
       res.status(500).json({ error: e.message });
     }
