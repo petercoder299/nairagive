@@ -98,6 +98,18 @@ describe('OG (other-category) draws', () => {
     };
     assert.equal(custom.oneOffDrawId(g), 'OG0121092026A');
   });
+
+  it('one-off prefers draw_seq over row id (row 6, seq 1 -> CASH01…) ', () => {
+    const g = {
+      id: 6,
+      draw_prefix: 'CASH',
+      draw_seq: 1,
+      created_at: new Date(2026, 8, 22, 14, 30, 0).toISOString(),
+      scheduled_at: new Date(2026, 9, 17, 21, 0, 0).toISOString(),
+    };
+    const id = custom.oneOffDrawId(g);
+    assert.ok(id.startsWith('CASH01'), id);
+  });
 });
 
 describe('entry-stamped tickets', () => {

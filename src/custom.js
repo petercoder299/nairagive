@@ -94,7 +94,7 @@ function oneOffDrawId(idOrGiveaway) {
   // → OG0121092026A). Creation hour sets the letter, exactly like hourly.
   if (g.draw_prefix) {
     const base = new Date(g.created_at || g.scheduled_at || Date.now());
-    return `${g.draw_prefix}${pad(g.id)}${fmtLocalDay(base)}${hourLetterLocal(base)}`;
+    return ticketPrefixFor(g, base);
   }
   return `G${g.id}-ONCE`;
 }
