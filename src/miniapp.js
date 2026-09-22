@@ -63,15 +63,25 @@ function mountMiniApp(app) {
   // Sponsored giveaways by category (public — also powers the preview).
   // Cash screen shows sponsored CASH only; Others screen uses ?category=others.
   app.get('/api/miniapp/sponsored', async (req, res) => {
+    const category = req.query.category || 'cash';
+    const fullSelect = (extraWhere) =>
+      `SELECT id, name, category, amount, winners_per_draw, interval_minutes,
+              starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, sponsored, spotlight
+       FROM giveaways WHERE status = 'active' AND category = $1${extraWhere} ORDER BY created_at DESC LIMIT 20`;
     try {
-      const category = req.query.category || 'cash';
-      const r = await query(
-        `SELECT id, name, category, amount, winners_per_draw, interval_minutes,
-                starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, sponsored
-         FROM giveaways WHERE status = 'active' AND category = $1 ORDER BY created_at DESC LIMIT 20`,
-        [category]
-      );
-      res.json(r.rows);
+      try {
+        const r = await query(fullSelect(''), [category]);
+        return res.json(r.rows);
+      } catch (_) {
+        // Pre-migration DBs lack the newest columns — fall back gracefully.
+        const r = await query(
+          `SELECT id, name, category, amount, winners_per_draw, interval_minutes,
+                  starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules
+           FROM giveaways WHERE status = 'active' AND category = $1 ORDER BY created_at DESC LIMIT 20`,
+          [category]
+        );
+        return res.json(r.rows);
+      }
     } catch (e) {
       res.status(500).json({ error: e.message });
     }

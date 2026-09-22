@@ -1003,29 +1003,29 @@ async function loadCash() {
     meta: live ? ('Draw ' + live.drawId) : 'Every hour',
     live: !!(live && live.phase === 'entry_open'),
   });
-  if (official[0]) {
-    const o = openOf(official[0].id);
+  official.filter((g) => g.spotlight === true).forEach((gm) => {
+    const o = openOf(gm.id);
     spots.push({
-      kind: 'giveaway', id: official[0].id, title: official[0].name,
-      prize: '₦' + Number(official[0].amount || 0).toLocaleString(),
+      kind: 'giveaway', id: gm.id, title: gm.name,
+      prize: '₦' + Number(gm.amount || 0).toLocaleString(),
       meta: o ? 'Open now' : 'Opens soon', live: !!o,
     });
-  }
-  if (sponsored[0]) {
-    const o = openOf(sponsored[0].id);
+  });
+  sponsored.filter((g) => g.spotlight === true).forEach((gm) => {
+    const o = openOf(gm.id);
     spots.push({
-      kind: 'giveaway', id: sponsored[0].id, title: sponsored[0].name,
-      prize: '₦' + Number(sponsored[0].amount || 0).toLocaleString(),
+      kind: 'giveaway', id: gm.id, title: gm.name,
+      prize: '₦' + Number(gm.amount || 0).toLocaleString(),
       meta: o ? 'Sponsored · open' : 'Sponsored', live: !!o,
     });
-  }
-  while (spots.length < 3) spots.push(null);
-  el('cashSpots').innerHTML = spots.slice(0, 3).map((s) => {
-    if (!s) return '<div class="spot ghost"><small>SPOTLIGHT</small><b>???</b><span class="st">More heat soon</span></div>';
-    const goAttr = s.kind === 'hourly' ? 'data-spot-go="s-hourly"' : 'data-spot-open="' + s.id + '"';
-    return '<button class="spot" type="button" ' + goAttr + '><small>' + (s.live ? '● LIVE' : 'SPOTLIGHT') + '</small><b>' + s.prize + '</b><span class="st">' + s.title + ' · ' + s.meta + '</span></button>';
-  }).join('');
-  el('cashCount').textContent = '3 spotlight';
+  });
+  el('cashSpots').innerHTML = spots.length
+    ? spots.map((s) => {
+        const goAttr = s.kind === 'hourly' ? 'data-spot-go="s-hourly"' : 'data-spot-open="' + s.id + '"';
+        return '<button class="spot" type="button" ' + goAttr + '><small>' + (s.live ? '● LIVE' : 'SPOTLIGHT') + '</small><b>' + s.prize + '</b><span class="st">' + s.title + ' · ' + s.meta + '</span></button>';
+      }).join('')
+    : '<div class="empty"><div class="e-ic">○</div><p>No spotlights right now.</p></div>';
+  el('cashCount').textContent = spots.length + ' spotlight' + (spots.length === 1 ? '' : 's');
   spotIx = 0;
   const strip = el('cashSpots');
   if (strip) strip.scrollTo({ left: 0 });

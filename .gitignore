@@ -3,5 +3,7 @@ node_modules/
 *.log
 # spec file holds a live token — never commit
 deen.txt
+# local spec notes — never commit
+giveaways.txt
 # generated deploy secrets — never commit
 render-secrets.txt
