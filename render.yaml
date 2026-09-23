@@ -31,6 +31,8 @@ services:
         value: 10
       - key: WITHDRAW_MIN
         value: 100
+      - key: MONETAG_POSTBACK_KEY
+        sync: false
       - key: SPONSOR_NAME
         value: NaijaGiveawayBot
       - key: SPONSOR_LINK

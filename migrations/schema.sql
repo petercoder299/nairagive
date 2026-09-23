@@ -99,6 +99,24 @@ ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_facebook TEXT;
 ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_instagram TEXT;
 ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_linkedin TEXT;
 
+-- Monetag rewarded postback events. ymid is unique per event so replayed
+-- or fraudulent duplicates are dropped instead of double-counted.
+CREATE TABLE IF NOT EXISTS monetag_events (
+  id SERIAL PRIMARY KEY,
+  telegram_id BIGINT,
+  app_id INTEGER,
+  zone_id INTEGER,
+  subzone_id INTEGER,
+  event_type TEXT NOT NULL,
+  reward TEXT,
+  price NUMERIC,
+  ymid TEXT UNIQUE NOT NULL,
+  request_var TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_monetag_user ON monetag_events(telegram_id);
+CREATE INDEX IF NOT EXISTS idx_monetag_ymid ON monetag_events(ymid);
+
 -- User withdrawal requests (min ₦100, paid out manually by admin)
 CREATE TABLE IF NOT EXISTS withdrawals (
   id SERIAL PRIMARY KEY,

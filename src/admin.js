@@ -84,6 +84,8 @@ button.mini-no{background:transparent;color:var(--red);border:1px solid #4a2c2c;
 <div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>User</th><th class="num">Amount</th><th>Bank details</th><th>Status</th><th>When</th><th></th></tr></thead><tbody id="wdRows"></tbody></table></div><div id="pgWd"></div>
 <h2>Manual adjustment</h2><p class="sub">Add or deduct naira using the Telegram numeric ID (not @username).</p>
 <div class="box"><input id="tTg" placeholder="Telegram numeric ID" inputmode="numeric"/><input id="tAmt" type="number" placeholder="Amount ₦"/><button id="tAdd">Add</button><button id="tDeduct">Deduct</button></div><div id="tOut" style="margin-top:10px"></div>
+<h2>Ad events</h2><p class="sub">Verified Monetag rewarded postbacks (replays dropped by event ID).</p>
+<div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>User</th><th>Event</th><th>Reward</th><th class="num">Price</th><th>Zone</th><th>When</th></tr></thead><tbody id="adRows"></tbody></table></div>
 <h2>Giveaways</h2><p class="sub">Create interval or one-off draws. Prefix OG + 9-digit tickets for Others.</p>
 <div class="box">
 <input id="g_name" placeholder="Name — e.g. Evening Splash"/>
@@ -131,7 +133,8 @@ try{var s=sessionStorage.getItem("ng_admin");if(s){keyEl.value=s;login()}}catch(
 function pagerHTML(p,total,sec){if(total<=1)return "";return "<div class='pager'><button data-pgsec='"+sec+"' data-pgd='-1'"+(p<=1?" disabled":"")+">← Previous</button><span class='pg-info'>Page "+p+" of "+total+"</span><button data-pgsec='"+sec+"' data-pgd='1'"+(p>=total?" disabled":"")+">Next →</button></div>"}
 function slice(list,sec){var total=Math.max(1,Math.ceil(list.length/PER));if(PG[sec]>total)PG[sec]=total;if(PG[sec]<1)PG[sec]=1;return{items:list.slice((PG[sec]-1)*PER,PG[sec]*PER),page:PG[sec],total:total}}
 function stat(k,v,cls){return "<div class='stat'><div class='k'>"+k+"</div><div class='v"+(cls?" "+cls:"")+"'>"+v+"</div></div>"}
-function render(){var t=DATA.totals||{};document.getElementById("stats").innerHTML=stat("Users",t.users)+stat("Draws",t.draws)+stat("Tickets",t.tickets)+stat("Winners",t.winners)+stat("Paid out",fmt(t.paidOut),"green")+stat("Pending",t.pendingCount+" · "+fmt(t.pendingSum),"gold");renderWd();renderG();renderD();document.getElementById("updated").textContent="Updated "+new Date().toLocaleTimeString()}
+function render(){var t=DATA.totals||{};document.getElementById("stats").innerHTML=stat("Users",t.users)+stat("Draws",t.draws)+stat("Tickets",t.tickets)+stat("Winners",t.winners)+stat("Paid out",fmt(t.paidOut),"green")+stat("Pending",t.pendingCount+" · "+fmt(t.pendingSum),"gold");renderWd();renderG();renderD();renderAds();document.getElementById("updated").textContent="Updated "+new Date().toLocaleTimeString()}
+function renderAds(){call("GET","/api/admin/monetag").then(function(rows){document.getElementById("adRows").innerHTML=rows.map(function(a){return "<tr><td>"+a.id+"</td><td>"+esc(a.telegram_id||"—")+"</td><td><span class='pill "+(a.event_type==="click"?"paid":"pending")+"'>"+esc(a.event_type)+"</span></td><td>"+esc(a.reward||"—")+"</td><td class='num'>"+(a.price==null?"—":Number(a.price).toFixed(5))+"</td><td>"+esc(a.zone_id||"—")+"</td><td>"+dt(a.created_at)+"</td></tr>"}).join("")||"<tr><td colspan='7' class='muted'>No ad events yet.</td></tr>"}).catch(function(){document.getElementById("adRows").innerHTML="<tr><td colspan='7' class='muted'>Could not load ad events.</td></tr>"})}
 function renderWd(){var list=(DATA.withdrawals||[]).filter(function(w){return wdTab==="pending"?w.status==="pending":w.status!=="pending"});var p=slice(list,"wd");document.getElementById("wdRows").innerHTML=p.items.map(function(w){var bank=[w.full_name,w.account_number,w.bank_name].filter(Boolean).join(" · ");var act=w.status==="pending"?"<button class='mini-ok' data-act='paid' data-id='"+w.id+"'>Paid</button><button class='mini-no' data-act='rejected' data-id='"+w.id+"'>Reject</button>":"";return "<tr><td>"+w.id+"</td><td>"+esc(w.username||w.telegram_id)+"</td><td class='num'>"+fmt(w.amount)+"</td><td>"+esc(bank)+"</td><td><span class='pill "+w.status+"'>"+w.status+"</span></td><td>"+dt(w.created_at)+"</td><td>"+act+"</td></tr>"}).join("")||"<tr><td colspan='7' class='muted'>Nothing here.</td></tr>";document.getElementById("pgWd").innerHTML=pagerHTML(p.page,p.total,"wd")}
 function schedOf(g){if(g.interval_minutes)return "every "+g.interval_minutes+"m";if(g.scheduled_at)return dt(g.scheduled_at);return "—"}
 function renderG(){var p=slice(DATA.giveaways||[],"g");document.getElementById("gRows").innerHTML=p.items.map(function(g){var done=g.status!=="active";return "<tr><td>"+g.id+"</td><td><b>"+esc(g.name)+"</b></td><td>"+esc(g.category)+"</td><td class='num'>"+fmt(g.amount)+"</td><td class='num'>"+g.winners_per_draw+"</td><td>"+schedOf(g)+"</td><td><span class='pill "+(done?"done":"pending")+"'>"+g.status+"</span></td><td><button class='mini-ok' data-edit='"+g.id+"'>Sponsor</button><button class='mini-ok' data-spot='"+g.id+"' title='Toggle Cash spotlight'>"+(g.spotlight?"★":"☆")+"</button>"+(done?"":"<button class='mini-no' data-stop='"+g.id+"'>Stop</button>")+"</td></tr>"}).join("")||"<tr><td colspan='8' class='muted'>No giveaways yet.</td></tr>";document.getElementById("pgG").innerHTML=pagerHTML(p.page,p.total,"g")}
@@ -402,6 +405,39 @@ function createAdminApp() {
       res.json(await store.adjustBalance(b.telegram_id, Number(b.amount)));
     } catch (e) {
       if (e.code === 'BAD_ID' || e.code === 'BAD_AMOUNT') return res.status(400).json({ error: e.message });
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ---- Monetag rewarded postback (called by Monetag, NOT by users) ----
+  // Dashboard URL template:
+  //   https://YOUR-APP.onrender.com/api/monetag/postback?key=YOUR_KEY
+  //   &telegram_id={telegram_id}&app_id={app_id}&zone_id={zone_id}&subzone_id={subzone_id}
+  //   &event={event}&reward={reward}&price={price}&ymid={ymid}&request_var={request_var}
+  app.get('/api/monetag/postback', async (req, res) => {
+    try {
+      if (config.monetagPostbackKey && req.query.key !== config.monetagPostbackKey) {
+        return res.status(401).json({ ok: false, error: 'bad key' });
+      }
+      const { parsePostback } = require('./monetag');
+      const parsed = parsePostback(req.query || {});
+      if (!parsed.ok) return res.status(400).json({ ok: false, error: parsed.error });
+      const v = parsed.value;
+      const saved = await store.recordMonetagEvent(v).catch((e) => {
+        if (e.code === '23505') return { duplicate: true };
+        throw e;
+      });
+      res.json({ ok: true, duplicate: !!saved.duplicate, ymid: v.ymid });
+    } catch (e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  // ---- Recent ad events for the dashboard ----
+  app.get('/api/admin/monetag', requireAdmin, async (req, res) => {
+    try {
+      res.json(await store.getMonetagEvents(50));
+    } catch (e) {
       res.status(500).json({ error: e.message });
     }
   });

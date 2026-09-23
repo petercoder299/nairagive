@@ -21,6 +21,8 @@ const config = {
   hourlyPrefix: requireEnv('HOURLY_PREFIX', 'NG'),
   maxTicketsPerUser: parseInt(requireEnv('MAX_TICKETS_PER_USER', '10'), 10),
   withdrawMin: parseInt(requireEnv('WITHDRAW_MIN', '100'), 10),
+  // Monetag rewarded postback key. Empty = accept all (testing only).
+  monetagPostbackKey: requireEnv('MONETAG_POSTBACK_KEY', ''),
   sponsor: {
     name: requireEnv('SPONSOR_NAME', 'NaijaGiveawayBot'),
     link: requireEnv('SPONSOR_LINK', 'https://t.me/naijagiveawaybot'),

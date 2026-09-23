@@ -491,6 +491,7 @@
         <button class="btn-g" id="playHomeBtn" type="button" style="margin-bottom:12px">← Back to Home</button>
         <span class="round-chip">DRAW · <span id="drawId">—</span></span>
         <div class="statusbar" id="statusbar"><span class="st"><span class="pulse"></span><span id="phase">…</span></span><span class="cd"><span id="countdown">--:--</span><small id="countLabel">until entry closes</small></span></div>
+        <button class="round-chip" id="sponsorBtnHourly" type="button">About Sponsor</button>
         <div class="pick-card">
           <h3>Get your tickets</h3>
           <p class="hint" id="claimNote">Max 10 tickets per hour. Free entry.</p>
@@ -852,6 +853,7 @@ async function loadLive() {
     } catch (_) {}
   }
 }
+let hourlySponsor = null;
 function renderDraw(d, fromApi) {
   el('drawId').textContent = d.drawId;
   el('drawIdHome').textContent = d.drawId;
@@ -878,6 +880,7 @@ function renderDraw(d, fromApi) {
   el('sponsor').innerHTML = sp
     ? 'Sponsor: <b>' + sp.sponsor_name + '</b><br>Link: <a href="' + sp.sponsor_link + '" target="_blank" rel="noopener">' + sp.sponsor_link + '</a><br>' + sp.sponsor_bio
     : 'Sponsor: <b>NaijaGiveawayBot</b> — free hourly ₦200 giveaways.';
+  hourlySponsor = sp ? { name: sp.sponsor_name, link: sp.sponsor_link, bio: sp.sponsor_bio } : null;
 }
 // ---- Paged ticket lists (20 per page) + ticket labels ----
 const PAGE_SIZE = 20;
@@ -1051,6 +1054,13 @@ function showSponsor(title, info) {
   el('spBio').textContent = sp.bio || '';
   go('s-sponsor');
 }
+el('sponsorBtnHourly').addEventListener('click', () => {
+  showSponsor('About Sponsor', hourlySponsor || {
+    name: 'NaijaGiveawayBot',
+    link: '',
+    bio: 'Free hourly giveaways for our community.',
+  });
+});
 el('oSponsorBtn').addEventListener('click', () => {
   const g = currentOther && currentOther.giveaway;
   const d = currentOther && currentOther.draw;

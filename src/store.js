@@ -277,6 +277,22 @@ async function getTicketsCountSince(ids, sinceISO, untilISO = null) {
   return res.rows;
 }
 
+// ---- Monetag rewarded postback events (ymid unique = replay-proof) ----
+async function recordMonetagEvent(v) {
+  const res = await query(
+    `INSERT INTO monetag_events (telegram_id, app_id, zone_id, subzone_id, event_type, reward, price, ymid, request_var)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+     ON CONFLICT (ymid) DO NOTHING RETURNING *`,
+    [v.telegramId, v.appId, v.zoneId, v.subzoneId, v.event, v.reward, v.price, v.ymid, v.requestVar]
+  );
+  if (!res.rows.length) return { duplicate: true };
+  return res.rows[0];
+}
+
+async function getMonetagEvents(limit = 50) {
+  const res = await query(`SELECT * FROM monetag_events ORDER BY id DESC LIMIT $1`, [limit]);
+  return res.rows;
+}
 // ---- Withdrawals (balance debit + request are one transaction) ----
 async function createWithdrawal({ telegramId, username, fullName, accountNumber, bankName, amount }) {
   const pool = getPool();
@@ -432,4 +448,6 @@ module.exports = {
   getWithdrawals,
   resolveWithdrawal,
   adjustBalance,
+  recordMonetagEvent,
+  getMonetagEvents,
 };
