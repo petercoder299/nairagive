@@ -174,7 +174,7 @@ async function getWallet(telegramId) {
   return res.rows[0].wallet_balance;
 }
 
-async function getRecentResults(limit = 5) {
+async function getRecentResults(limit = 20, offset = 0) {
   const res = await query(
     `SELECT d.id, d.amount, d.drawn_at, d.giveaway_id, w.ticket_code, w.username, w.telegram_id, u.first_name,
             g.name AS giveaway_name, g.prize_text AS giveaway_prize
@@ -182,10 +182,17 @@ async function getRecentResults(limit = 5) {
      LEFT JOIN users u ON u.telegram_id = w.telegram_id
      LEFT JOIN giveaways g ON g.id = d.giveaway_id
      WHERE d.status IN ('results','closed')
-     ORDER BY d.drawn_at DESC NULLS LAST, d.id DESC LIMIT $1`,
-    [limit]
+     ORDER BY d.drawn_at DESC NULLS LAST, d.id DESC LIMIT $1 OFFSET $2`,
+    [limit, offset]
   );
   return res.rows;
+}
+
+async function countRecentResults() {
+  const res = await query(
+    `SELECT COUNT(*)::int AS c FROM draws WHERE status IN ('results','closed')`
+  );
+  return res.rows[0].c;
 }
 
 // ---- Custom giveaways ----
@@ -232,6 +239,40 @@ async function getOverdueCustomDraws(now = new Date()) {
          ))
        )`,
     [now.toISOString()]
+  );
+  return res.rows;
+}
+
+// ---- Weekly leaderboard ----
+async function getTicketLeaders(sinceISO, limit = 10, untilISO = null) {
+  const params = [sinceISO, limit];
+  let extra = '';
+  if (untilISO) {
+    params.push(untilISO);
+    extra = ' AND t.created_at < $3';
+  }
+  const res = await query(
+    `SELECT t.telegram_id, MAX(t.username) AS username, MAX(u.first_name) AS first_name, COUNT(*)::int AS tickets
+     FROM tickets t LEFT JOIN users u ON u.telegram_id = t.telegram_id
+     WHERE t.created_at >= $1${extra} GROUP BY t.telegram_id
+     ORDER BY tickets DESC, t.telegram_id ASC LIMIT $2`,
+    params
+  );
+  return res.rows;
+}
+
+async function getTicketsCountSince(ids, sinceISO, untilISO = null) {
+  if (!ids.length) return [];
+  const params = [ids, sinceISO];
+  let extra = '';
+  if (untilISO) {
+    params.push(untilISO);
+    extra = ' AND created_at < $3';
+  }
+  const res = await query(
+    `SELECT telegram_id, COUNT(*)::int AS tickets FROM tickets
+     WHERE telegram_id = ANY($1) AND created_at >= $2${extra} GROUP BY telegram_id`,
+    params
   );
   return res.rows;
 }
@@ -376,6 +417,7 @@ module.exports = {
   runSeededDraw,
   getWallet,
   getRecentResults,
+  countRecentResults,
   getActiveGiveaways,
   getGiveaway,
   markGiveawayDone,
@@ -385,6 +427,8 @@ module.exports = {
   getUserWithdrawals,
   getWalletWins,
   countWalletWins,
+  getTicketLeaders,
+  getTicketsCountSince,
   getWithdrawals,
   resolveWithdrawal,
   adjustBalance,

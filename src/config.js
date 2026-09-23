@@ -29,7 +29,7 @@ const config = {
   contact: {
     text: requireEnv(
       'CONTACT_TEXT',
-      'Questions or sponsorships? Contact @nairagivebot_admin or email support@nairagivebot.example'
+      'If you want to claim your prize, you got questions or you want to host a giveaway on our app? Contact @ponyed838 on telegram.'
     ),
   },
   howToUse: requireEnv(
@@ -38,7 +38,7 @@ const config = {
   ),
   rulesText: requireEnv(
     'RULES_TEXT',
-    'GIVEAWAY RULES\n\n1. Entry is free. Max 10 tickets per user per draw.\n2. Hourly draw: entry :00–:50, winner picked :51–:52, results :53–:59 (Africa/Lagos).\n3. One winner per hourly draw; custom draws pay the stated winners.\n4. Winners are picked by seeded shuffle (SHA-256), never at random by hand — every result is verifiable.\n5. Winnings credit to your Wallet automatically. No ticket, no win.\n6. Abuse, duplicate accounts or botting forfeits winnings.'
+    'GIVEAWAY RULES\n\n1. Entry is free. Max 10 tickets per user per draw.\n2. Hourly draw: entry :00–:50, winner picked :51–:52, results :53–:59 (Africa/Lagos).\n3. One winner per hourly draw; custom draws pay the stated winners.\n4. Winners are picked by seeded shuffle (SHA-256), never at random by hand.\n5. Winnings credit to your Wallet automatically. No ticket, no win.\n6. Abuse, duplicate accounts or botting forfeits winnings.'
   ),
 };
 

@@ -186,8 +186,19 @@ function createAdminApp() {
 
   app.get('/api/draws/recent', async (req, res) => {
     try {
-      const rows = await store.getRecentResults(parseInt(req.query.limit || '10', 10));
+      const rows = await store.getRecentResults(
+        parseInt(req.query.limit || '20', 10),
+        parseInt(req.query.offset || '0', 10)
+      );
       res.json(rows);
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.get('/api/draws/recent/count', async (_req, res) => {
+    try {
+      res.json({ total: await store.countRecentResults() });
     } catch (e) {
       res.status(500).json({ error: e.message });
     }

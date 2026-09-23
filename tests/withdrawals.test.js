@@ -33,10 +33,12 @@ describe('withdrawal validation (min ₦100)', () => {
     assert.equal(validateWithdrawal({ ...good, amount: undefined }, 100).ok, false);
   });
 
-  it('requires a 10-digit NUBAN account number', () => {
+  it('requires a 10-to-16 digit account number', () => {
     assert.equal(validateWithdrawal({ ...good, account_number: '123456789' }, 100).ok, false);
-    assert.equal(validateWithdrawal({ ...good, account_number: '12345678901' }, 100).ok, false);
+    assert.equal(validateWithdrawal({ ...good, account_number: '12345678901234567' }, 100).ok, false);
     assert.equal(validateWithdrawal({ ...good, account_number: '12345abcde' }, 100).ok, false);
+    assert.equal(validateWithdrawal({ ...good, account_number: '0123456789' }, 100).ok, true);
+    assert.equal(validateWithdrawal({ ...good, account_number: '0123456789012345' }, 100).ok, true);
     // spaces/dashes are stripped before checking
     assert.equal(validateWithdrawal({ ...good, account_number: '0123 456 789' }, 100).ok, true);
   });

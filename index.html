@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script src='//libtl.com/sdk.js' data-zone='11866156' data-sdk='show_11866156'></script>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta name="theme-color" content="#FFF6E9" />
@@ -212,6 +213,11 @@
   }
   .tag.soon { background: transparent; color: var(--ink-3); border-color: var(--line); }
   /* Section heads */
+  .trend { font-weight: 800; margin-left: 6px; }
+  .trend.up { color: var(--emerald-deep, #007A44); }
+  .trend.down { color: var(--coral); }
+  .trend.same { color: var(--ink-3); }
+  .rank { display: inline-block; min-width: 30px; font-family: var(--head-font); font-weight: 800; font-size: 16px; }
   .spot-strip { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 12px; margin-bottom: 4px; scrollbar-width: none; }
   .spot-strip::-webkit-scrollbar { display: none; }
   .spot {
@@ -430,6 +436,7 @@
           <button class="menu-card" data-go="s-how" type="button"><span class="menu-ic">?</span><span class="menu-tx"><span class="menu-t">How To Use App</span><span class="menu-s">Entries, draws &amp; payouts</span></span><span class="chev">›</span></button>
           <button class="menu-card" data-go="s-wallet" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">Wallet</span><span class="menu-s" id="walletHint">Your balance &amp; wins</span></span><span class="chev">›</span></button>
           <button class="menu-card" data-go="s-contact" type="button"><span class="menu-ic">✉</span><span class="menu-tx"><span class="menu-t">Contact Us</span><span class="menu-s">Support &amp; sponsorships</span></span><span class="chev">›</span></button>
+          <button class="menu-card" data-go="s-leaderboard" type="button"><span class="menu-ic">♛</span><span class="menu-tx"><span class="menu-t">Leaderboard</span><span class="menu-s">Top ticket submitters</span></span><span class="chev">›</span></button>
         </div>
         <div class="status-ticket" style="margin-top:16px">
           <div><small>DRAW</small><b class="mono" id="drawIdHome">—</b></div>
@@ -579,12 +586,42 @@
       </div>
     </section>
 
+    <!-- LEADERBOARD -->
+    <section class="screen" id="s-leaderboard" data-title="Leaderboard">
+      <div class="page">
+        <div class="sec-head"><h2>Leaderboard</h2></div>
+        <p class="sub">Top ticket submitters, ranked weekly.</p>
+        <div class="menu">
+          <button class="menu-card" data-go="s-leaderboard-week" type="button"><span class="menu-ic">♛</span><span class="menu-tx"><span class="menu-t">Weekly Leaderboard</span><span class="menu-s">This week's top 10</span></span><span class="chev">›</span></button>
+          <button class="menu-card" data-go="s-prevwinners" type="button"><span class="menu-ic">✦</span><span class="menu-tx"><span class="menu-t">Previous Winners</span><span class="menu-s">Last week's top 3</span></span><span class="chev">›</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- WEEKLY BOARD -->
+    <section class="screen" id="s-leaderboard-week" data-title="Weekly Board">
+      <div class="page">
+        <div class="sec-head"><h2>This week</h2><span class="count" id="weekRange">—</span></div>
+        <p class="sub" id="weekSub">Monday to Sunday · 1st ₦5,000 · 2nd ₦3,000 · 3rd ₦2,000</p>
+        <div class="cards" id="weekBoard"><div class="empty"><div class="e-ic">○</div><p>loading…</p></div></div>
+      </div>
+    </section>
+
+    <!-- PREVIOUS WINNERS -->
+    <section class="screen" id="s-prevwinners" data-title="Winners">
+      <div class="page">
+        <div class="sec-head"><h2>Previous winners</h2><span class="count" id="prevRange">—</span></div>
+        <p class="sub">Last week's top 3 ticket submitters.</p>
+        <div class="cards" id="prevBoard"><div class="empty"><div class="e-ic">○</div><p>loading…</p></div></div>
+      </div>
+    </section>
+
     <!-- DRAWS -->
     <section class="screen" id="s-draws" data-title="Draws">
       <div class="page">
         <button class="btn-g" id="drawsHomeBtn" type="button" style="margin-bottom:12px">← Back to Home</button>
         <div class="sec-head"><h2>Winning Tickets &amp; Winners</h2><span class="count" id="drawsDraw">—</span></div>
-        <p class="sub">Seeded Draws. Contact Admin to redeem prize.</p>
+        <p class="sub">Seeded Draws. Contact Admin @ponyed838 to redeem your prize.</p>
         <div class="cards" id="recent"><div class="empty"><div class="e-ic">○</div><p>loading…</p></div></div>
       </div>
     </section>
@@ -627,7 +664,7 @@
         <div class="panel">
           <div class="field" style="padding:12px 0">
             <input id="wdName" placeholder="Full name on account" maxlength="100" autocomplete="off" />
-            <input id="wdAcct" placeholder="Account number (10 digits)" inputmode="numeric" maxlength="11" autocomplete="off" />
+            <input id="wdAcct" placeholder="Account number (10–16 digits)" inputmode="numeric" maxlength="16" autocomplete="off" />
             <input id="wdBank" placeholder="Bank name" maxlength="60" autocomplete="off" />
             <input id="wdAmt" placeholder="Amount (₦, min 100)" inputmode="numeric" autocomplete="off" />
             <button class="btn-p" id="wdBtn" type="button">Request withdrawal</button>
@@ -645,8 +682,8 @@
         <div class="sec-head"><h2>Contact us</h2></div>
         <div class="notice">
           <h3>Talk to us</h3>
-          <p id="contactText">Questions or sponsorships? Reach us via Telegram.</p>
-          <p style="margin-top:12px"><a class="btn-p" id="contactBtn" href="https://t.me/" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">Message us</a></p>
+          <p id="contactText">If you want to claim your prize, you got questions or you want to host a giveaway on our app? Contact @ponyed838 on telegram.</p>
+          <p style="margin-top:12px"><a class="btn-p" id="contactBtn" href="https://t.me/ponyed838" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">Message us</a></p>
         </div>
         <div class="foot"><span class="mono" id="footDraw">—</span><br />NaijaGiveawayBot · hourly ₦200 · cash first</div>
       </div>
@@ -666,7 +703,7 @@
 <script>
 // ---- Navigation stack: one screen at a time, like the bot flow ----
 const stack = ['s-home'];
-const TAB_FOR = { 's-home': 's-home', 's-hourly': 's-hourly', 's-cats': 's-hourly', 's-cash': 's-hourly', 's-naira': 's-hourly', 's-sponsored': 's-hourly', 's-others': 's-hourly', 's-food': 's-hourly', 's-other': 's-hourly', 's-draws': 's-draws', 's-wallet': 's-wallet', 's-how': '', 's-contact': '' };
+const TAB_FOR = { 's-home': 's-home', 's-hourly': 's-hourly', 's-cats': 's-hourly', 's-cash': 's-hourly', 's-naira': 's-hourly', 's-sponsored': 's-hourly', 's-others': 's-hourly', 's-food': 's-hourly', 's-other': 's-hourly', 's-draws': 's-draws', 's-wallet': 's-wallet', 's-how': '', 's-contact': '', 's-leaderboard': '', 's-leaderboard-week': '', 's-prevwinners': '' };
 function renderNav() {
   const cur = stack[stack.length - 1];
   document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('show', s.id === cur));
@@ -685,6 +722,7 @@ function go(id) {
   if (id === 's-cash') loadCash();
   if (id === 's-others') loadOthers();
   if (id === 's-food') loadFoods();
+  if (id === 's-leaderboard-week' || id === 's-prevwinners') loadBoard();
   if (id === 's-wallet') loadWallet();
   if (id === 's-hourly') { loadLive(); loadMe(); }
   if (id === 's-draws') loadLive();
@@ -806,24 +844,7 @@ async function loadLive() {
     el('phase').textContent = 'Offline';
     el('statusbar').classList.add('closed');
   }
-  try {
-    const rows = await api('/api/draws/recent?limit=6');
-    let paid = 0; const seen = new Set();
-    rows.forEach((x) => { seen.add(x.id); if (x.ticket_code) paid += (x.amount || 0); });
-    el('recent').innerHTML = rows.length
-      ? rows.map((x) => {
-          const title = x.giveaway_name || '₦200 Hourly';
-          const prize = x.giveaway_prize || (x.amount > 0 ? '₦' + Number(x.amount).toLocaleString() : '');
-          return '<div class="tcard"><div class="tid">' + x.id + '</div><div class="trow"><span class="who">' + title +
-            (prize ? '<small>' + prize + '</small>' : '') + '</span></div>' +
-            (x.ticket_code ? '<div class="tcode-bar"></div><div class="trow"><span class="who"><span class="mono">' + x.ticket_code + '</span><small>Winner: ' + dispW(x) + '</small></span></div>' : '<small>no entries</small>') + '</div>';
-        }).join('')
-      : '<div class="empty"><div class="e-ic">○</div><p>No results yet — first draw completes at :51–:53 past the hour.</p></div>';
-    el('stDraws').textContent = seen.size;
-    el('stPaid').textContent = '₦' + paid.toLocaleString();
-  } catch (_) {
-    el('recent').innerHTML = '<div class="empty"><div class="e-ic">○</div><p><b>Connection failed.</b></p><p class="muted small">Could not reach the server.</p></div>';
-  }
+  await loadRecent();
   if (stack[stack.length - 1] === 's-other' && currentOther) {
     try {
       currentOther = await api('/api/miniapp/draw/' + encodeURIComponent(currentOther.draw.id));
@@ -862,7 +883,36 @@ function renderDraw(d, fromApi) {
 }
 // ---- Paged ticket lists (20 per page) + ticket labels ----
 const PAGE_SIZE = 20;
-const pageIx = { hourly: 0, other: 0 };
+const pageIx = { hourly: 0, other: 0, wins: 0, recent: 0, wd: 0 };
+const RECENT_PER_PAGE = 20;
+async function loadRecent() {
+  pageIx.recent = Math.max(0, pageIx.recent || 0);
+  let rows = null;
+  let total = 0;
+  try {
+    rows = await api('/api/draws/recent?limit=' + RECENT_PER_PAGE + '&offset=' + (pageIx.recent * RECENT_PER_PAGE));
+    try { total = (await api('/api/draws/recent/count')).total || 0; } catch (_) {}
+  } catch (_) { rows = null; }
+  if (!rows) {
+    el('recent').innerHTML = '<div class="empty"><div class="e-ic">○</div><p><b>Connection failed.</b></p><p class="muted small">Could not reach the server.</p></div>';
+    return;
+  }
+  const totalPages = Math.max(1, Math.ceil(total / RECENT_PER_PAGE));
+  pageIx.recent = Math.min(pageIx.recent, totalPages - 1);
+  let paid = 0; const seen = new Set();
+  rows.forEach((x) => { seen.add(x.id); if (x.ticket_code) paid += (x.amount || 0); });
+  el('recent').innerHTML = rows.length
+    ? rows.map((x) => {
+        const title = x.giveaway_name || '₦200 Hourly';
+        const prize = x.giveaway_prize || (x.amount > 0 ? '₦' + Number(x.amount).toLocaleString() : '');
+        return '<div class="tcard"><div class="tid">' + x.id + '</div><div class="trow"><span class="who">' + title +
+          (prize ? '<small>' + prize + '</small>' : '') + '</span></div>' +
+          (x.ticket_code ? '<div class="tcode-bar"></div><div class="trow"><span class="who"><span class="mono">' + x.ticket_code + '</span><small>Winner: ' + dispW(x) + '</small></span></div>' : '<small>no entries</small>') + '</div>';
+      }).join('') + pagerHtml('recent', pageIx.recent, totalPages)
+    : '<div class="empty"><div class="e-ic">○</div><p>No results yet — first draw completes at :51–:53 past the hour.</p></div>';
+  el('stDraws').textContent = total || seen.size;
+  el('stPaid').textContent = '₦' + paid.toLocaleString();
+}
 let hourlyCache = { tickets: [], drawId: '', max: 10, phase: '' };
 let otherCache = { tickets: [], drawId: '', max: 10 };
 function ticketCard(code, drawId, chip, title) {
@@ -882,6 +932,8 @@ document.addEventListener('click', (e) => {
   if (key === 'hourly') rerenderHourlyMine();
   else if (key === 'other') rerenderOtherMine();
   else if (key === 'wins') loadWins(pageIx.wins);
+  else if (key === 'recent') loadRecent();
+  else if (key === 'wd') loadWdMine(pageIx.wd);
 });
 function rerenderHourlyMine() {
   const t = hourlyCache.tickets;
@@ -932,10 +984,27 @@ async function loadMe() {
     el('claimNote').textContent = 'Sign-in failed: ' + e.message;
   }
 }
+// ---- Rewarded ads (Monetag): show before the 3rd, 5th and 8th ticket
+// of a CASH/NG/SCG draw. The ticket is ALWAYS issued afterwards, even if
+// the ad is blocked, fails or times out.
+function maybeAd(count) {
+  if (count !== 2 && count !== 4 && count !== 7) return Promise.resolve();
+  try {
+    if (typeof show_11866156 === 'function') {
+      toast('Loading ad…');
+      return Promise.race([
+        show_11866156().then(function () {}).catch(function () {}),
+        new Promise(function (r) { setTimeout(r, 10000); }),
+      ]);
+    }
+  } catch (_) {}
+  return Promise.resolve();
+}
 async function claimTicket() {
   if (!IN_TELEGRAM && !TEST_USER) return enableTestMode();
   el('claimBtn').disabled = true;
   try {
+    await maybeAd(hourlyCache.tickets.length);
     if (tg && tg.MainButton) { try { tg.MainButton.showProgress(); } catch (_) {} }
     const r = await api('/api/miniapp/tickets', { method: 'POST' });
     haptic('success');
@@ -1033,16 +1102,34 @@ async function loadWins(page) {
     ? rows.map((x) => {
         const prize = x.giveaway_prize || ((x.prize_amount > 0 || x.amount > 0) ? '+₦' + (x.prize_amount || x.amount) : '');
         const title = x.giveaway_name || '₦200 Hourly';
-        return '<div class="tx"><span class="tx-ic">₦</span><span class="tx-mid"><span class="tx-t">' + title + (prize ? ' · ' + prize : '') + '</span><span class="tx-d mono">' + x.ticket_code + ' · ' + x.draw_id + '</span></span></div>';
+        return '<div class="tx"><span class="tx-ic">₦</span><span class="tx-mid">' +
+          '<span class="tx-t mono">' + x.ticket_code + '</span>' +
+          '<span class="tx-d">' + title + '</span>' +
+          (prize ? '<span class="tx-d">' + prize + '</span>' : '') +
+          '<span class="tx-d">' + new Date(x.created_at).toLocaleString() + '</span>' +
+          '</span></div>';
       }).join('') + pagerHtml('wins', data.page || 0, data.totalPages || 1)
     : '<p class="muted small" style="padding:12px 0">No winnings yet — claim tickets every hour.</p>';
 }
 async function loadWdMine() {
   if (!IN_TELEGRAM && !TEST_USER) return;
+  pageIx.wd = Math.max(0, pageIx.wd || 0);
+  let rows = [];
   try {
-    const rows = await api('/api/miniapp/withdrawals');
+    rows = await api('/api/miniapp/withdrawals');
+  } catch (_) { rows = []; }
+  const totalPages = Math.max(1, Math.ceil(rows.length / 10));
+  pageIx.wd = Math.min(pageIx.wd, totalPages - 1);
+  const slice = rows.slice(pageIx.wd * 10, (pageIx.wd + 1) * 10);
+  try {
     el('wdMine').innerHTML = rows.length
-      ? rows.map((w) => '<div class="tx"><span class="tx-ic">₦</span><span class="tx-mid"><span class="tx-t">₦' + w.amount + ' · ' + w.status + '</span><span class="tx-d">' + w.full_name + ' · ' + w.account_number + ' · ' + w.bank_name + '</span></span></div>').join('')
+      ? slice.map((w) => '<div class="tx"><span class="tx-ic">₦</span><span class="tx-mid">' +
+          '<span class="tx-t">₦' + w.amount + '</span>' +
+          '<span class="tx-d">' + w.full_name + '</span>' +
+          '<span class="tx-d">' + w.account_number + '</span>' +
+          '<span class="tx-d">' + w.bank_name + '</span>' +
+          '<span class="tx-d">' + w.status + '</span>' +
+          '</span></div>').join('') + pagerHtml('wd', pageIx.wd, totalPages)
       : '<p class="muted small" style="padding:12px 0">No requests yet.</p>';
   } catch (_) {}
 }
@@ -1162,6 +1249,36 @@ document.addEventListener('click', (e) => {
   const o = e.target.closest('[data-spot-open]');
   if (o) openOther(o.getAttribute('data-spot-open'));
 });
+function fmtDay(s) {
+  try { return new Date(s).toLocaleDateString([], { day: 'numeric', month: 'short' }); }
+  catch (_) { return ''; }
+}
+function trendArrow(t) {
+  if (t === 'up') return '<span class="trend up">▲</span>';
+  if (t === 'down') return '<span class="trend down">▼</span>';
+  return '<span class="trend same">•</span>';
+}
+let boardCache = null;
+async function loadBoard() {
+  try {
+    boardCache = await api('/api/miniapp/leaderboard');
+  } catch (_) {
+    el('weekBoard').innerHTML = '<div class="empty"><div class="e-ic">○</div><p>Leaderboard appears when the server is running.</p></div>';
+    el('prevBoard').innerHTML = '';
+    return;
+  }
+  const medals = ['1st', '2nd', '3rd'];
+  el('weekRange').textContent = fmtDay(boardCache.week.start) + ' – ' + fmtDay(boardCache.week.end);
+  el('weekBoard').innerHTML = boardCache.top.length
+    ? boardCache.top.map((u, i) => '<div class="tcard"><div class="trow"><span class="who"><span class="rank">' + (i + 1) + '.</span> ' + dispW(u) + trendArrow(u.trend) +
+        '<small>' + u.tickets + ' tickets' + (u.prize ? ' · Prize ₦' + Number(u.prize).toLocaleString() : '') + '</small></span></div></div>').join('')
+    : '<div class="empty"><div class="e-ic">○</div><p>No tickets submitted this week yet.</p></div>';
+  el('prevRange').textContent = fmtDay(boardCache.previous.start) + ' – ' + fmtDay(boardCache.previous.end);
+  el('prevBoard').innerHTML = boardCache.previous.winners.length
+    ? boardCache.previous.winners.map((u, i) => '<div class="tcard"><div class="trow"><span class="who"><span class="rank">' + medals[i] + '</span> ' + dispW(u) +
+        '<small>' + u.tickets + ' tickets · Won ₦' + Number(u.prize).toLocaleString() + '</small></span></div></div>').join('')
+    : '<div class="empty"><div class="e-ic">○</div><p>No winners last week.</p></div>';
+}
 async function loadSponsored() {
   let rows = [];
   try {
@@ -1367,6 +1484,11 @@ el('oClaim').addEventListener('click', async () => {
   const drawId = currentOther.draw.id;
   el('oClaim').disabled = true;
   try {
+    const gx = (currentOther.giveaway) || {};
+    const adPrefixes = ['CASH', 'NG', 'SCG'];
+    if (gx.category === 'cash' || adPrefixes.indexOf(gx.draw_prefix) !== -1) {
+      await maybeAd(otherCache.tickets.length);
+    }
     const r = await api('/api/miniapp/custom-tickets', { method: 'POST', body: JSON.stringify({ drawId }) });
     haptic('success');
     confettiBurst(80);

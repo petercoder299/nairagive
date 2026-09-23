@@ -258,6 +258,57 @@ function mountMiniApp(app) {
     }
   });
 
+  // Weekly leaderboard: top 10 ticket submitters (Mon–Sun, Lagos),
+  // 24h trend arrows, weekly prizes; plus previous week winners.
+  app.get('/api/miniapp/leaderboard', async (_req, res) => {
+    try {
+      const { weekWindows, WEEK_PRIZES } = require('./leaderboard');
+      const w = weekWindows(new Date());
+      const top = await store.getTicketLeaders(w.start.toISOString(), 10).catch(() => []);
+      const ids = top.map((t) => t.telegram_id);
+      const dayAgo = new Date(Date.now() - 86400000).toISOString();
+      const twoAgo = new Date(Date.now() - 2 * 86400000).toISOString();
+      const [d24, d48] = await Promise.all([
+        store.getTicketsCountSince(ids, dayAgo).catch(() => []),
+        store.getTicketsCountSince(ids, twoAgo, dayAgo).catch(() => []),
+      ]);
+      const m24 = {};
+      const m48 = {};
+      d24.forEach((r) => { m24[r.telegram_id] = r.tickets; });
+      d48.forEach((r) => { m48[r.telegram_id] = r.tickets; });
+      const board = top.map((t, i) => {
+        const a = m24[t.telegram_id] || 0;
+        const b = m48[t.telegram_id] || 0;
+        return {
+          telegram_id: t.telegram_id,
+          username: t.username,
+          first_name: t.first_name,
+          tickets: t.tickets,
+          trend: a > b ? 'up' : a < b ? 'down' : 'same',
+          prize: WEEK_PRIZES[i] || 0,
+        };
+      });
+      const prev = await store.getTicketLeaders(w.prevStart.toISOString(), 3, w.prevEnd.toISOString()).catch(() => []);
+      res.json({
+        week: { start: w.start, end: w.end },
+        top: board,
+        previous: {
+          start: w.prevStart,
+          end: w.prevEnd,
+          winners: prev.map((t, i) => ({
+            telegram_id: t.telegram_id,
+            username: t.username,
+            first_name: t.first_name,
+            tickets: t.tickets,
+            prize: WEEK_PRIZES[i] || 0,
+          })),
+        },
+      });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   return app;
 }
 

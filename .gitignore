@@ -6,5 +6,6 @@ deen.txt
 # local spec notes — never commit
 giveaways.txt
 newone.txt
+mee.txt
 # generated deploy secrets — never commit
 render-secrets.txt
