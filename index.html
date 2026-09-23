@@ -453,12 +453,12 @@
         <div class="sec-head"><h2>Categories</h2><span class="count" id="catsCount">—</span></div>
         <p class="sub">Pick a giveaway category to enter.</p>
         <div class="menu">
-          <button class="menu-card" data-go="s-cash" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">Cash / Money</span><span class="menu-s">Hourly draws · live</span></span><span class="tag">LIVE</span></button>
-          <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Airtime</span><span class="menu-s">Mobile top-up</span></span><span class="tag soon">SOON</span></button>
-          <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Data Bundles</span><span class="menu-s">Mobile data</span></span><span class="tag soon">SOON</span></button>
-          <button class="menu-card" disabled type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Gadgets</span><span class="menu-s">Phones &amp; devices</span></span><span class="tag soon">SOON</span></button>
-          <button class="menu-card" data-go="s-food" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Food</span><span class="menu-s">Meals &amp; groceries</span></span><span class="tag">LIVE</span></button>
-          <button class="menu-card" data-go="s-others" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Others</span><span class="menu-s">Gadgets, accounts &amp; more</span></span><span class="tag">LIVE</span></button>
+          <button class="menu-card" data-go="s-cash" data-cat="cash" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">Cash / Money</span><span class="menu-s">Hourly draws · live</span></span><span class="tag">LIVE</span></button>
+          <button class="menu-card" disabled data-cat="airtime" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Airtime</span><span class="menu-s">Mobile top-up</span></span><span class="tag soon">SOON</span></button>
+          <button class="menu-card" disabled data-cat="data" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Data Bundles</span><span class="menu-s">Mobile data</span></span><span class="tag soon">SOON</span></button>
+          <button class="menu-card" disabled data-cat="gadgets" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Gadgets</span><span class="menu-s">Phones &amp; devices</span></span><span class="tag soon">SOON</span></button>
+          <button class="menu-card" data-go="s-food" data-cat="food" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Food</span><span class="menu-s">Meals &amp; groceries</span></span><span class="tag">LIVE</span></button>
+          <button class="menu-card" data-catgo="others" data-cat="others" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Others</span><span class="menu-s">Gadgets, accounts &amp; more</span></span><span class="tag">LIVE</span></button>
         </div>
       </div>
     </section>
@@ -545,8 +545,8 @@
     <!-- OTHERS LIST -->
     <section class="screen" id="s-others" data-title="Others">
       <div class="page">
-        <div class="sec-head"><h2>Others</h2><span class="count" id="othersCount">—</span></div>
-        <p class="sub">Gadgets, accounts, food and more.</p>
+        <div class="sec-head"><h2 id="othersTitle">Others</h2><span class="count" id="othersCount">—</span></div>
+        <p class="sub" id="othersSub">Gadgets, accounts, food and more.</p>
         <div class="menu" id="others"><div class="empty"><div class="e-ic">○</div><p>loading…</p></div></div>
       </div>
     </section>
@@ -722,6 +722,7 @@ function go(id) {
   if (id === 's-cash') loadCash();
   if (id === 's-others') loadOthers();
   if (id === 's-food') loadFoods();
+  if (id === 's-cats') loadCats();
   if (id === 's-leaderboard-week' || id === 's-prevwinners') loadBoard();
   if (id === 's-wallet') loadWallet();
   if (id === 's-hourly') { loadLive(); loadMe(); }
@@ -990,7 +991,7 @@ async function loadMe() {
     el('claimNote').textContent = 'Sign-in failed: ' + e.message;
   }
 }
-// ---- Rewarded ads (Monetag): show before the 3rd, 5th and 8th ticket
+// ---- Rewarded ads (Monetag): show before the 4th, 7th and 9th ticket
 // of a CASH/NG/SCG draw. Passes a unique ymid + placement so postbacks
 // link back to the exact claim. The ticket is ALWAYS issued afterwards,
 // even if the ad is blocked, fails or times out.
@@ -1006,7 +1007,7 @@ function adIdentity() {
   return 't' + who + '_' + Date.now().toString(36);
 }
 function maybeAd(count) {
-  if (count !== 2 && count !== 4 && count !== 7) return Promise.resolve();
+  if (count !== 3 && count !== 6 && count !== 8) return Promise.resolve();
   try {
     if (typeof show_11866156 === 'function') {
       toast('Loading ad…');
@@ -1398,15 +1399,53 @@ async function loadCategoryList(category, listId, countId) {
       }).join('')
     : '<div class="empty"><div class="e-ic">○</div><p>No giveaways here right now.</p></div>';
 }
+async function loadCats() {
+  let hourly = true;
+  const counts = {};
+  try {
+    const d = await api('/api/miniapp/categories');
+    hourly = d.hourly !== false;
+    (d.categories || []).forEach((c) => { counts[c.category] = c.n; });
+  } catch (_) {}
+  let live = 0;
+  document.querySelectorAll('#s-cats [data-cat]').forEach((b) => {
+    const cat = b.getAttribute('data-cat');
+    const on = cat === 'cash' ? (hourly || (counts.cash || 0) > 0) : (counts[cat] || 0) > 0;
+    if (on) b.removeAttribute('disabled');
+    else b.setAttribute('disabled', '');
+    const tag = b.querySelector('.tag');
+    if (tag) {
+      tag.textContent = on ? 'LIVE' : 'SOON';
+      tag.classList.toggle('soon', !on);
+    }
+    if (on) live++;
+  });
+  el('catsCount').textContent = live + ' live';
+}
 async function loadFoods() {
   await loadCategoryList('food', 'foods', 'foodsCount');
 }
+const CAT_TITLES = { others: 'Others', gadgets: 'Gadgets', food: 'Food', airtime: 'Airtime', data: 'Data Bundles' };
+let othersCat = 'others';
+function setOthersCat(c) {
+  othersCat = c;
+  const label = CAT_TITLES[c] || c;
+  el('othersTitle').textContent = label;
+  el('othersSub').textContent = { others: 'Gadgets, accounts, food and more.', gadgets: 'Phones & devices.', food: 'Meals & groceries.', airtime: 'Mobile top-up.', data: 'Mobile data.' }[c] || 'Special draws.';
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-catgo]');
+  if (!b || b.disabled) return;
+  setOthersCat(b.getAttribute('data-catgo'));
+  go('s-others');
+});
 async function loadOthers() {
+  const cat = othersCat;
   let rows = [];
   try {
-    rows = await api('/api/miniapp/sponsored?category=others');
+    rows = await api('/api/miniapp/sponsored?category=' + encodeURIComponent(cat));
   } catch (_) {
-    el('others').innerHTML = '<div class="empty"><div class="e-ic">○</div><p>Others appear here when the server is running.</p></div>';
+    el('others').innerHTML = '<div class="empty"><div class="e-ic">○</div><p>Giveaways appear here when the server is running.</p></div>';
     return;
   }
   let opens = [];
@@ -1414,7 +1453,7 @@ async function loadOthers() {
     opens = await api('/api/miniapp/custom-open');
   } catch (_) { opens = []; }
   const openById = {};
-  opens.forEach((o) => { if (o.giveaway && o.giveaway.category === 'others') openById[o.giveaway.id] = o; });
+  opens.forEach((o) => { if (o.giveaway && o.giveaway.category === cat) openById[o.giveaway.id] = o; });
   el('othersCount').textContent = rows.length ? rows.length + ' live' : 'none yet';
   el('others').innerHTML = rows.length
     ? rows.map((g) => {

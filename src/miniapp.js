@@ -313,6 +313,17 @@ function mountMiniApp(app) {
     }
   });
 
+  // Live categories: hourly status + active custom counts per category.
+  // The app enables exactly these category buttons — no hardcoded counts.
+  app.get('/api/miniapp/categories', async (_req, res) => {
+    try {
+      const counts = await store.getActiveCategoryCounts();
+      res.json({ hourly: config.hourlyEnabled, categories: counts });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   return app;
 }
 

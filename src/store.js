@@ -293,6 +293,14 @@ async function getMonetagEvents(limit = 50) {
   const res = await query(`SELECT * FROM monetag_events ORDER BY id DESC LIMIT $1`, [limit]);
   return res.rows;
 }
+// Active giveaway counts per category (drives the category buttons).
+async function getActiveCategoryCounts() {
+  const res = await query(
+    `SELECT category, COUNT(*)::int AS n FROM giveaways WHERE status = 'active' GROUP BY category`
+  ).catch(() => ({ rows: [] }));
+  return res.rows;
+}
+
 // ---- Withdrawals (balance debit + request are one transaction) ----
 async function createWithdrawal({ telegramId, username, fullName, accountNumber, bankName, amount }) {
   const pool = getPool();
@@ -445,6 +453,7 @@ module.exports = {
   countWalletWins,
   getTicketLeaders,
   getTicketsCountSince,
+  getActiveCategoryCounts,
   getWithdrawals,
   resolveWithdrawal,
   adjustBalance,

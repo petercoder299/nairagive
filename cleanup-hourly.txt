@@ -1,0 +1,17 @@
+-- Close leftover open hourly draws after switching HOURLY_ENABLED=false.
+-- Paste into Neon Dashboard -> SQL Editor, press Run.
+-- Run once on "neondb", then switch to "neondb_test" and run again.
+-- Only touches draws still stuck open; results history is untouched.
+
+UPDATE draws SET status = 'closed', drawn_at = NOW()
+WHERE kind = 'hourly_200' AND status = 'entry_open';
+
+-- Verify (must return zero open hourly rows):
+SELECT COUNT(*) AS open_hourly FROM draws WHERE kind = 'hourly_200' AND status = 'entry_open';
+
+-- Optional: list what is still open overall (should only be your
+-- admin-created custom draws awaiting their scheduled time):
+SELECT d.id, d.status, d.giveaway_id, g.name, d.entry_closes_at
+FROM draws d LEFT JOIN giveaways g ON g.id = d.giveaway_id
+WHERE d.status = 'entry_open'
+ORDER BY d.created_at DESC;

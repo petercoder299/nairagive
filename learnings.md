@@ -1,0 +1,71 @@
+# NairaGiveBot — Learnings
+
+Hard-won lessons from building this Telegram giveaway Mini App + bot.
+Read before touching the draw engine, the database, or production.
+
+## 1. Exactly ONE scheduler may run per database
+Two workers writing at once created duplicate draws with different hour
+letters minutes apart (same code + same data can never do that — the
+mismatch is the fingerprint of a rogue second writer). Rule: one server
+(Render) owns the real DB. Never run worker ticks, one-shot scripts, or a
+local server against production while it runs. Local work uses the test DB.
+
+## 2. Pin the timezone, or letters lie
+Hour letters (A = 00:00–01:00 … X = 23:00–00:00) come from server-local
+time. Mixed TZs across writers produce different IDs for the same instant.
+Production runs `TZ=Africa/Lagos`. Custom one-off/interval IDs use local
+time deliberately; keep it that way and keep writers to one.
+
+## 3. Draw rows are snapshots — frozen at creation
+`amount`, `winners_count`, sponsor fields, closing time and the ID format
+are copied onto the draw row when the worker first creates it, then never
+overwritten. Consequences:
+- Structural changes (ID format, prize, winners, schedule) need
+  delete + recreate. Editing the giveaway row is not enough.
+- Claim-time rules (caps, digit length) and all display text read live,
+  so those change without recreates.
+- Sponsor name/link/bio are the exception: PATCH propagates them onto
+  open draws on purpose.
+
+## 4. Seeded randomness for draws, throwaway randomness nowhere near them
+Winners come from SHA-256 → mulberry32 over the sorted ticket list
+(`src/draw.js`, mirrored in tests). Never `Math.random` in the draw path.
+The only allowed RNG is visual confetti, which uses its own xorshift and
+is commented as such.
+
+## 5. Caps are per calendar hour, not rolling windows
+"10 tickets an hour" means the clock hour (`startOfHour`), resetting at
+:00 like everything else in the app. Rolling 60-minute windows confused
+users who entered at 2:50pm and were still blocked at 3:05pm.
+
+## 6. The wallet is cash-only by engine rule, not by convention
+`runSeededDraw` credits wallets only for hourly + cash-category customs.
+Non-cash wins record prize 0 and are redeemed via admin. Withdrawals can
+therefore only ever spend cash — no balance-splitting logic needed.
+
+## 7. Neon free-tier realities
+- The pooler hostname is IPv6-only; when local IPv6 dies, every DB call
+  fails with empty-message timeouts. Diagnose DNS before blaming code.
+- Cold/waking databases fail the first touch: every read path degrades
+  gracefully (`.catch(() => [])`), admin writes surface real errors.
+- Render has no shell on free tier: schema upgrades must be idempotent
+  SQL runnable from Neon's browser editor, and the server auto-migrates
+  on boot.
+
+## 8. Idempotency everywhere
+`ensureDraw`, `runSeededDraw` (existing winners short-circuit), ticket
+inserts (unique constraint + retry), YMID dedupe on ad postbacks,
+giveaway provisioning scripts (skip-if-exists). Restarts, redeploys and
+Render sleeps must never double-draw or double-pay.
+
+## 9. Secrets stay local, always
+`.env`, `deen.txt`, `*-secrets.txt`, `monetag-postback-*.txt` and all
+`*e.txt` spec files are gitignored. Verified more than once with
+`git rev-list --all -- <file>`. Tokens are read from files into shell
+variables, never pasted into commands, and stripped from git remotes
+after every push.
+
+## 10. Test mode is not demo mode
+Browser test mode (`ALLOW_TEST_MODE` + `X-Test-User`) hits the REAL backend
+and writes REAL rows — use the test database. The old client-side demo
+simulation was deleted for exactly this confusion risk.
