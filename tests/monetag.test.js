@@ -41,4 +41,9 @@ describe('monetag postback parsing', () => {
     assert.equal(parsePostback({ ...good, telegram_id: 'abc' }).ok, false);
     assert.equal(parsePostback({ ...good, telegram_id: '-5' }).ok, false);
   });
+
+  it('stores valued/non_valued reward flags as-is', () => {
+    assert.equal(parsePostback({ ...good, reward: 'valued' }).value.reward, 'valued');
+    assert.equal(parsePostback({ ...good, reward: 'non_valued' }).value.reward, 'non_valued');
+  });
 });

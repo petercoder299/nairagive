@@ -410,10 +410,12 @@ function createAdminApp() {
   });
 
   // ---- Monetag rewarded postback (called by Monetag, NOT by users) ----
-  // Dashboard URL template:
+  // Dashboard URL template (param names are ours; {macros} are Monetag's and
+  // must stay exact: ymid, zone_id, sub_zone_id, request_var, telegram_id,
+  // event_type, reward_event_type, estimated_price):
   //   https://YOUR-APP.onrender.com/api/monetag/postback?key=YOUR_KEY
-  //   &telegram_id={telegram_id}&app_id={app_id}&zone_id={zone_id}&subzone_id={subzone_id}
-  //   &event={event}&reward={reward}&price={price}&ymid={ymid}&request_var={request_var}
+  //   &telegram_id={telegram_id}&zone_id={zone_id}&subzone_id={sub_zone_id}
+  //   &event={event_type}&reward={reward_event_type}&price={estimated_price}&ymid={ymid}&request_var={request_var}
   app.get('/api/monetag/postback', async (req, res) => {
     try {
       if (config.monetagPostbackKey && req.query.key !== config.monetagPostbackKey) {

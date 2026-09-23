@@ -987,15 +987,27 @@ async function loadMe() {
   }
 }
 // ---- Rewarded ads (Monetag): show before the 3rd, 5th and 8th ticket
-// of a CASH/NG/SCG draw. The ticket is ALWAYS issued afterwards, even if
-// the ad is blocked, fails or times out.
+// of a CASH/NG/SCG draw. Passes a unique ymid + placement so postbacks
+// link back to the exact claim. The ticket is ALWAYS issued afterwards,
+// even if the ad is blocked, fails or times out.
+function adIdentity() {
+  let who = 'guest';
+  try {
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+      who = String(tg.initDataUnsafe.user.id);
+    } else if (TEST_USER) {
+      who = TEST_USER.split(':')[0];
+    }
+  } catch (_) {}
+  return 't' + who + '_' + Date.now().toString(36);
+}
 function maybeAd(count) {
   if (count !== 2 && count !== 4 && count !== 7) return Promise.resolve();
   try {
     if (typeof show_11866156 === 'function') {
       toast('Loading ad…');
       return Promise.race([
-        show_11866156().then(function () {}).catch(function () {}),
+        show_11866156({ ymid: adIdentity(), requestVar: 'ticket' + (count + 1) }).then(function () {}).catch(function () {}),
         new Promise(function (r) { setTimeout(r, 10000); }),
       ]);
     }
