@@ -1309,14 +1309,15 @@ async function loadSponsored() {
   }
   rows = rows.filter((g) => g.sponsored !== false);
   let opens = [];
+  let opensFailed = false;
   try {
     opens = await api('/api/miniapp/custom-open');
-  } catch (_) { opens = []; }
+  } catch (_) { opens = []; opensFailed = true; }
   const openByGiveaway = {};
   opens.forEach((o) => { openByGiveaway[o.giveaway.id] = o; });
   el('sponsoredSub').textContent = rows.length ? rows.length + ' sponsored cash draws' : 'Sponsored cash giveaways';
   const cashOpens = opens.filter((o) => rows.some((g) => g.id === o.giveaway.id));
-  el('sponsoredCount').textContent = cashOpens.length ? cashOpens.length + ' open' : 'none right now';
+  el('sponsoredCount').textContent = opensFailed ? 'live status unknown' : (cashOpens.length ? cashOpens.length + ' open' : 'none right now');
   sponsoredRows = rows;
   el('sponsored').innerHTML = rows.length
     ? rows.map((g) => {
@@ -1335,7 +1336,7 @@ async function loadSponsored() {
           ? '<button class="btn-g" style="margin-top:10px" data-rules="' + g.id + '">Rules</button>'
           : '';
         const official = g.sponsored === false;
-        return '<div class="tcard"><div class="tid">' + (official ? 'OFFICIAL' : 'SPONSORED') + ' · ' + g.category + '</div><div class="trow"><span class="who">' + g.name +
+        return '<div class="tcard" data-other-open="' + g.id + '" style="cursor:pointer"><div class="tid">' + (official ? 'OFFICIAL' : 'SPONSORED') + ' · ' + g.category + '</div><div class="trow"><span class="who">' + g.name +
           '<small>' + when + (official ? ' · Official NaijaGiveawayBot draw' : ' · Sponsor: ' + (g.sponsor_name || '—')) + '</small></span>' +
           '<span class="prz">' + (g.prize_text || '₦' + g.amount) + '</span></div>' + action + rulesBtn + '</div>';
       }).join('')
@@ -1469,6 +1470,7 @@ async function loadOthers() {
     : '<div class="empty"><div class="e-ic">○</div><p>No other giveaways right now.</p></div>';
 }
 document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-custom-claim],[data-rules]')) return;
   const b = e.target.closest('[data-other-open]');
   if (b) openOther(b.getAttribute('data-other-open'));
 });
