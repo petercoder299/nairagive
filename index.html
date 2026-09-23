@@ -854,17 +854,21 @@ async function loadLive() {
   }
 }
 let hourlySponsor = null;
+let lastEffPhase = 'entry_open';
 function renderDraw(d, fromApi) {
+  // Winners posted beats the clock: a drawn draw shows results even inside :51–:52.
+  const effPhase = (d.phase === 'drawing' && d.winners && d.winners.length) ? 'results' : d.phase;
+  lastEffPhase = effPhase;
   el('drawId').textContent = d.drawId;
   el('drawIdHome').textContent = d.drawId;
   el('drawsDraw').textContent = d.drawId;
-  el('footDraw').textContent = d.drawId + ' · ' + (phaseLabel[d.phase] || d.phase);
-  el('phase').textContent = phaseLabel[d.phase] || d.phase;
-  el('phaseHome').textContent = phaseLabel[d.phase] || d.phase;
-  el('statusbar').classList.toggle('closed', d.phase !== 'entry_open');
-  el('countLabel').textContent = countLabel[d.phase] || '';
+  el('footDraw').textContent = d.drawId + ' · ' + (phaseLabel[effPhase] || effPhase);
+  el('phase').textContent = phaseLabel[effPhase] || effPhase;
+  el('phaseHome').textContent = phaseLabel[effPhase] || effPhase;
+  el('statusbar').classList.toggle('closed', effPhase !== 'entry_open');
+  el('countLabel').textContent = countLabel[effPhase] || '';
   if (d.draw && d.draw.amount) { el('prize').textContent = d.draw.amount; }
-  document.querySelectorAll('#s-hourly .ph').forEach((s) => s.classList.toggle('on', s.dataset.k === d.phase));
+  document.querySelectorAll('#s-hourly .ph').forEach((s) => s.classList.toggle('on', s.dataset.k === effPhase));
   const w = d.winners || [];
   el('winners').innerHTML = w.length
     ? w.map((x) => {
@@ -1537,6 +1541,11 @@ function tickClock() {
     el('oCountdown').textContent = left > 0 ? fmtDHMS(Math.ceil(left / 1000)) : 'closed';
   }
   if (!serverSeen) return;
+  if (lastEffPhase === 'results') {
+    const n = new Date();
+    el('countdown').textContent = fmt(3600 - (n.getMinutes() * 60 + n.getSeconds()));
+    return;
+  }
   el('countdown').textContent = fmt(secsToBoundary(new Date()));
 }
 
