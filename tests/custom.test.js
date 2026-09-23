@@ -186,6 +186,20 @@ describe('calendar-hour cap', () => {
   });
 });
 
+describe('ad slot parsing', () => {
+  it('parses comma lists into sorted unique ticket numbers', () => {
+    assert.deepEqual(custom.parseAdSlots('4,7,9'), [4, 7, 9]);
+    assert.deepEqual(custom.parseAdSlots('9, 4,7,4'), [4, 7, 9]);
+  });
+
+  it('drops garbage, keeps 1–100', () => {
+    assert.deepEqual(custom.parseAdSlots('0, abc, 5, 101, 3'), [3, 5]);
+    assert.deepEqual(custom.parseAdSlots(''), []);
+    assert.deepEqual(custom.parseAdSlots(null), []);
+    assert.deepEqual(custom.parseAdSlots(undefined), []);
+  });
+});
+
 describe('cash-only wallet rule', () => {
   it('hourly draws are always cash', () => {
     assert.equal(custom.isCashDraw({ kind: 'hourly_200' }, null), true);

@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS giveaways (
   sponsor_facebook TEXT,
   sponsor_instagram TEXT,
   sponsor_linkedin TEXT,
+  ad_slots TEXT,
   status TEXT NOT NULL DEFAULT 'active',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -98,6 +99,7 @@ ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_twitter TEXT;
 ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_facebook TEXT;
 ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_instagram TEXT;
 ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS sponsor_linkedin TEXT;
+ALTER TABLE giveaways ADD COLUMN IF NOT EXISTS ad_slots TEXT;
 
 -- Monetag rewarded postback events. ymid is unique per event so replayed
 -- or fraudulent duplicates are dropped instead of double-counted.

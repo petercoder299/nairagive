@@ -27,6 +27,8 @@ services:
         value: 200
       - key: HOURLY_PREFIX
         value: NG
+      - key: HOURLY_AD_SLOTS
+        value: 4,7,9
       - key: HOURLY_ENABLED
         value: true
       - key: MAX_TICKETS_PER_USER

@@ -8,6 +8,7 @@ const { getDrawId, getPhase, hourlyDrawId } = require('./draw');
 const labelFor = require('./custom').drawLabel;
 const startOfHour = require('./custom').startOfHour;
 const ticketPrefixFor = require('./custom').ticketPrefixFor;
+const parseAdSlots = require('./custom').parseAdSlots;
 const { validateWithdrawal } = require('./withdrawals');
 const { requireTelegramUserOrTest } = require('./telegramAuth');
 
@@ -37,6 +38,7 @@ function mountMiniApp(app) {
         contact: config.contact.text,
         howTo: config.howToUse,
         rules: config.rulesText,
+        adSlots: parseAdSlots(config.hourlyAdSlots),
       });
     } catch (e) {
       res.status(500).json({ error: e.message });
@@ -148,7 +150,8 @@ function mountMiniApp(app) {
       const prizeText =
         (giveaway && giveaway.prize_text) ||
         (draw.amount > 0 ? '₦' + Number(draw.amount).toLocaleString('en-NG') : null);
-      res.json({ draw, giveaway, winners, myTickets, myHourCount, max: config.maxTicketsPerUser, label: labelFor(draw, giveaway), prizeText });
+      const adSlots = giveaway ? (giveaway.ad_slots == null ? [4, 7, 9] : parseAdSlots(giveaway.ad_slots)) : [];
+      res.json({ draw, giveaway, winners, myTickets, myHourCount, max: config.maxTicketsPerUser, label: labelFor(draw, giveaway), prizeText, adSlots });
     } catch (e) {
       res.status(500).json({ error: e.message });
     }

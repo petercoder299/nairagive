@@ -122,6 +122,18 @@ function isCashDraw(draw, giveaway) {
   if (draw.kind === 'custom') return !!giveaway && giveaway.category === 'cash';
   return false;
 }
+// Ad slots: comma list of the ticket numbers that trigger a rewarded ad
+// BEFORE claiming (e.g. "4,7,9" fires when the user holds 3, 6, 8 tickets).
+// Empty/missing = no ads. Pure + tested.
+function parseAdSlots(str) {
+  if (str === undefined || str === null) return [];
+  return [...new Set(
+    String(str)
+      .split(',')
+      .map((s) => parseInt(String(s).trim(), 10))
+      .filter((n) => Number.isInteger(n) && n >= 1 && n <= 100)
+  )].sort((a, b) => a - b);
+}
 // Ticket label so users can tell draws apart: CASH, GADGET, NETFLIX…
 function drawLabel(draw, giveaway) {
   if (giveaway) {
@@ -146,5 +158,6 @@ module.exports = {
   drawLabel,
   prizeLabel,
   isCashDraw,
+  parseAdSlots,
   startOfHour,
 };

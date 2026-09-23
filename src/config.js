@@ -17,6 +17,8 @@ const config = {
   // works fully in a desktop browser without Telegram. Never enable in prod.
   allowTestMode: requireEnv('ALLOW_TEST_MODE', 'false') === 'true',
   hourlyAmount: parseInt(requireEnv('HOURLY_AMOUNT', '200'), 10),
+  // Ticket numbers that trigger a rewarded ad BEFORE claiming, hourly draw.
+  hourlyAdSlots: requireEnv('HOURLY_AD_SLOTS', '4,7,9'),
   // Master switch for the hardcoded hourly draw. Set false to run ONLY
   // admin-created giveaways (hourly stops opening, drawing and accepting).
   hourlyEnabled: requireEnv('HOURLY_ENABLED', 'true') === 'true',

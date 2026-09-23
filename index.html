@@ -836,6 +836,7 @@ function syncMainButton() {
 let serverSeen = false;
 let hourlyRules = '';
 let myWinnerLabel = '';
+let hourlyAdSlots = [4, 7, 9];
 async function loadLive() {
   try {
     const d = await api('/api/draws/current');
@@ -979,6 +980,7 @@ async function loadMe() {
     el('walletUser').textContent = 'Signed in as ' + who + ' — winnings credit automatically.';
     if (me.contact) el('contactText').textContent = me.contact;
     if (me.rules) hourlyRules = me.rules;
+    if (me.adSlots) hourlyAdSlots = me.adSlots;
     if (me.howTo) {
       const lines = me.howTo.split('\n').map((x) => x.trim()).filter((x) => x && !/^how to use/i.test(x));
       if (lines.length) el('howList').innerHTML = lines.map((x) => '<li>' + x.replace(/^\d+\.\s*/, '') + '</li>').join('');
@@ -1005,8 +1007,8 @@ function adIdentity() {
   } catch (_) {}
   return 't' + who + '_' + Date.now().toString(36);
 }
-function maybeAd(count) {
-  if (count !== 3 && count !== 6 && count !== 8) return Promise.resolve();
+function maybeAd(count, slots) {
+  if (!slots || slots.indexOf(count + 1) === -1) return Promise.resolve();
   try {
     if (typeof show_11866156 === 'function') {
       toast('Loading ad…');
@@ -1022,7 +1024,7 @@ async function claimTicket() {
   if (!IN_TELEGRAM && !TEST_USER) return enableTestMode();
   el('claimBtn').disabled = true;
   try {
-    await maybeAd(hourlyCache.tickets.length);
+    await maybeAd(hourlyCache.tickets.length, hourlyAdSlots);
     if (tg && tg.MainButton) { try { tg.MainButton.showProgress(); } catch (_) {} }
     const r = await api('/api/miniapp/tickets', { method: 'POST' });
     haptic('success');
@@ -1518,7 +1520,7 @@ el('oClaim').addEventListener('click', async () => {
   const drawId = currentOther.draw.id;
   el('oClaim').disabled = true;
   try {
-    await maybeAd(otherCache.tickets.length);
+    await maybeAd(otherCache.tickets.length, currentOther.adSlots || []);
     const r = await api('/api/miniapp/custom-tickets', { method: 'POST', body: JSON.stringify({ drawId }) });
     haptic('success');
     confettiBurst(80);

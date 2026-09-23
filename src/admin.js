@@ -109,6 +109,7 @@ button.mini-no{background:transparent;color:var(--red);border:1px solid #4a2c2c;
 <input id="g_digits" type="number" placeholder="Ticket digits" value="10"/>
 <label style="display:flex;align-items:center;gap:8px;font-size:13px"><input id="g_sponsored" type="checkbox" checked style="flex:none;min-width:0;width:auto"/> Sponsored (show sponsor)</label>
 <label style="display:flex;align-items:center;gap:8px;font-size:13px"><input id="g_spot" type="checkbox" style="flex:none;min-width:0;width:auto"/> Spotlight on Cash page</label>
+<input id="g_ads" placeholder="Ad slots — e.g. 4,7,9 (blank = default, 0 = never)"/>
 <button id="createBtn">Create</button></div><div id="g_out" style="margin-top:10px"></div>
 <div style="overflow-x:auto;margin-top:10px"><table><thead><tr><th>ID</th><th>Name</th><th>Cat</th><th class="num">Amount</th><th class="num">Winners</th><th>Schedule</th><th>Status</th><th></th></tr></thead><tbody id="gRows"></tbody></table></div><div id="pgG"></div>
 <h2>Draws</h2><p class="sub">Live draw, manual trigger and recent results.</p>
@@ -146,7 +147,7 @@ document.getElementById("logoutBtn").addEventListener("click",function(){KEY="";
 document.getElementById("refreshBtn").addEventListener("click",function(){if(!DATA)return;call("GET","/api/admin/overview").then(function(j){DATA=j;render();toast("Refreshed.",true)}).catch(function(e){toast("Refresh failed: "+e.message)})});
 document.getElementById("tabP").addEventListener("click",function(){wdTab="pending";PG.wd=1;document.getElementById("tabP").classList.add("on");document.getElementById("tabH").classList.remove("on");renderWd()});
 document.getElementById("tabH").addEventListener("click",function(){wdTab="history";PG.wd=1;document.getElementById("tabH").classList.add("on");document.getElementById("tabP").classList.remove("on");renderWd()});
-document.getElementById("createBtn").addEventListener("click",function(){var b={name:val("g_name"),category:val("g_cat"),amount:+val("g_amt"),winners_per_draw:+val("g_win")||1,interval_minutes:val("g_int")?+val("g_int"):null,starts_at:val("g_start")?new Date(val("g_start")).toISOString():null,ends_at:val("g_end")?new Date(val("g_end")).toISOString():null,scheduled_at:val("g_sched")?new Date(val("g_sched")).toISOString():null,sponsor_name:val("g_sp")||undefined,sponsor_location:val("g_sloc")||null,sponsor_phone:val("g_sphone")||null,sponsor_website:val("g_sweb")||null,sponsor_twitter:val("g_stw")||null,sponsor_facebook:val("g_sfb")||null,sponsor_instagram:val("g_sig")||null,sponsor_linkedin:val("g_sli")||null,rules:val("g_rules")||null,draw_prefix:val("g_prefix")||null,ticket_digits:val("g_digits")?+val("g_digits"):10,sponsored:document.getElementById("g_sponsored").checked,spotlight:document.getElementById("g_spot").checked,prize_text:val("g_prize")||null};if(!b.name||!(b.amount>0||b.prize_text)){toast("Name plus amount or prize text is required.");return}call("POST","/api/giveaways",b).then(function(d){document.getElementById("g_out").innerHTML="<span class='pill pending'>created #"+d.id+"</span>";PG.g=1;return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Giveaway created.",true)}).catch(function(e){toast("Create failed: "+e.message)})});
+document.getElementById("createBtn").addEventListener("click",function(){var b={name:val("g_name"),category:val("g_cat"),amount:+val("g_amt"),winners_per_draw:+val("g_win")||1,interval_minutes:val("g_int")?+val("g_int"):null,starts_at:val("g_start")?new Date(val("g_start")).toISOString():null,ends_at:val("g_end")?new Date(val("g_end")).toISOString():null,scheduled_at:val("g_sched")?new Date(val("g_sched")).toISOString():null,sponsor_name:val("g_sp")||undefined,sponsor_location:val("g_sloc")||null,sponsor_phone:val("g_sphone")||null,sponsor_website:val("g_sweb")||null,sponsor_twitter:val("g_stw")||null,sponsor_facebook:val("g_sfb")||null,sponsor_instagram:val("g_sig")||null,sponsor_linkedin:val("g_sli")||null,rules:val("g_rules")||null,draw_prefix:val("g_prefix")||null,ticket_digits:val("g_digits")?+val("g_digits"):10,sponsored:document.getElementById("g_sponsored").checked,spotlight:document.getElementById("g_spot").checked,prize_text:val("g_prize")||null,ad_slots:val("g_ads")||null};if(!b.name||!(b.amount>0||b.prize_text)){toast("Name plus amount or prize text is required.");return}call("POST","/api/giveaways",b).then(function(d){document.getElementById("g_out").innerHTML="<span class='pill pending'>created #"+d.id+"</span>";PG.g=1;return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Giveaway created.",true)}).catch(function(e){toast("Create failed: "+e.message)})});
 document.getElementById("triggerBtn").addEventListener("click",function(){call("POST","/api/draws/current/trigger",{}).then(function(d){toast("Draw triggered: "+(d.winners||[]).length+" winner(s).",true)}).catch(function(e){toast("Trigger failed: "+e.message)})});
 document.getElementById("gRows").addEventListener("click",function(e){var s=e.target.closest?e.target.closest("[data-spot]"):null;if(s){var gid=s.getAttribute("data-spot");var cur=null;for(var i=0;i<DATA.giveaways.length;i++){if(String(DATA.giveaways[i].id)===gid)cur=DATA.giveaways[i]}call("PATCH","/api/giveaways/"+gid,{spotlight:!(cur&&cur.spotlight)}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Spotlight updated.",true)}).catch(function(err){toast("Failed: "+err.message)});return}});
 document.getElementById("gRows").addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-edit]"):null;if(b){var g=null;for(var i=0;i<DATA.giveaways.length;i++){if(String(DATA.giveaways[i].id)===b.getAttribute("data-edit"))g=DATA.giveaways[i]}if(!g)return;var nm=prompt("Sponsor name",g.sponsor_name||"");if(nm===null)return;var ln=prompt("Sponsor link",g.sponsor_link||"");if(ln===null)return;var bi=prompt("Sponsor bio",g.sponsor_bio||"");if(bi===null)return;call("PATCH","/api/giveaways/"+g.id,{sponsor_name:nm,sponsor_link:ln,sponsor_bio:bi}).then(function(){return call("GET","/api/admin/overview")}).then(function(j){DATA=j;render();toast("Sponsor updated — live immediately.",true)}).catch(function(err){toast("Failed: "+err.message)});return}});
@@ -259,8 +260,8 @@ function createAdminApp() {
         seq = s.rows[0].n;
       }
       const r = await query(
-        `INSERT INTO giveaways (name, category, amount, winners_per_draw, interval_minutes, starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, draw_prefix, ticket_digits, sponsored, draw_seq, spotlight, prize_text, sponsor_location, sponsor_phone, sponsor_website, sponsor_twitter, sponsor_facebook, sponsor_instagram, sponsor_linkedin, status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,'active') RETURNING *`,
+        `INSERT INTO giveaways (name, category, amount, winners_per_draw, interval_minutes, starts_at, ends_at, scheduled_at, sponsor_name, sponsor_link, sponsor_bio, rules, draw_prefix, ticket_digits, sponsored, draw_seq, spotlight, prize_text, sponsor_location, sponsor_phone, sponsor_website, sponsor_twitter, sponsor_facebook, sponsor_instagram, sponsor_linkedin, ad_slots, status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,'active') RETURNING *`,
         [
           b.name,
           b.category || 'cash',
@@ -287,6 +288,7 @@ function createAdminApp() {
           b.sponsor_facebook || null,
           b.sponsor_instagram || null,
           b.sponsor_linkedin || null,
+          b.ad_slots || null,
         ]
       );
       res.json(r.rows[0]);
@@ -322,8 +324,12 @@ function createAdminApp() {
         vals.push(!!b.spotlight);
         sets.push(`spotlight = $${vals.length}`);
       }
+      if (b.ad_slots !== undefined) {
+        vals.push(b.ad_slots || null);
+        sets.push(`ad_slots = $${vals.length}`);
+      }
       if (!sets.length) {
-        return res.status(400).json({ error: 'nothing to update (status, scheduled_at, rules, sponsor_*, spotlight)' });
+        return res.status(400).json({ error: 'nothing to update (status, scheduled_at, rules, sponsor_*, spotlight, ad_slots)' });
       }
       const r = await query(`UPDATE giveaways SET ${sets.join(', ')} WHERE id = $1 RETURNING *`, vals);
       if (!r.rows.length) return res.status(404).json({ error: 'not found' });
