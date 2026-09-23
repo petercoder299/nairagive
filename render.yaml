@@ -34,7 +34,7 @@ services:
       - key: SPONSOR_NAME
         value: NaijaGiveawayBot
       - key: SPONSOR_LINK
-        value: https://t.me/nairagivebot
+        value: https://t.me/naijagiveawaybot
       - key: SPONSOR_BIO
         value: Proudly powering free hourly 200 naira giveaways.
       - key: PORT

@@ -372,7 +372,7 @@
   }
   .tx-mid { flex: 1; min-width: 0; }
   .tx-t { font-size: 14px; font-weight: 700; word-break: break-word; }
-  .tx-d { font-size: 12px; color: var(--ink-3); font-weight: 500; margin-top: 1px; }
+  .tx-d { display: block; font-size: 12px; color: var(--ink-3); font-weight: 500; margin-top: 1px; }
   .tx-a { font-weight: 800; font-size: 15px; white-space: nowrap; font-variant-numeric: tabular-nums; font-family: var(--head-font); color: var(--emerald-deep, #007A44); }
   /* Misc */
   .sponsor { border-left: 4px solid var(--coral); padding-left: 12px; margin: 14px 2px 0; font-size: 12.5px; color: var(--ink-2); font-weight: 500; line-height: 1.6; }
@@ -467,7 +467,7 @@
     <section class="screen" id="s-cash" data-title="Cash / Money">
       <div class="page">
         <div class="sec-head"><h2>Cash</h2><span class="count" id="cashCount">spotlight</span></div>
-        <p class="sub">Tonight's featured draws, house draws and sponsored draws.</p>
+        <p class="sub">All featured draws, house draws and sponsored draws.</p>
         <div class="spot-strip" id="cashSpots"></div>
         <div class="menu">
           <button class="menu-card hero-cta" data-go="s-naira" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">Naira Giveaways</span><span class="menu-s">Win Cash Daily</span></span><span class="chev">›</span></button>
@@ -491,7 +491,6 @@
         <button class="btn-g" id="playHomeBtn" type="button" style="margin-bottom:12px">← Back to Home</button>
         <span class="round-chip">DRAW · <span id="drawId">—</span></span>
         <div class="statusbar" id="statusbar"><span class="st"><span class="pulse"></span><span id="phase">…</span></span><span class="cd"><span id="countdown">--:--</span><small id="countLabel">until entry closes</small></span></div>
-        <button class="round-chip" id="sponsorBtnHourly" type="button">About Sponsor</button>
         <div class="pick-card">
           <h3>Get your tickets</h3>
           <p class="hint" id="claimNote">Max 10 tickets per hour. Free entry.</p>
@@ -602,7 +601,7 @@
     <section class="screen" id="s-leaderboard-week" data-title="Weekly Board">
       <div class="page">
         <div class="sec-head"><h2>This week</h2><span class="count" id="weekRange">—</span></div>
-        <p class="sub" id="weekSub">Monday to Sunday · 1st ₦5,000 · 2nd ₦3,000 · 3rd ₦2,000</p>
+        <p class="sub" id="weekSub">Monday to Sunday<br>1st ₦5,000 · 2nd ₦3,000 · 3rd ₦2,000</p>
         <div class="cards" id="weekBoard"><div class="empty"><div class="e-ic">○</div><p>loading…</p></div></div>
       </div>
     </section>
@@ -834,6 +833,7 @@ function syncMainButton() {
 // ---- Hourly ticket page (server data only — no simulated draws) ----
 let serverSeen = false;
 let hourlyRules = '';
+let myWinnerLabel = '';
 let sponsoredRows = [];
 async function loadLive() {
   try {
@@ -852,7 +852,6 @@ async function loadLive() {
     } catch (_) {}
   }
 }
-let hourlySponsor = null;
 function renderDraw(d, fromApi) {
   el('drawId').textContent = d.drawId;
   el('drawIdHome').textContent = d.drawId;
@@ -879,7 +878,6 @@ function renderDraw(d, fromApi) {
   el('sponsor').innerHTML = sp
     ? 'Sponsor: <b>' + sp.sponsor_name + '</b><br>Link: <a href="' + sp.sponsor_link + '" target="_blank" rel="noopener">' + sp.sponsor_link + '</a><br>' + sp.sponsor_bio
     : 'Sponsor: <b>NaijaGiveawayBot</b> — free hourly ₦200 giveaways.';
-  hourlySponsor = sp ? { name: sp.sponsor_name, link: sp.sponsor_link, bio: sp.sponsor_bio } : null;
 }
 // ---- Paged ticket lists (20 per page) + ticket labels ----
 const PAGE_SIZE = 20;
@@ -965,6 +963,7 @@ async function loadMe() {
   try {
     const me = await api('/api/me');
     const who = me.user.username ? '@' + me.user.username : (me.user.first_name || 'Player');
+    myWinnerLabel = me.user.username ? '@' + me.user.username : (me.user.first_name || String(me.user.id));
     el('hello').textContent = 'Good luck, ' + (me.user.first_name || me.user.username || 'player') + '. Free money, airtime, data, gadgets & food.';
     el('walletBalTop').textContent = '₦' + (me.wallet || 0);
     el('walletPillBal').textContent = '₦' + (me.wallet || 0);
@@ -1052,13 +1051,6 @@ function showSponsor(title, info) {
   el('spBio').textContent = sp.bio || '';
   go('s-sponsor');
 }
-el('sponsorBtnHourly').addEventListener('click', () => {
-  showSponsor('About Sponsor', hourlySponsor || {
-    name: 'NaijaGiveawayBot',
-    link: '',
-    bio: 'Free hourly giveaways for our community.',
-  });
-});
 el('oSponsorBtn').addEventListener('click', () => {
   const g = currentOther && currentOther.giveaway;
   const d = currentOther && currentOther.draw;
@@ -1107,6 +1099,7 @@ async function loadWins(page) {
           '<span class="tx-d">' + title + '</span>' +
           (prize ? '<span class="tx-d">' + prize + '</span>' : '') +
           '<span class="tx-d">' + new Date(x.created_at).toLocaleString() + '</span>' +
+          '<span class="tx-d">winner: ' + myWinnerLabel + '</span>' +
           '</span></div>';
       }).join('') + pagerHtml('wins', data.page || 0, data.totalPages || 1)
     : '<p class="muted small" style="padding:12px 0">No winnings yet — claim tickets every hour.</p>';
