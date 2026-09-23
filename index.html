@@ -1473,12 +1473,15 @@ document.addEventListener('click', (e) => {
   if (b) openOther(b.getAttribute('data-other-open'));
 });
 async function openOther(giveawayId) {
-  let opens = [];
+  let opens = null;
   try {
     opens = await api('/api/miniapp/custom-open');
-  } catch (_) {}
-  const o = opens.find((x) => String(x.giveaway.id) === String(giveawayId));
-  if (!o) { toast('Not open yet'); return; }
+  } catch (e) {
+    toast('Could not reach server — ' + e.message);
+    return;
+  }
+  const o = (opens || []).find((x) => x.giveaway && String(x.giveaway.id) === String(giveawayId));
+  if (!o) { toast('Not open yet — next draw opens soon'); return; }
   try {
     currentOther = await api('/api/miniapp/draw/' + encodeURIComponent(o.drawId));
     pageIx.other = 0;
