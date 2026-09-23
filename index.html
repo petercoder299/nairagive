@@ -456,7 +456,7 @@
           <button class="menu-card" data-go="s-cash" data-cat="cash" type="button"><span class="menu-ic">₦</span><span class="menu-tx"><span class="menu-t">Cash / Money</span><span class="menu-s">Hourly draws · live</span></span><span class="tag">LIVE</span></button>
           <button class="menu-card" disabled data-cat="airtime" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Airtime</span><span class="menu-s">Mobile top-up</span></span><span class="tag soon">SOON</span></button>
           <button class="menu-card" disabled data-cat="data" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Data Bundles</span><span class="menu-s">Mobile data</span></span><span class="tag soon">SOON</span></button>
-          <button class="menu-card" disabled data-cat="gadgets" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Gadgets</span><span class="menu-s">Phones &amp; devices</span></span><span class="tag soon">SOON</span></button>
+          <button class="menu-card" disabled data-catgo="gadgets" data-cat="gadgets" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Gadgets</span><span class="menu-s">Phones &amp; devices</span></span><span class="tag soon">SOON</span></button>
           <button class="menu-card" data-go="s-food" data-cat="food" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Food</span><span class="menu-s">Meals &amp; groceries</span></span><span class="tag">LIVE</span></button>
           <button class="menu-card" data-catgo="others" data-cat="others" type="button"><span class="menu-ic">◌</span><span class="menu-tx"><span class="menu-t">Others</span><span class="menu-s">Gadgets, accounts &amp; more</span></span><span class="tag">LIVE</span></button>
         </div>
@@ -1336,9 +1336,8 @@ async function loadSponsored() {
           ? '<button class="btn-g" style="margin-top:10px" data-rules="' + g.id + '">Rules</button>'
           : '';
         const official = g.sponsored === false;
-        return '<div class="tcard" data-other-open="' + g.id + '" style="cursor:pointer"><div class="tid">' + (official ? 'OFFICIAL' : 'SPONSORED') + ' · ' + g.category + '</div><div class="trow"><span class="who">' + g.name +
-          '<small>' + when + (official ? ' · Official NaijaGiveawayBot draw' : ' · Sponsor: ' + (g.sponsor_name || '—')) + '</small></span>' +
-          '<span class="prz">' + (g.prize_text || '₦' + g.amount) + '</span></div>' + action + rulesBtn + '</div>';
+        const sub = when + (official ? ' · Official draw' : ' · Sponsor: ' + (g.sponsor_name || '—')) + ' · ' + (g.prize_text || ('₦' + g.amount));
+        return '<div style="margin-bottom:12px"><button class="menu-card" data-other-open="' + g.id + '" type="button"><span class="menu-ic">☆</span><span class="menu-tx"><span class="menu-t">' + g.name + '</span><span class="menu-s">' + sub + '</span></span>' + (o ? '<span class="tag">LIVE</span>' : '<span class="chev">›</span>') + '</button>' + action + rulesBtn + '</div>';
       }).join('')
     : '<div class="empty"><div class="e-ic">○</div><p>No sponsored cash giveaways right now — check the Naira list or the hourly draw.</p></div>';
 }
