@@ -878,8 +878,8 @@ function renderDraw(d, fromApi) {
   if (w.length && lastWinnerBurst !== d.drawId) { lastWinnerBurst = d.drawId; confettiBurst(90); }
   const sp = (d.draw && (d.draw.sponsor_name || d.draw.sponsor_bio)) ? d.draw : null;
   el('sponsor').innerHTML = sp
-    ? 'Sponsor: <b>' + sp.sponsor_name + '</b><br>Link: <a href="' + sp.sponsor_link + '" target="_blank" rel="noopener">' + sp.sponsor_link + '</a><br>' + sp.sponsor_bio
-    : 'Sponsor: <b>NaijaGiveawayBot</b> — free hourly ₦200 giveaways.';
+    ? '<b>About Sponsor</b><br>Link:<br><a href="' + sp.sponsor_link + '" target="_blank" rel="noopener">' + sp.sponsor_link + '</a><br>' + sp.sponsor_bio
+    : '<b>About Sponsor</b><br>Link:<br><a href="https://t.me/naijagiveawaybot" target="_blank" rel="noopener">https://t.me/naijagiveawaybot</a><br>Free hourly ₦200 giveaways for our community.';
   hourlySponsor = sp ? { name: sp.sponsor_name, link: sp.sponsor_link, bio: sp.sponsor_bio } : null;
 }
 // ---- Paged ticket lists (20 per page) + ticket labels ----
