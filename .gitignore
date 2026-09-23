@@ -9,6 +9,7 @@ newone.txt
 mee.txt
 747.txt
 pep.txt
+777.txt
 # live deploy secrets — never commit
 render-secrets.txt
 monetag-postback-key.txt

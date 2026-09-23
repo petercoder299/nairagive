@@ -13,15 +13,30 @@ async function main() {
   app.listen(config.port, () => console.log(`[admin] listening on :${config.port} (GET /admin)`));
 
   // Telegram bot (long polling — no public webhook needed; works on Render background/web service)
+  // A bot failure (e.g. 409: another instance polling the same token)
+  // must NEVER take down the API, scheduler and admin — so it is caught.
+  // The scheduler starts exactly once either way.
+  let bot = null;
   if (!config.botToken) {
     console.warn('[bot] BOT_TOKEN not set — bot disabled, admin only.');
-    return;
+  } else {
+    try {
+      bot = createBot();
+    } catch (e) {
+      console.error('[bot] disabled:', e.message);
+      bot = null;
+    }
   }
-  const bot = createBot();
   startScheduler(bot);
-  await bot.launch();
-  console.log('[bot] launched (long polling).');
-  await setupMiniAppMenu(bot);
+  if (bot) {
+    try {
+      await bot.launch();
+      console.log('[bot] launched (long polling).');
+      await setupMiniAppMenu(bot);
+    } catch (e) {
+      console.error('[bot] launch failed — running without Telegram bot:', e.message);
+    }
+  }
 
   const stop = async (sig) => {
     console.log(`[index] ${sig} — stopping...`);
