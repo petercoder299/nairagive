@@ -17,6 +17,9 @@ const config = {
   // works fully in a desktop browser without Telegram. Never enable in prod.
   allowTestMode: requireEnv('ALLOW_TEST_MODE', 'false') === 'true',
   hourlyAmount: parseInt(requireEnv('HOURLY_AMOUNT', '200'), 10),
+  // Master switch for the hardcoded hourly draw. Set false to run ONLY
+  // admin-created giveaways (hourly stops opening, drawing and accepting).
+  hourlyEnabled: requireEnv('HOURLY_ENABLED', 'true') === 'true',
   // Prefix for hourly draw IDs, e.g. NG0122092026A. Empty = legacy DDMMYYYY+letter.
   hourlyPrefix: requireEnv('HOURLY_PREFIX', 'NG'),
   maxTicketsPerUser: parseInt(requireEnv('MAX_TICKETS_PER_USER', '10'), 10),

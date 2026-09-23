@@ -19,12 +19,13 @@ function mountMiniApp(app) {
     try {
       const u = req.tgUser;
       const now = new Date();
+      const drawOn = config.hourlyEnabled;
       const drawId = hourlyDrawId(now, config.hourlyPrefix);
-      const phase = getPhase(now);
+      const phase = drawOn ? getPhase(now) : 'off';
       await store.upsertUser(u.id, u.username, u.first_name).catch(() => {});
-      await store.ensureDraw({ drawId }).catch(() => {});
+      if (drawOn) await store.ensureDraw({ drawId }).catch(() => {});
       const [tickets, wallet] = await Promise.all([
-        store.getUserTickets(drawId, u.id).catch(() => []),
+        drawOn ? store.getUserTickets(drawId, u.id).catch(() => []) : [],
         store.getWallet(u.id).catch(() => 0),
       ]);
       res.json({
@@ -90,6 +91,9 @@ function mountMiniApp(app) {
   // Claim one ticket in the current hourly draw
   app.post('/api/miniapp/tickets', auth, async (req, res) => {
     try {
+      if (!config.hourlyEnabled) {
+        return res.status(410).json({ error: 'The hourly draw is switched off.' });
+      }
       const u = req.tgUser;
       const now = new Date();
       if (getPhase(now) !== 'entry_open') {

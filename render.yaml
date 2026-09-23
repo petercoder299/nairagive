@@ -27,6 +27,8 @@ services:
         value: 200
       - key: HOURLY_PREFIX
         value: NG
+      - key: HOURLY_ENABLED
+        value: true
       - key: MAX_TICKETS_PER_USER
         value: 10
       - key: WITHDRAW_MIN

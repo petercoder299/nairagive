@@ -142,6 +142,10 @@ function createBot() {
   bot.action('cash:hourly', async (ctx) => {
     await ctx.answerCbQuery();
     trackChat(ctx.chat && ctx.chat.id);
+    if (!config.hourlyEnabled) {
+      await ctx.reply('⛔ The hourly draw is currently switched off. Check the sponsored and special draws instead!', mainMenu());
+      return;
+    }
     const now = new Date();
     const drawId = hourlyDrawId(now, config.hourlyPrefix);
     const phase = getPhase(now);
@@ -177,6 +181,10 @@ function createBot() {
 
   bot.action('ticket:get', async (ctx) => {
     await ctx.answerCbQuery('Issuing ticket...');
+    if (!config.hourlyEnabled) {
+      await ctx.reply('⛔ The hourly draw is currently switched off. Check the sponsored and special draws instead!');
+      return;
+    }
     const now = new Date();
     const drawId = hourlyDrawId(now, config.hourlyPrefix);
     if (getPhase(now) !== 'entry_open') {

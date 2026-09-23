@@ -12,6 +12,7 @@ function trackChat(id) {
 }
 
 async function tick(now = new Date()) {
+  if (!config.hourlyEnabled) return; // hourly killed via HOURLY_ENABLED=false
   const drawId = hourlyDrawId(now, config.hourlyPrefix);
   const phase = getPhase(now);
   const min = now.getMinutes();
