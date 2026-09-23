@@ -1352,6 +1352,10 @@ document.getElementById('sponsored').addEventListener('click', (e) => {
 document.getElementById('sponsored').addEventListener('click', async (e) => {
   const btn = e.target.closest('[data-custom-claim]');
   if (!btn) return;
+  if (!IN_TELEGRAM && !TEST_USER) {
+    toast('Browser preview — open via Telegram or enable test mode to enter');
+    return;
+  }
   const drawId = btn.getAttribute('data-custom-claim');
   btn.disabled = true;
   try {
@@ -1475,6 +1479,10 @@ document.addEventListener('click', (e) => {
   if (b) openOther(b.getAttribute('data-other-open'));
 });
 async function openOther(giveawayId) {
+  if (!IN_TELEGRAM && !TEST_USER) {
+    toast('Browser preview — open via Telegram or enable test mode to enter');
+    return;
+  }
   let opens = null;
   try {
     opens = await api('/api/miniapp/custom-open');
