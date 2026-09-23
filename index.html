@@ -992,7 +992,7 @@ async function loadMe() {
   }
 }
 // ---- Rewarded ads (Monetag): show before the 4th, 7th and 9th ticket
-// of a CASH/NG/SCG draw. Passes a unique ymid + placement so postbacks
+// of any draw. Passes a unique ymid + placement so postbacks link back
 // link back to the exact claim. The ticket is ALWAYS issued afterwards,
 // even if the ad is blocked, fails or times out.
 function adIdentity() {
@@ -1542,11 +1542,7 @@ el('oClaim').addEventListener('click', async () => {
   const drawId = currentOther.draw.id;
   el('oClaim').disabled = true;
   try {
-    const gx = (currentOther.giveaway) || {};
-    const adPrefixes = ['CASH', 'NG', 'SCG'];
-    if (gx.category === 'cash' || adPrefixes.indexOf(gx.draw_prefix) !== -1) {
-      await maybeAd(otherCache.tickets.length);
-    }
+    await maybeAd(otherCache.tickets.length);
     const r = await api('/api/miniapp/custom-tickets', { method: 'POST', body: JSON.stringify({ drawId }) });
     haptic('success');
     confettiBurst(80);
