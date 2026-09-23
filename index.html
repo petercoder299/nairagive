@@ -836,7 +836,6 @@ function syncMainButton() {
 let serverSeen = false;
 let hourlyRules = '';
 let myWinnerLabel = '';
-let sponsoredRows = [];
 async function loadLive() {
   try {
     const d = await api('/api/draws/current');
@@ -1318,7 +1317,6 @@ async function loadSponsored() {
   el('sponsoredSub').textContent = rows.length ? rows.length + ' sponsored cash draws' : 'Sponsored cash giveaways';
   const cashOpens = opens.filter((o) => rows.some((g) => g.id === o.giveaway.id));
   el('sponsoredCount').textContent = opensFailed ? 'live status unknown' : (cashOpens.length ? cashOpens.length + ' open' : 'none right now');
-  sponsoredRows = rows;
   el('sponsored').innerHTML = rows.length
     ? rows.map((g) => {
         const o = openByGiveaway[g.id];
@@ -1329,48 +1327,15 @@ async function loadSponsored() {
             : (g.interval_minutes && g.starts_at && g.ends_at)
               ? 'Every ' + g.interval_minutes + ' min'
               : 'Opens soon';
-        const action = o
-          ? '<button class="btn-p" style="margin-top:10px" data-custom-claim="' + o.drawId + '">Enter · ' + o.myCount + '/' + o.max + '</button>'
-          : '';
-        const rulesBtn = g.rules
-          ? '<button class="btn-g" style="margin-top:10px" data-rules="' + g.id + '">Rules</button>'
-          : '';
         const official = g.sponsored === false;
         const sub = when + (official ? ' · Official draw' : ' · Sponsor: ' + (g.sponsor_name || '—')) + ' · ' + (g.prize_text || ('₦' + g.amount));
-        return '<div style="margin-bottom:12px"><button class="menu-card" data-other-open="' + g.id + '" type="button"><span class="menu-ic">☆</span><span class="menu-tx"><span class="menu-t">' + g.name + '</span><span class="menu-s">' + sub + '</span></span>' + (o ? '<span class="tag">LIVE</span>' : '<span class="chev">›</span>') + '</button>' + action + rulesBtn + '</div>';
+        return '<div style="margin-bottom:12px"><button class="menu-card" data-other-open="' + g.id + '" type="button" style="width:100%"><span class="menu-ic">☆</span><span class="menu-tx"><span class="menu-t">' + g.name + '</span><span class="menu-s">' + sub + '</span></span>' + (o ? '<span class="tag">LIVE</span>' : '<span class="chev">›</span>') + '</button></div>';
       }).join('')
     : '<div class="empty"><div class="e-ic">○</div><p>No sponsored cash giveaways right now — check the Naira list or the hourly draw.</p></div>';
 }
-document.getElementById('sponsored').addEventListener('click', (e) => {
-  const rb = e.target.closest('[data-rules]');
-  if (rb) {
-    const g = sponsoredRows.find((x) => String(x.id) === rb.getAttribute('data-rules'));
-    if (g) showRules(g.name + ' — Rules', g.rules);
-  }
-});
-document.getElementById('sponsored').addEventListener('click', async (e) => {
-  const btn = e.target.closest('[data-custom-claim]');
-  if (!btn) return;
-  if (!IN_TELEGRAM && !TEST_USER) {
-    toast('Browser preview — open via Telegram or enable test mode to enter');
-    return;
-  }
-  const drawId = btn.getAttribute('data-custom-claim');
-  btn.disabled = true;
-  try {
-    await api('/api/miniapp/custom-tickets', { method: 'POST', body: JSON.stringify({ drawId }) });
-    haptic('success');
-    confettiBurst(80);
-    toast('Custom ticket issued');
-    await loadSponsored();
-    loadWallet();
-  } catch (err) {
-    haptic('error');
-    toast('Claim failed');
-  } finally {
-    btn.disabled = false;
-  }
-});
+// Sponsored rows navigate via data-other-open (document delegation);
+// claiming and rules live on the ticket page.
+
 
 // ---- Others list + full giveaway page ----
 // ---- Others list + full giveaway page ----
@@ -1473,7 +1438,6 @@ async function loadOthers() {
     : '<div class="empty"><div class="e-ic">○</div><p>No other giveaways right now.</p></div>';
 }
 document.addEventListener('click', (e) => {
-  if (e.target.closest('[data-custom-claim],[data-rules]')) return;
   const b = e.target.closest('[data-other-open]');
   if (b) openOther(b.getAttribute('data-other-open'));
 });
