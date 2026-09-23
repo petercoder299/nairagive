@@ -171,6 +171,11 @@ function createAdminApp() {
   });
   app.get('/admin', (_req, res) => res.send(dashboardHtml()));
   app.get('/health', (_req, res) => res.json({ ok: true, now: new Date().toISOString() }));
+  // Build fingerprint: compare with `git log --oneline -1` locally to prove
+  // Render is actually running your latest push. Render injects the commit SHA.
+  app.get('/api/version', (_req, res) =>
+    res.json({ ok: true, commit: process.env.RENDER_GIT_COMMIT || 'dev', now: new Date().toISOString() })
+  );
 
   mountMiniApp(app);
 
