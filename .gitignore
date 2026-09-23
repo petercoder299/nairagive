@@ -7,5 +7,7 @@ deen.txt
 giveaways.txt
 newone.txt
 mee.txt
-# generated deploy secrets — never commit
+# live deploy secrets — never commit
 render-secrets.txt
+monetag-postback-key.txt
+monetag-postback-link.txt
