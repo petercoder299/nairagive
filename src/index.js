@@ -4,6 +4,10 @@ const { createAdminApp } = require('./admin');
 const { startScheduler } = require('./scheduler');
 
 async function main() {
+  // Fresh databases start empty — apply the (idempotent) schema on every
+  // boot so Render deploys work with zero manual steps. Never fatal.
+  await autoMigrate();
+
   // Admin dashboard (Render web service needs a listening port)
   const app = createAdminApp();
   app.listen(config.port, () => console.log(`[admin] listening on :${config.port} (GET /admin)`));
@@ -34,3 +38,20 @@ main().catch((e) => {
   console.error('[index] fatal:', e);
   process.exit(1);
 });
+
+async function autoMigrate() {
+  if (!config.databaseUrl) {
+    console.warn('[db] DATABASE_URL not set — skipping auto-migrate.');
+    return;
+  }
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const { query } = require('./db');
+    const sql = fs.readFileSync(path.join(__dirname, '..', 'migrations', 'schema.sql'), 'utf8');
+    await query(sql);
+    console.log('[db] schema ready.');
+  } catch (e) {
+    console.error('[db] auto-migrate failed (will retry next boot):', e.message);
+  }
+}

@@ -1,0 +1,17 @@
+-- FULL WIPE for a fresh launch. Paste into Neon Dashboard -> SQL Editor.
+-- Run once on "neondb", then switch to "neondb_test" and run again.
+-- Wipes: giveaways, draws, tickets, winners, users+wallets, withdrawals,
+-- ad events. IDs restart at 1.
+
+TRUNCATE draws, tickets, draw_winners, users, withdrawals, monetag_events RESTART IDENTITY CASCADE;
+DELETE FROM giveaways;
+ALTER SEQUENCE IF EXISTS giveaways_id_seq RESTART WITH 1;
+
+-- Verify (all zeros, no giveaway rows):
+SELECT (SELECT COUNT(*) FROM giveaways) AS giveaways,
+       (SELECT COUNT(*) FROM draws) AS draws,
+       (SELECT COUNT(*) FROM tickets) AS tickets,
+       (SELECT COUNT(*) FROM draw_winners) AS winners,
+       (SELECT COUNT(*) FROM users) AS users,
+       (SELECT COUNT(*) FROM withdrawals) AS withdrawals,
+       (SELECT COUNT(*) FROM monetag_events) AS ads;
